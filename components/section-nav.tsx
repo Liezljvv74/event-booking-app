@@ -21,7 +21,7 @@ export function SectionNav({ eventId }: { eventId: string }) {
   return (
     <nav
       aria-label="Event sections"
-      className="flex gap-1 overflow-x-auto border-b border-zinc-200 px-2 py-2 dark:border-zinc-800"
+      className="flex gap-1 overflow-x-auto border-b border-zinc-200 px-2 py-1 dark:border-zinc-800"
     >
       {SECTIONS.map((section) => {
         const href = section.segment === "" ? base : `${base}/${section.segment}`;
@@ -31,7 +31,7 @@ export function SectionNav({ eventId }: { eventId: string }) {
             key={section.label}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`shrink-0 rounded-md px-3 py-2 text-sm whitespace-nowrap ${
+            className={`shrink-0 rounded-md px-3 py-1.5 text-sm whitespace-nowrap ${
               active
                 ? "bg-zinc-900 font-medium text-white dark:bg-zinc-100 dark:text-black"
                 : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"

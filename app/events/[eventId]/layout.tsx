@@ -58,7 +58,7 @@ function EventChrome({ children }: { children: React.ReactNode }) {
 
       {known && <SectionNav eventId={eventId} />}
 
-      <div className="flex-1 p-4 sm:p-6">
+      <div className="flex-1 p-2 sm:p-6">
         {creating && (
           <div className="mb-6">
             <NewEventForm

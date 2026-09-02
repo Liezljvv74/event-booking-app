@@ -12,6 +12,17 @@ const STATUS_LABELS: Record<AttendeeStatus, string> = {
   cancelled: "Cancelled",
 };
 
+/**
+ * One grid template shared by the header and every row, so the columns line
+ * up without a real table. Ten rows have to fit on a phone screen, which
+ * rules out per-field labels; the header carries them once instead.
+ */
+export const ATTENDEE_GRID =
+  "grid grid-cols-[minmax(7rem,1fr)_5rem_8rem_5.5rem_5rem] items-center gap-2";
+
+/** Narrower than a phone, so the columns scroll sideways instead of wrapping. */
+export const ATTENDEE_MIN_WIDTH = "min-w-[33rem]";
+
 interface Props {
   event: Event;
   attendee: Attendee;
@@ -21,8 +32,8 @@ interface Props {
   onCancel: () => Promise<unknown>;
 }
 
-const inputClass =
-  "h-11 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+const controlClass =
+  "h-9 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 
 export function AttendeeRow({
   event,
@@ -84,106 +95,81 @@ export function AttendeeRow({
   }
 
   return (
-    <li
-      data-attendee={attendee.id}
-      className={`rounded-md border p-3 ${
-        cancelled
-          ? "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40"
-          : "border-zinc-200 dark:border-zinc-800"
-      }`}
-    >
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex min-w-[10rem] flex-1 flex-col gap-1 sm:max-w-sm">
-          <span className="text-xs text-zinc-600 dark:text-zinc-400">Name</span>
-          <input
-            type="text"
-            value={name}
-            disabled={busy}
-            placeholder={`Guest ${position}`}
-            aria-label={`Name of guest ${position}`}
-            data-attendee-name={attendee.id}
-            onChange={(changed) => setName(changed.target.value)}
-            onBlur={commitName}
-            onKeyDown={(pressed) => {
-              if (pressed.key === "Enter") {
-                pressed.preventDefault();
-                commitName();
-              }
-            }}
-            className={`${inputClass} w-full`}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-zinc-600 dark:text-zinc-400">Table</span>
-          <select
-            value={attendee.assignedTableNumber ?? ""}
-            disabled={busy}
-            aria-label={`Table for guest ${position}`}
-            data-attendee-table={attendee.id}
-            onChange={(changed) =>
-              void apply({
-                assignedTableNumber:
-                  changed.target.value === ""
-                    ? null
-                    : Number(changed.target.value),
-              })
+    <li data-attendee={attendee.id} className={cancelled ? "opacity-60" : ""}>
+      <div className={ATTENDEE_GRID}>
+        <input
+          type="text"
+          value={name}
+          disabled={busy}
+          placeholder={`Guest ${position}`}
+          aria-label={`Name of guest ${position}`}
+          data-attendee-name={attendee.id}
+          onChange={(changed) => setName(changed.target.value)}
+          onBlur={commitName}
+          onKeyDown={(pressed) => {
+            if (pressed.key === "Enter") {
+              pressed.preventDefault();
+              commitName();
             }
-            className={inputClass}
-          >
-            <option value="">Unseated</option>
-            {event.tables.map((table) => (
-              <option key={table.id} value={table.tableNumber}>
-                Table {table.tableNumber}
-              </option>
-            ))}
-          </select>
-        </label>
+          }}
+          className={controlClass}
+        />
 
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-zinc-600 dark:text-zinc-400">
-            Status
-          </span>
-          <select
-            value={attendee.status}
-            disabled={busy}
-            aria-label={`Status of guest ${position}`}
-            data-attendee-status={attendee.id}
-            onChange={(changed) =>
-              void apply({ status: changed.target.value as AttendeeStatus })
+        <select
+          value={attendee.assignedTableNumber ?? ""}
+          disabled={busy}
+          aria-label={`Table for guest ${position}`}
+          data-attendee-table={attendee.id}
+          onChange={(changed) =>
+            void apply({
+              assignedTableNumber:
+                changed.target.value === "" ? null : Number(changed.target.value),
+            })
+          }
+          className={controlClass}
+        >
+          <option value="">—</option>
+          {event.tables.map((table) => (
+            <option key={table.id} value={table.tableNumber}>
+              {table.tableNumber}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={attendee.status}
+          disabled={busy}
+          aria-label={`Status of guest ${position}`}
+          data-attendee-status={attendee.id}
+          onChange={(changed) =>
+            void apply({ status: changed.target.value as AttendeeStatus })
+          }
+          className={controlClass}
+        >
+          {(Object.keys(STATUS_LABELS) as AttendeeStatus[]).map((status) => (
+            <option key={status} value={status}>
+              {STATUS_LABELS[status]}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          inputMode="decimal"
+          value={price}
+          disabled={busy}
+          aria-label={`Ticket price for guest ${position}`}
+          data-attendee-price={attendee.id}
+          onChange={(changed) => setPrice(changed.target.value)}
+          onBlur={commitPrice}
+          onKeyDown={(pressed) => {
+            if (pressed.key === "Enter") {
+              pressed.preventDefault();
+              commitPrice();
             }
-            className={inputClass}
-          >
-            {(Object.keys(STATUS_LABELS) as AttendeeStatus[]).map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-xs text-zinc-600 dark:text-zinc-400">
-            Ticket
-          </span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={price}
-            disabled={busy}
-            aria-label={`Ticket price for guest ${position}`}
-            data-attendee-price={attendee.id}
-            onChange={(changed) => setPrice(changed.target.value)}
-            onBlur={commitPrice}
-            onKeyDown={(pressed) => {
-              if (pressed.key === "Enter") {
-                pressed.preventDefault();
-                commitPrice();
-              }
-            }}
-            className={`${inputClass} w-24`}
-          />
-        </label>
+          }}
+          className={`${controlClass} text-right`}
+        />
 
         {cancelled ? (
           /* A cancelled guest keeps their table on record so restoring them
@@ -191,26 +177,34 @@ export function AttendeeRow({
              reads as though the table is still occupied. */
           <span
             data-seat-released={attendee.id}
-            className="rounded-md bg-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+            title={
+              attendee.assignedTableNumber === null
+                ? "Cancelled"
+                : `Cancelled, seat at table ${attendee.assignedTableNumber} is free`
+            }
+            className="text-xs text-zinc-500 dark:text-zinc-500"
           >
-            Cancelled
-            {attendee.assignedTableNumber !== null ? " · seat released" : ""}
+            {attendee.assignedTableNumber === null ? "—" : "seat free"}
           </span>
         ) : (
           <button
             type="button"
             onClick={() => void onCancel()}
             disabled={busy}
+            aria-label={`Cancel guest ${position}`}
             data-cancel-attendee={attendee.id}
-            className="h-11 rounded-md border border-zinc-300 px-3 text-sm font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+            className="h-9 rounded-md border border-zinc-300 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
           >
-            Cancel guest
+            Cancel
           </button>
         )}
       </div>
 
       {error !== "" && (
-        <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
+        <p
+          role="alert"
+          className="mt-1 mb-1 text-xs text-red-600 dark:text-red-400"
+        >
           {error}
         </p>
       )}

@@ -25,7 +25,7 @@ export function EventTabs({ events, selectedId, atLimit, onNewEvent }: Props) {
           min-w-0 lets the strip shrink instead of widening the row. */}
       <nav
         aria-label="Events"
-        className="flex min-w-0 flex-1 items-stretch gap-1 overflow-x-auto px-2 pt-2"
+        className="flex min-w-0 flex-1 items-stretch gap-1 overflow-x-auto px-2 pt-1.5"
       >
         {events.map((event) => {
           const selected = event.id === selectedId;
@@ -36,7 +36,7 @@ export function EventTabs({ events, selectedId, atLimit, onNewEvent }: Props) {
               href={`/events/${event.id}`}
               aria-current={selected ? "page" : undefined}
               data-event-tab={event.id}
-              className={`shrink-0 rounded-t-md px-4 py-3 text-left text-sm ${
+              className={`shrink-0 rounded-t-md px-3 py-2 text-left text-sm ${
                 selected
                   ? "bg-white font-semibold text-black shadow-[inset_0_-2px_0_0_currentColor] dark:bg-zinc-950 dark:text-zinc-50"
                   : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"

@@ -38,19 +38,34 @@ export default function BookingsScreen() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+      {/* Heading, counts and the New booking button share one row: ten guest
+          rows have to fit on a phone screen, and a separate button row costs
+          about sixty pixels of that. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="text-lg font-semibold text-black dark:text-zinc-50">
           Bookings
         </h1>
         <p
           data-bookings-summary
-          className="text-sm text-zinc-600 dark:text-zinc-400"
+          className="text-xs text-zinc-600 dark:text-zinc-400"
         >
           {event.bookings.length} booking
           {event.bookings.length === 1 ? "" : "s"} · {live.length} guest
           {live.length === 1 ? "" : "s"}
           {unseated > 0 ? ` · ${unseated} unseated` : ""}
         </p>
+        {!creating && (
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="ml-auto h-9 rounded-md bg-black px-3 text-sm font-medium whitespace-nowrap text-white dark:bg-zinc-50 dark:text-black"
+          >
+            <span className="sm:hidden" aria-hidden="true">
+              +
+            </span>
+            <span className="max-sm:sr-only">+ New booking</span>
+          </button>
+        )}
       </div>
 
       {/* Guests can be booked before any table exists, but they cannot be
@@ -78,8 +93,8 @@ export default function BookingsScreen() {
         </p>
       )}
 
-      {creating ? (
-        <div className="mt-4">
+      {creating && (
+        <div className="mt-3">
           <NewBookingForm
             onCreate={async (input) => {
               const updated = await addBooking(event.id, input);
@@ -89,23 +104,15 @@ export default function BookingsScreen() {
             onCancel={() => setCreating(false)}
           />
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white dark:bg-zinc-50 dark:text-black"
-        >
-          + New booking
-        </button>
       )}
 
       {event.bookings.length === 0 ? (
-        <p className="mt-4 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
           No bookings yet. A booking is a party name, a telephone number and a
           guest count.
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-4">
+        <ul className="mt-3 flex flex-col gap-3">
           {event.bookings.map((booking) => (
             <BookingCard
               key={booking.id}
