@@ -327,13 +327,49 @@ export class TableFullError extends Error {
 }
 
 /**
+ * Pick a table that seats the whole party together.
+ *
+ * Prefers the tightest table the party still fits in, so a party of two does
+ * not take a ten-seat table while a two-seater sits empty. Ties break on the
+ * lower table number so the choice is predictable. Returns null when no
+ * single table can hold them all, in which case they stay unseated rather
+ * than being split up.
+ */
+export function pickTableForParty(
+  event: Event,
+  guestCount: number,
+): number | null {
+  const candidates = event.tables
+    .map((table) => ({
+      tableNumber: table.tableNumber,
+      free: freeSeatsAtTable(event, table.tableNumber),
+    }))
+    .filter((candidate) => candidate.free >= guestCount)
+    .sort(
+      (a, b) => a.free - b.free || a.tableNumber - b.tableNumber,
+    );
+
+  return candidates[0]?.tableNumber ?? null;
+}
+
+export interface CreatedBooking {
+  event: Event;
+  bookingId: string;
+  /** The table the whole party was seated at, or null if none could hold it. */
+  seatedAtTable: number | null;
+}
+
+/**
  * Create a booking and the attendee records its guest count implies.
  *
- * Attendees start unnamed and unseated: the spec generates them from a count,
- * so names and tables are filled in afterwards. Each inherits the booking's
- * ticket price, which stays editable per attendee.
+ * The first guest takes the party name: whoever booked is normally attending,
+ * so making them type it again is busywork. The rest start unnamed.
+ *
+ * The whole party is seated together at one table when one can hold them,
+ * and each guest inherits the booking's ticket price. Both stay editable per
+ * guest afterwards.
  */
-export function createBooking(
+export async function createBooking(
   eventId: string,
   input: {
     partyName: string;
@@ -341,7 +377,7 @@ export function createBooking(
     guestCount: number;
     ticketPriceCents: number;
   },
-): Promise<Event> {
+): Promise<CreatedBooking> {
   const partyName = input.partyName.trim();
   const telephone = input.telephone.trim();
 
@@ -361,13 +397,19 @@ export function createBooking(
     throw new Error("Enter a ticket price of zero or more.");
   }
 
-  return mutateEvent(eventId, (event) => {
+  let bookingId = "";
+  let seatedAtTable: number | null = null;
+
+  const event = await mutateEvent(eventId, (current) => {
+    const table = pickTableForParty(current, input.guestCount);
+    seatedAtTable = table;
+
     const attendees: Attendee[] = Array.from(
       { length: input.guestCount },
-      () => ({
+      (_unused, index) => ({
         id: newId(),
-        name: "",
-        assignedTableNumber: null,
+        name: index === 0 ? partyName : "",
+        assignedTableNumber: table,
         status: "pay_at_venue" as AttendeeStatus,
         ticketPriceCents: input.ticketPriceCents,
       }),
@@ -381,9 +423,37 @@ export function createBooking(
       attendees,
       createdAt: Date.now(),
     };
+    bookingId = booking.id;
 
-    return { ...event, bookings: [...event.bookings, booking] };
+    return { ...current, bookings: [...current.bookings, booking] };
   });
+
+  return { event, bookingId, seatedAtTable };
+}
+
+/**
+ * Edit a party's own details. The guests are edited individually, so this
+ * covers only what belongs to the booking itself.
+ */
+export function updateBookingDetails(
+  eventId: string,
+  bookingId: string,
+  details: { partyName: string; telephone: string },
+): Promise<Event> {
+  const partyName = details.partyName.trim();
+  const telephone = details.telephone.trim();
+
+  if (partyName === "") throw new Error("Give the party a name.");
+  if (telephone === "") throw new Error("A booking needs a telephone number.");
+
+  return mutateEvent(eventId, (event) => ({
+    ...event,
+    bookings: event.bookings.map((booking) =>
+      booking.id === bookingId
+        ? { ...booking, partyName, telephone }
+        : booking,
+    ),
+  }));
 }
 
 /** Replace one attendee, leaving the rest of the party untouched. */

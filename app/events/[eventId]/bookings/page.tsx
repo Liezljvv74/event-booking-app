@@ -12,12 +12,25 @@ export default function BookingsScreen() {
   const {
     activeEvents,
     addBooking,
+    editBookingDetails,
     editAttendee,
     cancelOneAttendee,
     cancelWholeBooking,
   } = useEventContext();
   const params = useParams<{ eventId: string }>();
   const [creating, setCreating] = useState(false);
+  // Parties start collapsed so the screen is a readable list of party names.
+  // Several can be open at once, since comparing two parties is common.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [notice, setNotice] = useState("");
+
+  function toggle(bookingId: string) {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (!next.delete(bookingId)) next.add(bookingId);
+      return next;
+    });
+  }
 
   const event = activeEvents.find(
     (candidate) => candidate.id === params.eventId,
@@ -93,13 +106,26 @@ export default function BookingsScreen() {
         </p>
       )}
 
+      {notice !== "" && (
+        <p className="mt-3 max-w-prose text-sm text-amber-700 dark:text-amber-500">
+          {notice}
+        </p>
+      )}
+
       {creating && (
         <div className="mt-3">
           <NewBookingForm
             onCreate={async (input) => {
-              const updated = await addBooking(event.id, input);
+              const created = await addBooking(event.id, input);
               setCreating(false);
-              return updated;
+              // Open the party just captured: its guests still need names.
+              setExpanded((current) => new Set(current).add(created.bookingId));
+              setNotice(
+                created.seatedAtTable === null
+                  ? `No single table has ${input.guestCount} free seats, so this party is unseated. Add seats, or seat them individually.`
+                  : "",
+              );
+              return created;
             }}
             onCancel={() => setCreating(false)}
           />
@@ -118,6 +144,11 @@ export default function BookingsScreen() {
               key={booking.id}
               event={event}
               booking={booking}
+              expanded={expanded.has(booking.id)}
+              onToggle={() => toggle(booking.id)}
+              onSaveDetails={(details) =>
+                editBookingDetails(event.id, booking.id, details)
+              }
               onPatchAttendee={(attendeeId, patch) =>
                 editAttendee(event.id, booking.id, attendeeId, patch)
               }

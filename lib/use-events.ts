@@ -25,8 +25,10 @@ import {
   runRetentionSweep,
   setTableSeatCount,
   updateAttendee,
+  updateBookingDetails,
   updateEventSchedule,
   type AttendeePatch,
+  type CreatedBooking,
 } from "./repository";
 import { MAX_ACTIVE_EVENTS, type Event } from "./types";
 
@@ -67,7 +69,15 @@ export interface UseEventsResult {
     seatCount: number,
   ) => Promise<Event>;
   removeEventTable: (eventId: string, tableId: string) => Promise<Event>;
-  addBooking: (eventId: string, input: NewBookingInput) => Promise<Event>;
+  addBooking: (
+    eventId: string,
+    input: NewBookingInput,
+  ) => Promise<CreatedBooking>;
+  editBookingDetails: (
+    eventId: string,
+    bookingId: string,
+    details: { partyName: string; telephone: string },
+  ) => Promise<Event>;
   editAttendee: (
     eventId: string,
     bookingId: string,
@@ -178,9 +188,23 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  // Returns more than the event: the caller needs the new booking's id to
+  // open it, and which table the party landed at to say so.
   const addBooking = useCallback(
-    (eventId: string, input: NewBookingInput) =>
-      applyChange(() => createBooking(eventId, input)),
+    async (eventId: string, input: NewBookingInput) => {
+      const created = await createBooking(eventId, input);
+      setActiveEvents(await readActiveEvents());
+      return created;
+    },
+    [],
+  );
+
+  const editBookingDetails = useCallback(
+    (
+      eventId: string,
+      bookingId: string,
+      details: { partyName: string; telephone: string },
+    ) => applyChange(() => updateBookingDetails(eventId, bookingId, details)),
     [applyChange],
   );
 
@@ -217,6 +241,7 @@ export function useEvents(): UseEventsResult {
     setSeatCount,
     removeEventTable,
     addBooking,
+    editBookingDetails,
     editAttendee,
     cancelOneAttendee,
     cancelWholeBooking,
