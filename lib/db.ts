@@ -8,7 +8,7 @@
  */
 
 const DATABASE_NAME = "event-booking-manager";
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 export const STORE_EVENTS = "events";
 export const STORE_EXPENSE_TEMPLATES = "expenseTemplates";
@@ -29,6 +29,32 @@ function promisifyRequest<T>(request: IDBRequest<T>): Promise<T> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+/**
+ * Backfill startTime and endTime on events stored before version 2.
+ *
+ * Runs inside the versionchange transaction, so the fields exist before any
+ * application code reads a record. Without this, an older event would come
+ * back with undefined where the type promises string | null.
+ */
+function backfillEventTimes(transaction: IDBTransaction): void {
+  const request = transaction.objectStore(STORE_EVENTS).openCursor();
+
+  request.onsuccess = () => {
+    const cursor = request.result;
+    if (!cursor) return;
+
+    const record = cursor.value as Record<string, unknown>;
+    if (record.startTime === undefined || record.endTime === undefined) {
+      cursor.update({
+        ...record,
+        startTime: record.startTime ?? null,
+        endTime: record.endTime ?? null,
+      });
+    }
+    cursor.continue();
+  };
 }
 
 function createSchema(database: IDBDatabase): void {
@@ -65,7 +91,16 @@ export function openDatabase(): Promise<IDBDatabase> {
   connection = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
 
-    request.onupgradeneeded = () => createSchema(request.result);
+    request.onupgradeneeded = (upgrade) => {
+      createSchema(request.result);
+
+      // Stores are created above, so an existing database only needs its
+      // records brought forward.
+      const transaction = request.transaction;
+      if (upgrade.oldVersion >= 1 && upgrade.oldVersion < 2 && transaction) {
+        backfillEventTimes(transaction);
+      }
+    };
 
     request.onsuccess = () => {
       const database = request.result;

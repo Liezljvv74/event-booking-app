@@ -67,6 +67,13 @@ export interface Event {
   name: string;
   /** Calendar date as "YYYY-MM-DD", interpreted in the viewer's timezone. */
   eventDate: string;
+  /**
+   * Start and end clock times as "HH:MM" in 24-hour local time, or null when
+   * not set. An end at or before the start means the event runs past
+   * midnight, which a late function legitimately does; it is not an error.
+   */
+  startTime: string | null;
+  endTime: string | null;
   status: EventStatus;
   tables: Table[];
   bookings: Booking[];

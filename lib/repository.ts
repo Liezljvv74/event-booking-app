@@ -90,6 +90,8 @@ export class TooManyActiveEventsError extends Error {
 export function createEvent(input: {
   name: string;
   eventDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
   seedExpensesFromEventId?: string;
 }): Promise<Event> {
   return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
@@ -113,6 +115,8 @@ export function createEvent(input: {
       id: newId(),
       name: input.name,
       eventDate: input.eventDate,
+      startTime: input.startTime ?? null,
+      endTime: input.endTime ?? null,
       status: "active",
       tables: [],
       bookings: [],
@@ -140,6 +144,26 @@ function copyExpenses(expenses: readonly Expense[]): Expense[] {
     description: expense.description,
     amountCents: expense.amountCents,
   }));
+}
+
+/**
+ * Update an event's date and clock times.
+ *
+ * Needed for more than fixing typos: events created before times existed
+ * hold null for both, and there would otherwise be no way to fill them in.
+ */
+export async function updateEventSchedule(
+  id: string,
+  schedule: { eventDate: string; startTime: string | null; endTime: string | null },
+): Promise<Event> {
+  return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
+    const existing = await getOne<Event>(transaction, STORE_EVENTS, id);
+    if (existing === null) throw new Error("That event no longer exists.");
+
+    const updated: Event = { ...existing, ...schedule };
+    await put(transaction, STORE_EVENTS, updated);
+    return updated;
+  });
 }
 
 /** A table with the spec's default seat count. */
