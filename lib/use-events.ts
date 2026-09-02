@@ -15,9 +15,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isBrowser } from "./db";
 import {
   TooManyActiveEventsError,
+  addTable,
   createEvent,
   listEvents,
+  removeTable,
   runRetentionSweep,
+  setTableSeatCount,
   updateEventSchedule,
 } from "./repository";
 import { MAX_ACTIVE_EVENTS, type Event } from "./types";
@@ -45,6 +48,13 @@ export interface UseEventsResult {
   atEventLimit: boolean;
   addEvent: (input: NewEventInput) => Promise<Event>;
   updateSchedule: (id: string, schedule: ScheduleInput) => Promise<Event>;
+  addEventTable: (eventId: string) => Promise<Event>;
+  setSeatCount: (
+    eventId: string,
+    tableId: string,
+    seatCount: number,
+  ) => Promise<Event>;
+  removeEventTable: (eventId: string, tableId: string) => Promise<Event>;
   reload: () => Promise<void>;
 }
 
@@ -114,6 +124,35 @@ export function useEvents(): UseEventsResult {
     [],
   );
 
+  // Every mutation returns the saved event and refreshes the list from the
+  // store, so the screens render what was actually written rather than an
+  // optimistic guess that could drift from it.
+  const applyChange = useCallback(
+    async (change: () => Promise<Event>): Promise<Event> => {
+      const updated = await change();
+      setActiveEvents(await readActiveEvents());
+      return updated;
+    },
+    [],
+  );
+
+  const addEventTable = useCallback(
+    (eventId: string) => applyChange(() => addTable(eventId)),
+    [applyChange],
+  );
+
+  const setSeatCount = useCallback(
+    (eventId: string, tableId: string, seatCount: number) =>
+      applyChange(() => setTableSeatCount(eventId, tableId, seatCount)),
+    [applyChange],
+  );
+
+  const removeEventTable = useCallback(
+    (eventId: string, tableId: string) =>
+      applyChange(() => removeTable(eventId, tableId)),
+    [applyChange],
+  );
+
   return {
     state,
     error,
@@ -121,6 +160,9 @@ export function useEvents(): UseEventsResult {
     atEventLimit: activeEvents.length >= MAX_ACTIVE_EVENTS,
     addEvent,
     updateSchedule,
+    addEventTable,
+    setSeatCount,
+    removeEventTable,
     reload: load,
   };
 }

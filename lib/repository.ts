@@ -12,6 +12,7 @@ import {
   DEFAULT_SEAT_COUNT,
   DEFAULT_SETTINGS,
   MAX_ACTIVE_EVENTS,
+  SEAT_OCCUPYING_STATUSES,
   type Event,
   type Expense,
   type ExpenseTemplate,
@@ -166,9 +167,125 @@ export async function updateEventSchedule(
   });
 }
 
-/** A table with the spec's default seat count. */
-export function makeTable(tableNumber: number): Table {
-  return { id: newId(), tableNumber, seatCount: DEFAULT_SEAT_COUNT };
+/* ------------------------------------------------------------------ tables */
+
+/** Read, change and write one event inside a single transaction. */
+async function mutateEvent(
+  id: string,
+  change: (event: Event) => Event,
+): Promise<Event> {
+  return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
+    const existing = await getOne<Event>(transaction, STORE_EVENTS, id);
+    if (existing === null) throw new Error("That event no longer exists.");
+
+    const updated = change(existing);
+    await put(transaction, STORE_EVENTS, updated);
+    return updated;
+  });
+}
+
+/** How many seats at this table are held by attendees who have not cancelled. */
+export function occupiedSeats(event: Event, tableNumber: number): number {
+  return event.bookings
+    .flatMap((booking) => booking.attendees)
+    .filter(
+      (attendee) =>
+        attendee.assignedTableNumber === tableNumber &&
+        SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+    ).length;
+}
+
+/**
+ * Add a table numbered one past the highest in use.
+ *
+ * Numbering from the maximum rather than the count means removing table 2 of
+ * three leaves 1 and 3, and the next table is 4. A gap is better than reusing
+ * number 2 while attendees are still recorded as sitting at it.
+ */
+export function addTable(eventId: string): Promise<Event> {
+  return mutateEvent(eventId, (event) => {
+    const highest = event.tables.reduce(
+      (max, table) => Math.max(max, table.tableNumber),
+      0,
+    );
+    const table: Table = {
+      id: newId(),
+      tableNumber: highest + 1,
+      seatCount: DEFAULT_SEAT_COUNT,
+    };
+    return { ...event, tables: [...event.tables, table] };
+  });
+}
+
+export class SeatsBelowOccupancyError extends Error {
+  constructor(occupied: number) {
+    super(
+      `That table already seats ${occupied} guest${occupied === 1 ? "" : "s"}. ` +
+        `Move them before reducing the seat count.`,
+    );
+    this.name = "SeatsBelowOccupancyError";
+  }
+}
+
+/**
+ * Change one table's seat count.
+ *
+ * Refuses to drop below the guests already seated there, which would leave
+ * the event over-seated and the dashboard's available-seat count negative.
+ */
+export function setTableSeatCount(
+  eventId: string,
+  tableId: string,
+  seatCount: number,
+): Promise<Event> {
+  if (!Number.isInteger(seatCount) || seatCount < 1) {
+    throw new Error("A table needs at least one seat.");
+  }
+
+  return mutateEvent(eventId, (event) => {
+    const table = event.tables.find((candidate) => candidate.id === tableId);
+    if (!table) throw new Error("That table no longer exists.");
+
+    const occupied = occupiedSeats(event, table.tableNumber);
+    if (seatCount < occupied) throw new SeatsBelowOccupancyError(occupied);
+
+    return {
+      ...event,
+      tables: event.tables.map((candidate) =>
+        candidate.id === tableId ? { ...candidate, seatCount } : candidate,
+      ),
+    };
+  });
+}
+
+/**
+ * Remove a table and unassign anyone seated at it.
+ *
+ * Leaving attendees pointing at a table that no longer exists would strand
+ * them: they would count against no table and never appear in the dashboard's
+ * per-table list. Unassigning puts them back in the pool to be re-seated.
+ */
+export function removeTable(
+  eventId: string,
+  tableId: string,
+): Promise<Event> {
+  return mutateEvent(eventId, (event) => {
+    const table = event.tables.find((candidate) => candidate.id === tableId);
+    if (!table) return event;
+
+    return {
+      ...event,
+      tables: event.tables.filter((candidate) => candidate.id !== tableId),
+      bookings: event.bookings.map((booking) => ({
+        ...booking,
+        attendees: booking.attendees.map((attendee) =>
+          attendee.assignedTableNumber === table.tableNumber
+            ? { ...attendee, assignedTableNumber: null }
+            : attendee,
+        ),
+      })),
+    };
+  });
 }
 
 /* -------------------------------------------------------- expense library */
