@@ -13,6 +13,9 @@ import {
   DEFAULT_SETTINGS,
   MAX_ACTIVE_EVENTS,
   SEAT_OCCUPYING_STATUSES,
+  type Attendee,
+  type AttendeeStatus,
+  type Booking,
   type Event,
   type Expense,
   type ExpenseTemplate,
@@ -286,6 +289,229 @@ export function removeTable(
       })),
     };
   });
+}
+
+
+/* ---------------------------------------------------------------- bookings */
+
+export const MAX_GUESTS_PER_BOOKING = 500;
+
+/** Seats at a table not held by an attendee, ignoring one attendee if given. */
+export function freeSeatsAtTable(
+  event: Event,
+  tableNumber: number,
+  ignoreAttendeeId?: string,
+): number {
+  const table = event.tables.find(
+    (candidate) => candidate.tableNumber === tableNumber,
+  );
+  if (!table) return 0;
+
+  const taken = event.bookings
+    .flatMap((booking) => booking.attendees)
+    .filter(
+      (attendee) =>
+        attendee.id !== ignoreAttendeeId &&
+        attendee.assignedTableNumber === tableNumber &&
+        SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+    ).length;
+
+  return table.seatCount - taken;
+}
+
+export class TableFullError extends Error {
+  constructor(tableNumber: number) {
+    super(`Table ${tableNumber} has no free seats.`);
+    this.name = "TableFullError";
+  }
+}
+
+/**
+ * Create a booking and the attendee records its guest count implies.
+ *
+ * Attendees start unnamed and unseated: the spec generates them from a count,
+ * so names and tables are filled in afterwards. Each inherits the booking's
+ * ticket price, which stays editable per attendee.
+ */
+export function createBooking(
+  eventId: string,
+  input: {
+    partyName: string;
+    telephone: string;
+    guestCount: number;
+    ticketPriceCents: number;
+  },
+): Promise<Event> {
+  const partyName = input.partyName.trim();
+  const telephone = input.telephone.trim();
+
+  if (partyName === "") throw new Error("Give the party a name.");
+  // Mandatory per the spec's data model, unlike the per-attendee number.
+  if (telephone === "") throw new Error("A booking needs a telephone number.");
+  if (!Number.isInteger(input.guestCount) || input.guestCount < 1) {
+    throw new Error("Enter a whole number of guests, at least 1.");
+  }
+  if (input.guestCount > MAX_GUESTS_PER_BOOKING) {
+    // Guards against a mistyped count generating an unusable number of rows.
+    throw new Error(
+      `That is more than ${MAX_GUESTS_PER_BOOKING} guests. Split it across bookings.`,
+    );
+  }
+  if (!Number.isInteger(input.ticketPriceCents) || input.ticketPriceCents < 0) {
+    throw new Error("Enter a ticket price of zero or more.");
+  }
+
+  return mutateEvent(eventId, (event) => {
+    const attendees: Attendee[] = Array.from(
+      { length: input.guestCount },
+      () => ({
+        id: newId(),
+        name: "",
+        assignedTableNumber: null,
+        status: "pay_at_venue" as AttendeeStatus,
+        ticketPriceCents: input.ticketPriceCents,
+      }),
+    );
+
+    const booking: Booking = {
+      id: newId(),
+      partyName,
+      telephone,
+      ticketPriceCents: input.ticketPriceCents,
+      attendees,
+      createdAt: Date.now(),
+    };
+
+    return { ...event, bookings: [...event.bookings, booking] };
+  });
+}
+
+/** Replace one attendee, leaving the rest of the party untouched. */
+function withAttendee(
+  event: Event,
+  bookingId: string,
+  attendeeId: string,
+  change: (attendee: Attendee) => Attendee,
+): Event {
+  return {
+    ...event,
+    bookings: event.bookings.map((booking) =>
+      booking.id === bookingId
+        ? {
+            ...booking,
+            attendees: booking.attendees.map((attendee) =>
+              attendee.id === attendeeId ? change(attendee) : attendee,
+            ),
+          }
+        : booking,
+    ),
+  };
+}
+
+function findAttendee(
+  event: Event,
+  bookingId: string,
+  attendeeId: string,
+): Attendee {
+  const attendee = event.bookings
+    .find((booking) => booking.id === bookingId)
+    ?.attendees.find((candidate) => candidate.id === attendeeId);
+  if (!attendee) throw new Error("That guest no longer exists.");
+  return attendee;
+}
+
+export interface AttendeePatch {
+  name?: string;
+  assignedTableNumber?: number | null;
+  status?: AttendeeStatus;
+  ticketPriceCents?: number;
+}
+
+/**
+ * Update one attendee.
+ *
+ * Seating is checked against the table's free seats, counting only guests who
+ * have not cancelled, and ignoring this attendee so re-saving an unchanged
+ * row cannot fail against itself.
+ */
+export function updateAttendee(
+  eventId: string,
+  bookingId: string,
+  attendeeId: string,
+  patch: AttendeePatch,
+): Promise<Event> {
+  if (
+    patch.ticketPriceCents !== undefined &&
+    (!Number.isInteger(patch.ticketPriceCents) || patch.ticketPriceCents < 0)
+  ) {
+    throw new Error("Enter a ticket price of zero or more.");
+  }
+
+  return mutateEvent(eventId, (event) => {
+    const current = findAttendee(event, bookingId, attendeeId);
+    const next: Attendee = { ...current, ...patch };
+
+    const takesSeat = SEAT_OCCUPYING_STATUSES.includes(next.status);
+    const table = next.assignedTableNumber;
+
+    if (table !== null && takesSeat) {
+      const exists = event.tables.some(
+        (candidate) => candidate.tableNumber === table,
+      );
+      if (!exists) throw new Error(`There is no table ${table}.`);
+
+      // Only re-check when the seat claim actually changes, so editing a name
+      // never fails because the table filled up in the meantime.
+      const claimsNewSeat =
+        current.assignedTableNumber !== table ||
+        !SEAT_OCCUPYING_STATUSES.includes(current.status);
+
+      if (claimsNewSeat && freeSeatsAtTable(event, table, attendeeId) < 1) {
+        throw new TableFullError(table);
+      }
+    }
+
+    return withAttendee(event, bookingId, attendeeId, () => next);
+  });
+}
+
+/**
+ * Cancel one attendee, freeing their seat but leaving their table assignment
+ * recorded. Their seat is free because cancelled guests do not occupy one, so
+ * restoring the booking puts them back where they were.
+ */
+export function cancelAttendee(
+  eventId: string,
+  bookingId: string,
+  attendeeId: string,
+): Promise<Event> {
+  return mutateEvent(eventId, (event) =>
+    withAttendee(event, bookingId, attendeeId, (attendee) => ({
+      ...attendee,
+      status: "cancelled",
+    })),
+  );
+}
+
+/** Cancel every guest in a party, freeing all of their seats at once. */
+export function cancelBooking(
+  eventId: string,
+  bookingId: string,
+): Promise<Event> {
+  return mutateEvent(eventId, (event) => ({
+    ...event,
+    bookings: event.bookings.map((booking) =>
+      booking.id === bookingId
+        ? {
+            ...booking,
+            attendees: booking.attendees.map((attendee) => ({
+              ...attendee,
+              status: "cancelled" as AttendeeStatus,
+            })),
+          }
+        : booking,
+    ),
+  }));
 }
 
 /* -------------------------------------------------------- expense library */

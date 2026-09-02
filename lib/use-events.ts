@@ -16,14 +16,26 @@ import { isBrowser } from "./db";
 import {
   TooManyActiveEventsError,
   addTable,
+  cancelAttendee,
+  cancelBooking,
+  createBooking,
   createEvent,
   listEvents,
   removeTable,
   runRetentionSweep,
   setTableSeatCount,
+  updateAttendee,
   updateEventSchedule,
+  type AttendeePatch,
 } from "./repository";
 import { MAX_ACTIVE_EVENTS, type Event } from "./types";
+
+export interface NewBookingInput {
+  partyName: string;
+  telephone: string;
+  guestCount: number;
+  ticketPriceCents: number;
+}
 
 export type LoadState = "loading" | "ready" | "error";
 
@@ -55,6 +67,19 @@ export interface UseEventsResult {
     seatCount: number,
   ) => Promise<Event>;
   removeEventTable: (eventId: string, tableId: string) => Promise<Event>;
+  addBooking: (eventId: string, input: NewBookingInput) => Promise<Event>;
+  editAttendee: (
+    eventId: string,
+    bookingId: string,
+    attendeeId: string,
+    patch: AttendeePatch,
+  ) => Promise<Event>;
+  cancelOneAttendee: (
+    eventId: string,
+    bookingId: string,
+    attendeeId: string,
+  ) => Promise<Event>;
+  cancelWholeBooking: (eventId: string, bookingId: string) => Promise<Event>;
   reload: () => Promise<void>;
 }
 
@@ -153,6 +178,34 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  const addBooking = useCallback(
+    (eventId: string, input: NewBookingInput) =>
+      applyChange(() => createBooking(eventId, input)),
+    [applyChange],
+  );
+
+  const editAttendee = useCallback(
+    (
+      eventId: string,
+      bookingId: string,
+      attendeeId: string,
+      patch: AttendeePatch,
+    ) => applyChange(() => updateAttendee(eventId, bookingId, attendeeId, patch)),
+    [applyChange],
+  );
+
+  const cancelOneAttendee = useCallback(
+    (eventId: string, bookingId: string, attendeeId: string) =>
+      applyChange(() => cancelAttendee(eventId, bookingId, attendeeId)),
+    [applyChange],
+  );
+
+  const cancelWholeBooking = useCallback(
+    (eventId: string, bookingId: string) =>
+      applyChange(() => cancelBooking(eventId, bookingId)),
+    [applyChange],
+  );
+
   return {
     state,
     error,
@@ -163,6 +216,10 @@ export function useEvents(): UseEventsResult {
     addEventTable,
     setSeatCount,
     removeEventTable,
+    addBooking,
+    editAttendee,
+    cancelOneAttendee,
+    cancelWholeBooking,
     reload: load,
   };
 }
