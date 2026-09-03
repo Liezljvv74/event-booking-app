@@ -64,8 +64,11 @@ export function ScheduleEditor({ event, onSave }: Props) {
 
   if (!editing) {
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p data-schedule className="text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <p
+          data-schedule
+          className="text-xl font-semibold text-zinc-600 dark:text-zinc-400"
+        >
           {formatEventDate(event.eventDate)}
           {times === "" ? " · no times set" : ` · ${times}`}
         </p>
@@ -88,7 +91,7 @@ export function ScheduleEditor({ event, onSave }: Props) {
   return (
     <form
       onSubmit={submit}
-      className="mt-2 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
+      className="mt-2 w-full rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
     >
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1">

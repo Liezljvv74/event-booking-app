@@ -1,6 +1,5 @@
 "use client";
 
-import { Fragment } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
@@ -76,7 +75,7 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${
+      className={`rounded-lg border p-2.5 ${
         lead
           ? "border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900"
           : "border-zinc-200 dark:border-zinc-800"
@@ -85,44 +84,36 @@ function Stat({
       {/* Two lines' worth of room whether or not the label needs it, so the
           figures line up across the row instead of stepping down wherever a
           longer label wraps. */}
-      <div className="min-h-[2.5rem] text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="min-h-[2rem] text-xs leading-4 text-zinc-600 dark:text-zinc-400">
         {label}
       </div>
 
-      {/* From small screens up the figures share one line, so a card
-          carrying two of them is exactly as tall as a card carrying one. A
-          half-width card on a phone cannot fit two, so there they stack one
-          per line rather than breaking a number away from its unit. */}
-      <div className="flex flex-col items-start gap-y-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-1.5 sm:gap-y-0">
+      {/* Now that the cards are a sixth of the row wide, two figures never
+          fit on one line, so a card carrying a pair stacks them and the row
+          stretches to suit. Each number keeps its unit beside it either way. */}
+      <div className="flex flex-col items-start gap-y-0.5">
         {figures.map((figure, index) => (
-          <Fragment key={figure.unit ?? index}>
-            {index > 0 && (
-              <span
-                aria-hidden="true"
-                className="hidden text-sm text-zinc-400 sm:inline dark:text-zinc-600"
-              >
-                ·
+          /* The number and its unit travel together, so neither wraps away
+             from the other. */
+          <span
+            key={figure.unit ?? index}
+            className="flex items-baseline gap-x-1.5"
+          >
+            <span
+              className={`text-xl font-semibold ${
+                negative
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-black dark:text-zinc-50"
+              }`}
+            >
+              {figure.value}
+            </span>
+            {figure.unit !== undefined && (
+              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                {figure.unit}
               </span>
             )}
-            {/* The number and its unit travel together, so neither wraps
-                away from the other. */}
-            <span className="flex items-baseline gap-x-1.5">
-              <span
-                className={`text-2xl font-semibold ${
-                  negative
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-black dark:text-zinc-50"
-                }`}
-              >
-                {figure.value}
-              </span>
-              {figure.unit !== undefined && (
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {figure.unit}
-                </span>
-              )}
-            </span>
-          </Fragment>
+          </span>
         ))}
       </div>
     </div>
@@ -167,21 +158,25 @@ export default function EventDashboard() {
 
   return (
     <section>
-      <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
-        {event.name}
-      </h1>
-
-      <div className="mt-2">
+      {/* Name, date, times and the Edit button on one line, the schedule set
+          in the heading's own size and weight. Wraps rather than shrinking,
+          and the edit form takes the full width when it opens. */}
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+          {event.name}
+        </h1>
         <ScheduleEditor
           event={event}
           onSave={(schedule) => updateSchedule(event.id, schedule)}
         />
       </div>
 
-      {/* Six figures across two rows of three, which fills both rows at every
-          width the grid uses. Expected profit closes the set: it is what the
-          five before it add up to. */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {/* All six on one line from the large breakpoint up, which is what
+          makes them this narrow: labels get two lines' worth of room and
+          wrap into it, and the figures drop a size to match. Below that they
+          fall back to three across, then two. Expected profit closes the
+          set: it is what the five before it add up to. */}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat
           label="Guests"
           figures={[
@@ -215,7 +210,7 @@ export default function EventDashboard() {
         />
       </div>
 
-      <section className="mt-8">
+      <section className="mt-4">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="text-base font-semibold text-black dark:text-zinc-50">
             Seating
@@ -242,7 +237,7 @@ export default function EventDashboard() {
             when you are ready.
           </p>
         ) : (
-          <ul className="mt-2 flex flex-col gap-1.5">
+          <ul className="mt-2 grid grid-cols-1 gap-1.5 lg:grid-cols-2">
             {seating.map((table) => (
               <li
                 key={table.tableNumber}
