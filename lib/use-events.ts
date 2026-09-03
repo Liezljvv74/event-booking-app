@@ -15,21 +15,27 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isBrowser } from "./db";
 import {
   TooManyActiveEventsError,
+  addExpense,
   addTable,
   cancelAttendee,
   cancelBooking,
+  clearExpenses,
   createBooking,
   createEvent,
   listEvents,
   moveAttendees,
+  removeExpense,
   removeTable,
   runRetentionSweep,
   setTableSeatCount,
   updateAttendee,
   updateBookingDetails,
+  updateExpense,
   updateEventSchedule,
   type AttendeePatch,
   type CreatedBooking,
+  type ExpenseInput,
+  type ExpensePatch,
   type MoveTarget,
 } from "./repository";
 import { MAX_ACTIVE_EVENTS, type Event } from "./types";
@@ -97,6 +103,16 @@ export interface UseEventsResult {
     bookingId: string,
     attendeeId: string,
   ) => Promise<Event>;
+  addExpenseLine: (eventId: string, input: ExpenseInput) => Promise<Event>;
+  editExpense: (
+    eventId: string,
+    expenseId: string,
+    patch: ExpensePatch,
+  ) => Promise<Event>;
+  /** Clear one line. It stays in the reusable library for a later event. */
+  clearExpenseLine: (eventId: string, expenseId: string) => Promise<Event>;
+  /** Clear every line at once, each one remembered the same way. */
+  clearAllExpenses: (eventId: string) => Promise<Event>;
   cancelWholeBooking: (eventId: string, bookingId: string) => Promise<Event>;
   reload: () => Promise<void>;
 }
@@ -241,6 +257,29 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  const addExpenseLine = useCallback(
+    (eventId: string, input: ExpenseInput) =>
+      applyChange(() => addExpense(eventId, input)),
+    [applyChange],
+  );
+
+  const editExpense = useCallback(
+    (eventId: string, expenseId: string, patch: ExpensePatch) =>
+      applyChange(() => updateExpense(eventId, expenseId, patch)),
+    [applyChange],
+  );
+
+  const clearExpenseLine = useCallback(
+    (eventId: string, expenseId: string) =>
+      applyChange(() => removeExpense(eventId, expenseId)),
+    [applyChange],
+  );
+
+  const clearAllExpenses = useCallback(
+    (eventId: string) => applyChange(() => clearExpenses(eventId)),
+    [applyChange],
+  );
+
   const cancelWholeBooking = useCallback(
     (eventId: string, bookingId: string) =>
       applyChange(() => cancelBooking(eventId, bookingId)),
@@ -263,6 +302,10 @@ export function useEvents(): UseEventsResult {
     moveGuests,
     cancelOneAttendee,
     cancelWholeBooking,
+    addExpenseLine,
+    editExpense,
+    clearExpenseLine,
+    clearAllExpenses,
     reload: load,
   };
 }

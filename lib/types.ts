@@ -60,6 +60,16 @@ export interface Expense {
   id: string;
   description: string;
   amountCents: number;
+  /**
+   * Who the money goes to, the note against the line, and whether it has
+   * been settled. Only the description and the amount are required to save a
+   * line, so these three are blank or false on a line jotted down in a hurry
+   * — empty strings rather than optional keys, so no screen has to decide
+   * what a missing provider looks like.
+   */
+  provider: string;
+  paid: boolean;
+  notes: string;
 }
 
 export interface Event {

@@ -143,6 +143,13 @@ export async function runTransaction<T>(
       reject(transaction.error ?? new Error("Transaction aborted."));
   });
 
+  // When the callback below throws, the transaction is aborted deliberately
+  // and this promise rejects with it — but that path throws the callback's
+  // own error and never awaits this one, so the rejection would be reported
+  // as unhandled and drown the real message. Marking it handled here costs
+  // nothing: `await committed` still rejects for callers that reach it.
+  committed.catch(() => {});
+
   let result: T;
   try {
     result = await work(transaction);

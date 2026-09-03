@@ -45,11 +45,43 @@ interface SettingsRow {
 
 /* ------------------------------------------------------------------ events */
 
+/**
+ * What is actually on disk, which need not match the current Event.
+ *
+ * Expense lines gained a provider, a paid flag and notes after the store was
+ * first written, so a record saved before that has none of those keys. Typing
+ * the read as Event would be a lie the compiler then helps enforce.
+ */
+type StoredExpense = Omit<Expense, "provider" | "paid" | "notes"> &
+  Partial<Pick<Expense, "provider" | "paid" | "notes">>;
+
+type StoredEvent = Omit<Event, "expenses"> & { expenses: StoredExpense[] };
+
+/**
+ * Fill in the fields a stored record may predate.
+ *
+ * An undefined `paid` would render as an indeterminate checkbox rather than
+ * an unticked one, so every line leaves here fully populated.
+ */
+function withStoredDefaults(event: StoredEvent): Event {
+  return {
+    ...event,
+    expenses: event.expenses.map((expense) => ({
+      ...expense,
+      provider: expense.provider ?? "",
+      paid: expense.paid ?? false,
+      notes: expense.notes ?? "",
+    })),
+  };
+}
+
 export async function listEvents(): Promise<Event[]> {
   const events = await runTransaction(STORE_EVENTS, "readonly", (transaction) =>
-    getAll<Event>(transaction, STORE_EVENTS),
+    getAll<StoredEvent>(transaction, STORE_EVENTS),
   );
-  return events.sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+  return events
+    .map(withStoredDefaults)
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate));
 }
 
 export async function listActiveEvents(): Promise<Event[]> {
@@ -57,10 +89,11 @@ export async function listActiveEvents(): Promise<Event[]> {
   return events.filter((event) => event.status === "active");
 }
 
-export function getEvent(id: string): Promise<Event | null> {
-  return runTransaction(STORE_EVENTS, "readonly", (transaction) =>
-    getOne<Event>(transaction, STORE_EVENTS, id),
+export async function getEvent(id: string): Promise<Event | null> {
+  const event = await runTransaction(STORE_EVENTS, "readonly", (transaction) =>
+    getOne<StoredEvent>(transaction, STORE_EVENTS, id),
   );
+  return event === null ? null : withStoredDefaults(event);
 }
 
 /** Persist an event wholesale. Callers mutate a copy, then save it. */
@@ -147,6 +180,11 @@ function copyExpenses(expenses: readonly Expense[]): Expense[] {
     id: newId(),
     description: expense.description,
     amountCents: expense.amountCents,
+    provider: expense.provider,
+    // Notes and the paid flag belong to the event that was settled, not to
+    // the next one: a copied line starts unpaid, with last time's note gone.
+    paid: false,
+    notes: "",
   }));
 }
 
@@ -765,6 +803,127 @@ export function cancelBooking(
         : booking,
     ),
   }));
+}
+
+/* ---------------------------------------------------------------- expenses */
+
+/** A new expense line. Only the description and the amount are required. */
+export interface ExpenseInput {
+  description: string;
+  amountCents: number;
+  provider?: string;
+  paid?: boolean;
+  notes?: string;
+}
+
+export interface ExpensePatch {
+  description?: string;
+  amountCents?: number;
+  provider?: string;
+  paid?: boolean;
+  notes?: string;
+}
+
+/**
+ * Check the two fields a line cannot be saved without.
+ *
+ * Provider, notes and the paid flag are all optional, so a line can be taken
+ * down mid-phone-call with nothing but a name and a figure, and filled in
+ * afterwards.
+ */
+function checkRequired(description: string, amountCents: number): void {
+  if (description === "") throw new Error("Give the expense a description.");
+  if (!Number.isInteger(amountCents)) {
+    throw new Error("Enter an amount, for example 250.00.");
+  }
+  if (amountCents < 0) throw new Error("Enter an amount of zero or more.");
+}
+
+export function addExpense(
+  eventId: string,
+  input: ExpenseInput,
+): Promise<Event> {
+  const description = input.description.trim();
+  checkRequired(description, input.amountCents);
+
+  return mutateEvent(eventId, (event) => {
+    const expense: Expense = {
+      id: newId(),
+      description,
+      amountCents: input.amountCents,
+      provider: input.provider?.trim() ?? "",
+      paid: input.paid ?? false,
+      notes: input.notes?.trim() ?? "",
+    };
+    return { ...event, expenses: [...event.expenses, expense] };
+  });
+}
+
+export function updateExpense(
+  eventId: string,
+  expenseId: string,
+  patch: ExpensePatch,
+): Promise<Event> {
+  return mutateEvent(eventId, (event) => {
+    const current = event.expenses.find(
+      (candidate) => candidate.id === expenseId,
+    );
+    if (!current) throw new Error("That expense line no longer exists.");
+
+    const next: Expense = {
+      ...current,
+      ...patch,
+      description: (patch.description ?? current.description).trim(),
+      provider: (patch.provider ?? current.provider).trim(),
+      notes: (patch.notes ?? current.notes).trim(),
+    };
+    // Still required once the line exists: an emptied description would
+    // leave a row that nothing identifies.
+    checkRequired(next.description, next.amountCents);
+
+    return {
+      ...event,
+      expenses: event.expenses.map((candidate) =>
+        candidate.id === expenseId ? next : candidate,
+      ),
+    };
+  });
+}
+
+/**
+ * Clear one line, keeping it in the reusable library first.
+ *
+ * The spec asks that a removed line item stay available to pick for a later
+ * event, so its description and amount are remembered before it goes. The
+ * provider and the notes are not: those belong to this event's dealings,
+ * while the library is a list of costs that recur.
+ */
+export async function removeExpense(
+  eventId: string,
+  expenseId: string,
+): Promise<Event> {
+  const event = await getEvent(eventId);
+  const expense = event?.expenses.find(
+    (candidate) => candidate.id === expenseId,
+  );
+  if (expense) await rememberExpenseTemplate(expense);
+
+  return mutateEvent(eventId, (current) => ({
+    ...current,
+    expenses: current.expenses.filter(
+      (candidate) => candidate.id !== expenseId,
+    ),
+  }));
+}
+
+/** Clear every line at once, each one remembered the same way. */
+export async function clearExpenses(eventId: string): Promise<Event> {
+  const event = await getEvent(eventId);
+  for (const expense of event?.expenses ?? []) {
+    await rememberExpenseTemplate(expense);
+  }
+
+  return mutateEvent(eventId, (current) => ({ ...current, expenses: [] }));
 }
 
 /* -------------------------------------------------------- expense library */
