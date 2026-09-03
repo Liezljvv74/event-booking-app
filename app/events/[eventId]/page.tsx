@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
 import { ScheduleEditor } from "@/components/schedule-editor";
@@ -40,15 +41,31 @@ function summarise(event: Event) {
   };
 }
 
+/** One number in a stat card, with the unit it counts. */
+interface Figure {
+  value: string;
+  /** Named when a card carries two numbers, so neither can be misread. */
+  unit?: string;
+}
+
+/**
+ * Every guest, and how many of them are still coming when those differ.
+ *
+ * Written as "16/18" the way a party card writes "5/6 guests", so the total
+ * stays visible without a second line that would make this card taller than
+ * the others beside it.
+ */
+function guestCount(summary: { guestsTotal: number; guestsCancelled: number }) {
+  if (summary.guestsCancelled === 0) return String(summary.guestsTotal);
+  return `${summary.guestsTotal - summary.guestsCancelled}/${summary.guestsTotal}`;
+}
+
 function Stat({
   label,
-  value,
-  note,
+  figures,
 }: {
   label: string;
-  value: string;
-  /** Qualifies the figure when the headline number alone would mislead. */
-  note?: string;
+  figures: readonly Figure[];
 }) {
   return (
     <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
@@ -58,14 +75,37 @@ function Stat({
       <div className="min-h-[2.5rem] text-sm text-zinc-600 dark:text-zinc-400">
         {label}
       </div>
-      <div className="text-2xl font-semibold text-black dark:text-zinc-50">
-        {value}
+
+      {/* From small screens up the figures share one line, so a card
+          carrying two of them is exactly as tall as a card carrying one. A
+          half-width card on a phone cannot fit two, so there they stack one
+          per line rather than breaking a number away from its unit. */}
+      <div className="flex flex-col items-start gap-y-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-1.5 sm:gap-y-0">
+        {figures.map((figure, index) => (
+          <Fragment key={figure.unit ?? index}>
+            {index > 0 && (
+              <span
+                aria-hidden="true"
+                className="hidden text-sm text-zinc-400 sm:inline dark:text-zinc-600"
+              >
+                ·
+              </span>
+            )}
+            {/* The number and its unit travel together, so neither wraps
+                away from the other. */}
+            <span className="flex items-baseline gap-x-1.5">
+              <span className="text-2xl font-semibold text-black dark:text-zinc-50">
+                {figure.value}
+              </span>
+              {figure.unit !== undefined && (
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {figure.unit}
+                </span>
+              )}
+            </span>
+          </Fragment>
+        ))}
       </div>
-      {note !== undefined && (
-        <div className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">
-          {note}
-        </div>
-      )}
     </div>
   );
 }
@@ -92,24 +132,25 @@ export default function EventDashboard() {
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <Stat label="Tables" value={String(summary.tables)} />
-        <Stat label="Bookings" value={String(summary.bookings)} />
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label="Tables" figures={[{ value: String(summary.tables) }]} />
         <Stat
-          label="Total number of guests"
-          value={String(summary.guestsTotal)}
-          // Every guest is counted, so say when some of them are not coming.
-          note={
-            summary.guestsCancelled > 0
-              ? `${summary.guestsTotal - summary.guestsCancelled} attending · ${summary.guestsCancelled} cancelled`
-              : undefined
-          }
+          label="Bookings"
+          figures={[
+            { value: String(summary.bookings), unit: "parties" },
+            { value: guestCount(summary), unit: "guests" },
+          ]}
         />
         <Stat
           label="Seats available"
-          value={`${summary.seatsAvailable} of ${summary.seatsTotal}`}
+          figures={[
+            { value: `${summary.seatsAvailable} of ${summary.seatsTotal}` },
+          ]}
         />
-        <Stat label="Expenses" value={formatAmount(summary.expensesCents)} />
+        <Stat
+          label="Expenses"
+          figures={[{ value: formatAmount(summary.expensesCents) }]}
+        />
       </div>
 
       <p className="mt-6 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
