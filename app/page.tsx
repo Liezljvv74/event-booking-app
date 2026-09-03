@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { NewEventForm } from "@/components/new-event-form";
 import { useEvents } from "@/lib/use-events";
 import { MAX_ACTIVE_EVENTS } from "@/lib/types";
@@ -82,13 +83,24 @@ export default function Home() {
           Create your first event to start adding tables and bookings. You can
           have up to {MAX_ACTIVE_EVENTS} active at once.
         </p>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white dark:bg-zinc-50 dark:text-black"
-        >
-          + New event
-        </button>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="h-11 rounded-md bg-black px-4 text-base font-medium text-white dark:bg-zinc-50 dark:text-black"
+          >
+            + New event
+          </button>
+          {/* Closed events live on for the retention period and appear
+              nowhere else, so the way to them cannot be behind having an
+              active event to open. */}
+          <Link
+            href="/events/manage"
+            className="text-sm text-zinc-700 underline dark:text-zinc-300"
+          >
+            Manage events
+          </Link>
+        </div>
       </div>
     </div>
   );

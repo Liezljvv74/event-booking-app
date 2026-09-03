@@ -220,17 +220,33 @@ function copyExpenses(expenses: readonly Expense[]): Expense[] {
  * Needed for more than fixing typos: events created before times existed
  * hold null for both, and there would otherwise be no way to fill them in.
  */
-export async function updateEventSchedule(
-  id: string,
-  schedule: { eventDate: string; startTime: string | null; endTime: string | null },
-): Promise<Event> {
-  return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
-    const existing = await getOne<Event>(transaction, STORE_EVENTS, id);
-    if (existing === null) throw new Error("That event no longer exists.");
+/** Anything about an event a person can change after creating it. */
+export interface EventDetailsPatch {
+  name?: string;
+  eventDate?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+}
 
-    const updated: Event = { ...existing, ...schedule };
-    await put(transaction, STORE_EVENTS, updated);
-    return updated;
+/**
+ * Edit an event's own details, leaving its tables, bookings and expenses be.
+ *
+ * Times may be set to null, which is why the patch is applied by spread
+ * rather than by checking each field for truthiness: clearing a start time is
+ * a real edit, not a missing one.
+ */
+export function updateEventDetails(
+  id: string,
+  patch: EventDetailsPatch,
+): Promise<Event> {
+  return mutateEvent(id, (event) => {
+    const updated: Event = { ...event, ...patch };
+    const name = updated.name.trim();
+
+    if (name === "") throw new Error("Give the event a name.");
+    if (updated.eventDate === "") throw new Error("Pick an event date.");
+
+    return { ...updated, name };
   });
 }
 

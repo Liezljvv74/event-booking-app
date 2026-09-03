@@ -52,7 +52,20 @@ export function EventTabs({ events, selectedId, atLimit, onNewEvent }: Props) {
         })}
       </nav>
 
-      <div className="flex shrink-0 items-center pr-2 pl-2">
+      <div className="flex shrink-0 items-center gap-1.5 pr-2 pl-2">
+        {/* Reachable even at the four-event ceiling, when New event is not:
+            deleting one from here is how you make room. */}
+        <Link
+          href="/events/manage"
+          data-manage-events
+          className="rounded-md px-2 py-2 text-sm whitespace-nowrap text-zinc-600 underline hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+        >
+          <span className="sm:hidden" aria-hidden="true">
+            Manage
+          </span>
+          <span className="max-sm:sr-only">Manage events</span>
+        </Link>
+
         <button
           type="button"
           onClick={onNewEvent}

@@ -22,6 +22,7 @@ import {
   clearExpenses,
   createBooking,
   createEvent,
+  deleteEvent,
   lastSavedTimes,
   listEvents,
   listExpenseTemplates,
@@ -33,9 +34,10 @@ import {
   updateAttendee,
   updateBookingDetails,
   updateExpense,
-  updateEventSchedule,
+  updateEventDetails,
   type AttendeePatch,
   type CreatedBooking,
+  type EventDetailsPatch,
   type EventTimes,
   type ExpenseInput,
   type ExpensePatch,
@@ -74,6 +76,11 @@ export interface UseEventsResult {
   error: string;
   /** Active events only: the spec gives tabs to active events. */
   activeEvents: Event[];
+  /**
+   * Every stored event, closed ones included. The tabs show only the active
+   * ones, so this is what the management screen reads to reach the rest.
+   */
+  allEvents: Event[];
   atEventLimit: boolean;
   /**
    * Cleared expense lines, newest use first. Kept here rather than in the
@@ -88,6 +95,10 @@ export interface UseEventsResult {
   lastTimes: EventTimes;
   addEvent: (input: NewEventInput) => Promise<Event>;
   updateSchedule: (id: string, schedule: ScheduleInput) => Promise<Event>;
+  /** Edit an event's name, date or times. */
+  editEventDetails: (id: string, patch: EventDetailsPatch) => Promise<Event>;
+  /** Delete an event and everything recorded against it. Cannot be undone. */
+  removeEvent: (id: string) => Promise<void>;
   addEventTable: (eventId: string) => Promise<Event>;
   setSeatCount: (
     eventId: string,
@@ -146,15 +157,20 @@ function byEventDate(a: Event, b: Event): number {
   return a.eventDate.localeCompare(b.eventDate);
 }
 
-async function readActiveEvents(): Promise<Event[]> {
-  const events = await listEvents();
-  return events.filter((event) => event.status === "active").sort(byEventDate);
+/** Every event, and the active subset the tabs show, from one read. */
+async function readEvents(): Promise<{ all: Event[]; active: Event[] }> {
+  const all = await listEvents();
+  return {
+    all,
+    active: all.filter((event) => event.status === "active").sort(byEventDate),
+  };
 }
 
 export function useEvents(): UseEventsResult {
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
   const [activeEvents, setActiveEvents] = useState<Event[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [expenseTemplates, setExpenseTemplates] = useState<ExpenseTemplate[]>(
     [],
   );
@@ -162,6 +178,12 @@ export function useEvents(): UseEventsResult {
     startTime: null,
     endTime: null,
   });
+
+  const refreshEvents = useCallback(async () => {
+    const { all, active } = await readEvents();
+    setAllEvents(all);
+    setActiveEvents(active);
+  }, []);
 
   const load = useCallback(async () => {
     if (!isBrowser()) {
@@ -174,7 +196,7 @@ export function useEvents(): UseEventsResult {
       // Sweeping first means a tab left open for days sees the same closures
       // and deletions a fresh load would.
       await runRetentionSweep();
-      setActiveEvents(await readActiveEvents());
+      await refreshEvents();
       setExpenseTemplates(await listExpenseTemplates());
       setLastTimes(await lastSavedTimes());
       setState("ready");
@@ -183,7 +205,7 @@ export function useEvents(): UseEventsResult {
       setState("error");
       setError(describeError(caught));
     }
-  }, []);
+  }, [refreshEvents]);
 
   // Strict Mode double-invokes effects in development. The sweep is
   // idempotent, so a second run is harmless, but skipping it avoids two
@@ -197,19 +219,40 @@ export function useEvents(): UseEventsResult {
 
   const addEvent = useCallback(async (input: NewEventInput) => {
     const created = await createEvent(input);
-    setActiveEvents(await readActiveEvents());
+    await refreshEvents();
     setLastTimes(await lastSavedTimes());
     return created;
-  }, []);
+  }, [refreshEvents]);
 
   const updateSchedule = useCallback(
     async (id: string, schedule: ScheduleInput) => {
-      const updated = await updateEventSchedule(id, schedule);
-      setActiveEvents(await readActiveEvents());
+      const updated = await updateEventDetails(id, schedule);
+      await refreshEvents();
       setLastTimes(await lastSavedTimes());
       return updated;
     },
-    [],
+    [refreshEvents],
+  );
+
+  const editEventDetails = useCallback(
+    async (id: string, patch: EventDetailsPatch) => {
+      const updated = await updateEventDetails(id, patch);
+      await refreshEvents();
+      // The times of the most recent event are what a new event starts from,
+      // so an edit here changes that default.
+      setLastTimes(await lastSavedTimes());
+      return updated;
+    },
+    [refreshEvents],
+  );
+
+  const removeEvent = useCallback(
+    async (id: string) => {
+      await deleteEvent(id);
+      await refreshEvents();
+      setLastTimes(await lastSavedTimes());
+    },
+    [refreshEvents],
   );
 
   // Every mutation returns the saved event and refreshes the list from the
@@ -218,10 +261,10 @@ export function useEvents(): UseEventsResult {
   const applyChange = useCallback(
     async (change: () => Promise<Event>): Promise<Event> => {
       const updated = await change();
-      setActiveEvents(await readActiveEvents());
+      await refreshEvents();
       return updated;
     },
-    [],
+    [refreshEvents],
   );
 
   const addEventTable = useCallback(
@@ -246,10 +289,10 @@ export function useEvents(): UseEventsResult {
   const addBooking = useCallback(
     async (eventId: string, input: NewBookingInput) => {
       const created = await createBooking(eventId, input);
-      setActiveEvents(await readActiveEvents());
+      await refreshEvents();
       return created;
     },
-    [],
+    [refreshEvents],
   );
 
   const editBookingDetails = useCallback(
@@ -330,11 +373,14 @@ export function useEvents(): UseEventsResult {
     state,
     error,
     activeEvents,
+    allEvents,
     atEventLimit: activeEvents.length >= MAX_ACTIVE_EVENTS,
     expenseTemplates,
     lastTimes,
     addEvent,
     updateSchedule,
+    editEventDetails,
+    removeEvent,
     addEventTable,
     setSeatCount,
     removeEventTable,
