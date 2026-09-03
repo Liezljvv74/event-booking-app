@@ -13,6 +13,17 @@ const STATUS_LABELS: Record<AttendeeStatus, string> = {
 };
 
 /**
+ * The statuses this dropdown offers. Cancelling is not among them: it is the
+ * Cancel button's job, because cancelling also opens a replacement line, and
+ * a status change here would take the party's seat away instead.
+ */
+const LIVE_STATUSES: readonly AttendeeStatus[] = [
+  "paid",
+  "pay_at_venue",
+  "not_paying",
+];
+
+/**
  * One grid template shared by the header and every row, so the columns line
  * up without a real table. Ten rows have to fit on a phone screen, which
  * rules out per-field labels; the header carries them once instead.
@@ -37,6 +48,40 @@ interface Props {
 
 const controlClass =
   "h-9 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+
+/**
+ * A cancelled guest, laid out on the same grid but as plain text.
+ *
+ * Disabled inputs would still read as fields waiting to be filled in. This
+ * is a closed record: the name, table and price they held, kept for the
+ * account of what happened, with the seat itself passed to the replacement
+ * line the cancellation opened.
+ */
+export function CancelledRow({ attendee }: { attendee: Attendee }) {
+  const muted = "text-xs text-zinc-500 dark:text-zinc-500";
+
+  return (
+    <li data-attendee={attendee.id} data-cancelled-guest={attendee.id}>
+      <div className={`${ATTENDEE_GRID} opacity-70`}>
+        <span aria-hidden="true" />
+        <span
+          data-cancelled-name={attendee.id}
+          className="truncate px-2 text-sm text-zinc-600 line-through dark:text-zinc-400"
+        >
+          {attendee.name.trim() === "" ? "Unnamed guest" : attendee.name}
+        </span>
+        <span className={`px-2 ${muted}`}>
+          {attendee.assignedTableNumber ?? "—"}
+        </span>
+        <span className={`px-2 ${muted}`}>Cancelled</span>
+        <span className={`px-2 text-right ${muted}`}>
+          {formatCents(attendee.ticketPriceCents)}
+        </span>
+        <span aria-hidden="true" />
+      </div>
+    </li>
+  );
+}
 
 export function AttendeeRow({
   event,
@@ -66,11 +111,12 @@ export function AttendeeRow({
     setPrice(formatCents(attendee.ticketPriceCents));
   }
 
-  const cancelled = attendee.status === "cancelled";
+  if (attendee.status === "cancelled") {
+    return <CancelledRow attendee={attendee} />;
+  }
 
   // Ignoring this guest, so the table they already sit at does not count
-  // itself as full. A cancelled guest holds no seat, so no table is out of
-  // reach for them.
+  // itself as full.
   const seating = tableOccupancy(event, attendee.id);
 
   async function apply(patch: AttendeePatch, revert?: () => void) {
@@ -105,7 +151,7 @@ export function AttendeeRow({
   }
 
   return (
-    <li data-attendee={attendee.id} className={cancelled ? "opacity-60" : ""}>
+    <li data-attendee={attendee.id}>
       <div className={ATTENDEE_GRID}>
         <input
           type="checkbox"
@@ -153,7 +199,7 @@ export function AttendeeRow({
             const current = entry.tableNumber === attendee.assignedTableNumber;
             // Offered but unselectable beats accepted then refused. Never the
             // guest's own table, which they are entitled to stay at.
-            const full = !cancelled && !current && entry.free === 0;
+            const full = !current && entry.free === 0;
             return (
               <option
                 key={entry.tableNumber}
@@ -184,7 +230,7 @@ export function AttendeeRow({
           }
           className={controlClass}
         >
-          {(Object.keys(STATUS_LABELS) as AttendeeStatus[]).map((status) => (
+          {LIVE_STATUSES.map((status) => (
             <option key={status} value={status}>
               {STATUS_LABELS[status]}
             </option>
@@ -209,33 +255,16 @@ export function AttendeeRow({
           className={`${controlClass} text-right`}
         />
 
-        {cancelled ? (
-          /* A cancelled guest keeps their table on record so restoring them
-             puts them back, but the seat is free. Without saying so, the row
-             reads as though the table is still occupied. */
-          <span
-            data-seat-released={attendee.id}
-            title={
-              attendee.assignedTableNumber === null
-                ? "Cancelled"
-                : `Cancelled, seat at table ${attendee.assignedTableNumber} is free`
-            }
-            className="text-xs text-zinc-500 dark:text-zinc-500"
-          >
-            {attendee.assignedTableNumber === null ? "—" : "seat free"}
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => void onCancel()}
-            disabled={busy}
-            aria-label={`Cancel guest ${position}`}
-            data-cancel-attendee={attendee.id}
-            className="h-9 rounded-md border border-zinc-300 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
-          >
-            Cancel
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => void onCancel()}
+          disabled={busy}
+          aria-label={`Cancel guest ${position}`}
+          data-cancel-attendee={attendee.id}
+          className="h-9 rounded-md border border-zinc-300 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+        >
+          Cancel
+        </button>
       </div>
 
       {error !== "" && (

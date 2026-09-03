@@ -691,6 +691,13 @@ export interface AttendeePatch {
   ticketPriceCents?: number;
 }
 
+export class CancelledGuestError extends Error {
+  constructor() {
+    super("That guest has cancelled, so their line can no longer be changed.");
+    this.name = "CancelledGuestError";
+  }
+}
+
 /**
  * Update one attendee.
  *
@@ -713,6 +720,16 @@ export function updateAttendee(
 
   return mutateEvent(eventId, (event) => {
     const current = findAttendee(event, bookingId, attendeeId);
+    // A cancelled guest is a closed record. Their replacement line is where
+    // changes go, so refusing here keeps that the only way in.
+    if (current.status === "cancelled") throw new CancelledGuestError();
+    // Cancelling goes through cancelAttendee, which also opens the
+    // replacement line. Allowing it as a plain status change would cancel a
+    // guest and take the party's seat with them.
+    if (patch.status === "cancelled") {
+      throw new Error("Use Cancel on the guest's row to cancel them.");
+    }
+
     const next: Attendee = { ...current, ...patch };
 
     const takesSeat = SEAT_OCCUPYING_STATUSES.includes(next.status);
@@ -771,9 +788,8 @@ export class NotEnoughFreeSeatsError extends Error {
  * with two free seats would leave two of them moved and the third behind,
  * splitting the group the move was meant to keep together.
  *
- * Cancelled guests hold no seat, so they never count against the destination,
- * but their table is still recorded: restoring them puts them back with the
- * guests they were moved alongside.
+ * A cancelled guest cannot travel: their line is closed, and the table on it
+ * is the record of where they would have sat.
  */
 export function moveAttendees(
   eventId: string,
@@ -790,6 +806,9 @@ export function moveAttendees(
     const moving = targets.map((target) =>
       findAttendee(event, target.bookingId, target.attendeeId),
     );
+    if (moving.some((attendee) => attendee.status === "cancelled")) {
+      throw new CancelledGuestError();
+    }
     const movingIds = new Set(moving.map((attendee) => attendee.id));
 
     if (tableNumber !== null) {
@@ -827,24 +846,62 @@ export function moveAttendees(
 }
 
 /**
- * Cancel one attendee, freeing their seat but leaving their table assignment
- * recorded. Their seat is free because cancelled guests do not occupy one, so
- * restoring the booking puts them back where they were.
+ * Cancel one guest and open a blank line in their place.
+ *
+ * A cancelled guest is a closed record: their row keeps the table and price
+ * they held, for the account of what happened, and nothing about it can be
+ * edited afterwards. What the party does not lose is the seat — a guest
+ * dropping out of a party of six leaves six seats booked, one of them now
+ * going spare — so a fresh line takes the cancelled guest's table and price
+ * and waits to be named.
+ *
+ * The replacement sits where the cancelled guest sat in the list, so the
+ * party keeps its shape. Cancelling the whole booking does not do this: the
+ * booking is off, and six blank lines are not what is wanted.
  */
 export function cancelAttendee(
   eventId: string,
   bookingId: string,
   attendeeId: string,
 ): Promise<Event> {
-  return mutateEvent(eventId, (event) =>
-    withAttendee(event, bookingId, attendeeId, (attendee) => ({
-      ...attendee,
-      status: "cancelled",
-    })),
-  );
+  return mutateEvent(eventId, (event) => {
+    const cancelled = findAttendee(event, bookingId, attendeeId);
+    if (cancelled.status === "cancelled") return event;
+
+    const replacement: Attendee = {
+      id: newId(),
+      name: "",
+      assignedTableNumber: cancelled.assignedTableNumber,
+      status: "pay_at_venue",
+      ticketPriceCents: cancelled.ticketPriceCents,
+    };
+
+    return {
+      ...event,
+      bookings: event.bookings.map((booking) =>
+        booking.id === bookingId
+          ? {
+              ...booking,
+              attendees: booking.attendees.flatMap((attendee) =>
+                attendee.id === attendeeId
+                  ? [
+                      { ...attendee, status: "cancelled" as AttendeeStatus },
+                      replacement,
+                    ]
+                  : [attendee],
+              ),
+            }
+          : booking,
+      ),
+    };
+  });
 }
 
 /** Cancel every guest in a party, freeing all of their seats at once. */
+/**
+ * Cancel every guest of a party. No replacement lines: the booking is off,
+ * unlike a single guest dropping out of one that stands.
+ */
 export function cancelBooking(
   eventId: string,
   bookingId: string,

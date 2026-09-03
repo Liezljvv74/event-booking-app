@@ -6,6 +6,7 @@ import {
   ATTENDEE_MIN_WIDTH,
   AttendeeRow,
 } from "@/components/attendee-row";
+import { CancelledGroup } from "@/components/cancelled-group";
 import { PartyDetailsForm } from "@/components/party-details-form";
 import { formatAmount } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
@@ -97,19 +98,13 @@ export function BookingCard({
       : `${tables.length === 1 ? "table" : "tables"} ${tables.join(", ")}` +
         (unseated > 0 ? ` · ${unseated} unseated` : "");
 
-  // Only guests holding a seat need one at the destination; a cancelled guest
-  // travels with them without taking a seat.
-  const selectedGuests = booking.attendees.filter((attendee) =>
-    selected.has(attendee.id),
-  );
-  const seatsNeeded = selectedGuests.filter((attendee) =>
-    SEAT_OCCUPYING_STATUSES.includes(attendee.status),
-  ).length;
+  // A cancelled guest cannot be picked, so everyone travelling needs a seat.
+  const seatsNeeded = live.filter((attendee) => selected.has(attendee.id))
+    .length;
   // Discounting the travellers, so the table they are leaving does not look
   // occupied by the very guests about to vacate it.
   const destinations = tableOccupancy(event, selected);
-  const allSelected =
-    booking.attendees.length > 0 && selected.size === booking.attendees.length;
+  const allSelected = live.length > 0 && selected.size === live.length;
 
   async function move(choice: string) {
     setBusy(true);
@@ -302,11 +297,6 @@ export function BookingCard({
               Clear
             </button>
 
-            {seatsNeeded !== selected.size && (
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                {`${seatsNeeded} of them need a seat`}
-              </span>
-            )}
           </div>
         )}
 
@@ -326,7 +316,7 @@ export function BookingCard({
                 onChange={(changed) =>
                   setSelected(
                     changed.target.checked
-                      ? new Set(booking.attendees.map((guest) => guest.id))
+                      ? new Set(live.map((guest) => guest.id))
                       : new Set(),
                   )
                 }
@@ -340,7 +330,7 @@ export function BookingCard({
             </div>
 
             <ul className="flex flex-col gap-0.5">
-              {booking.attendees.map((attendee, index) => (
+              {live.map((attendee, index) => (
                 <AttendeeRow
                   key={attendee.id}
                   event={event}
@@ -353,6 +343,8 @@ export function BookingCard({
                 />
               ))}
             </ul>
+
+            <CancelledGroup booking={booking} />
           </div>
         </div>
       </div>
