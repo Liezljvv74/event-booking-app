@@ -26,7 +26,13 @@ function summarise(event: Event) {
 
   return {
     tables: event.tables.length,
+    // Parties, not people. The guest total sits beside it because "3
+    // bookings" says nothing about whether that is six people or thirty.
     bookings: event.bookings.length,
+    guestsTotal: attendees.length,
+    // Seat-occupying is every status but cancelled, so this is the count of
+    // guests no longer coming.
+    guestsCancelled: attendees.length - seatsTaken,
     seatsTotal,
     seatsAvailable: Math.max(0, seatsTotal - seatsTaken),
     expenseLines: event.expenses.length,
@@ -34,13 +40,32 @@ function summarise(event: Event) {
   };
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  /** Qualifies the figure when the headline number alone would mislead. */
+  note?: string;
+}) {
   return (
     <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-      <div className="text-sm text-zinc-600 dark:text-zinc-400">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-black dark:text-zinc-50">
+      {/* Two lines' worth of room whether or not the label needs it, so the
+          figures line up across the row instead of stepping down wherever a
+          longer label wraps. */}
+      <div className="min-h-[2.5rem] text-sm text-zinc-600 dark:text-zinc-400">
+        {label}
+      </div>
+      <div className="text-2xl font-semibold text-black dark:text-zinc-50">
         {value}
       </div>
+      {note !== undefined && (
+        <div className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">
+          {note}
+        </div>
+      )}
     </div>
   );
 }
@@ -67,9 +92,19 @@ export default function EventDashboard() {
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="Tables" value={String(summary.tables)} />
         <Stat label="Bookings" value={String(summary.bookings)} />
+        <Stat
+          label="Total number of guests"
+          value={String(summary.guestsTotal)}
+          // Every guest is counted, so say when some of them are not coming.
+          note={
+            summary.guestsCancelled > 0
+              ? `${summary.guestsTotal - summary.guestsCancelled} attending · ${summary.guestsCancelled} cancelled`
+              : undefined
+          }
+        />
         <Stat
           label="Seats available"
           value={`${summary.seatsAvailable} of ${summary.seatsTotal}`}
