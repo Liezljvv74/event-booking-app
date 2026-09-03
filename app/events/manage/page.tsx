@@ -8,8 +8,10 @@
  * them, closed ones included, which never appear in those tabs at all.
  */
 
+import { useState } from "react";
 import Link from "next/link";
 import { EventEditor } from "@/components/event-editor";
+import { NewEventForm } from "@/components/new-event-form";
 import { formatEventDate } from "@/lib/event-time";
 import { useEvents } from "@/lib/use-events";
 import { MAX_ACTIVE_EVENTS, type Event } from "@/lib/types";
@@ -19,7 +21,17 @@ function byDateThenName(a: Event, b: Event): number {
 }
 
 export default function ManageEventsScreen() {
-  const { state, error, allEvents, editEventDetails, removeEvent } = useEvents();
+  const {
+    state,
+    error,
+    allEvents,
+    atEventLimit,
+    lastTimes,
+    addEvent,
+    editEventDetails,
+    removeEvent,
+  } = useEvents();
+  const [creating, setCreating] = useState(false);
 
   if (state === "loading") {
     return (
@@ -68,18 +80,53 @@ export default function ManageEventsScreen() {
       </div>
 
       <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
-        Change an event&apos;s name, date or times here, or delete one you no
-        longer want. Deleting takes its tables, bookings and expenses with it
-        and cannot be undone.
+        Create an event here, change one&apos;s name, date or times, or delete
+        one you no longer want. Deleting takes its tables, bookings and
+        expenses with it and cannot be undone.
       </p>
+
+      {creating ? (
+        <div className="mt-4">
+          <NewEventForm
+            lastTimes={lastTimes}
+            onCreate={async (input) => {
+              const created = await addEvent(input);
+              // Staying put: the new event appears in the list below, and
+              // the point of being here is to work on the set of them.
+              setCreating(false);
+              return created;
+            }}
+            onCancel={() => setCreating(false)}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          disabled={atEventLimit}
+          data-new-event
+          title={
+            atEventLimit
+              ? `${MAX_ACTIVE_EVENTS} events are already active. Delete one to make room.`
+              : undefined
+          }
+          className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
+        >
+          + New event
+        </button>
+      )}
+
+      {atEventLimit && !creating && (
+        <p className="mt-2 max-w-prose text-sm text-amber-700 dark:text-amber-500">
+          {MAX_ACTIVE_EVENTS} events are already active, which is the limit.
+          Delete one below to make room for another.
+        </p>
+      )}
 
       {allEvents.length === 0 ? (
         <p className="mt-6 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
-          You have no events yet.{" "}
-          <Link href="/" className="underline dark:text-zinc-300">
-            Create your first one
-          </Link>{" "}
-          to start adding tables and bookings.
+          You have no events yet. Create your first one above to start adding
+          tables and bookings.
         </p>
       ) : (
         <section className="mt-6">

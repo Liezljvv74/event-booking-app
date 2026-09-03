@@ -6,20 +6,15 @@
  * Dashboard, Tables, Bookings and Expenses does not re-read IndexedDB.
  */
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EventProvider, useEventContext } from "@/components/event-provider";
 import { EventTabs } from "@/components/event-tabs";
-import { NewEventForm } from "@/components/new-event-form";
 import { SectionNav } from "@/components/section-nav";
 
 function EventChrome({ children }: { children: React.ReactNode }) {
-  const { state, error, activeEvents, atEventLimit, lastTimes, addEvent } =
-    useEventContext();
+  const { state, error, activeEvents } = useEventContext();
   const params = useParams<{ eventId: string }>();
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
 
   const eventId = params.eventId;
 
@@ -49,35 +44,14 @@ function EventChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <EventTabs
-        events={activeEvents}
-        selectedId={eventId}
-        atLimit={atEventLimit}
-        onNewEvent={() => setCreating(true)}
-      />
+      <EventTabs events={activeEvents} selectedId={eventId} />
 
       {known && <SectionNav eventId={eventId} />}
 
       <div className="flex-1 p-2 sm:p-6">
-        {creating && (
-          <div className="mb-6">
-            <NewEventForm
-              lastTimes={lastTimes}
-              onCreate={async (input) => {
-                const created = await addEvent(input);
-                setCreating(false);
-                // Push, so back returns to the event you were looking at.
-                router.push(`/events/${created.id}`);
-                return created;
-              }}
-              onCancel={() => setCreating(false)}
-            />
-          </div>
-        )}
-
         {/* An event can vanish under you: the retention sweep closes events
             48 hours after their date, and closed events leave the tabs. */}
-        {!known && !creating ? (
+        {!known ? (
           <div className="max-w-prose">
             <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
               That event is not open

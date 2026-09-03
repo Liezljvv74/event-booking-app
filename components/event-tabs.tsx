@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
-import { MAX_ACTIVE_EVENTS, type Event } from "@/lib/types";
+import type { Event } from "@/lib/types";
 
 interface Props {
   events: Event[];
   selectedId: string | null;
-  atLimit: boolean;
-  onNewEvent: () => void;
 }
 
 /**
@@ -17,10 +15,10 @@ interface Props {
  * tabs but are navigation, so this is a nav with aria-current rather than a
  * tablist — a tablist would promise arrow-key semantics these do not have.
  */
-export function EventTabs({ events, selectedId, atLimit, onNewEvent }: Props) {
+export function EventTabs({ events, selectedId }: Props) {
   return (
     <div className="flex items-stretch border-b border-zinc-200 dark:border-zinc-800">
-      {/* Only the tabs scroll. The New Event button sits outside this
+      {/* Only the tabs scroll. The Manage events link sits outside this
           container so four long names cannot push it off a phone screen;
           min-w-0 lets the strip shrink instead of widening the row. */}
       <nav
@@ -52,36 +50,18 @@ export function EventTabs({ events, selectedId, atLimit, onNewEvent }: Props) {
         })}
       </nav>
 
-      <div className="flex shrink-0 items-center gap-1.5 pr-2 pl-2">
-        {/* Reachable even at the four-event ceiling, when New event is not:
-            deleting one from here is how you make room. */}
+      <div className="flex shrink-0 items-center pr-2 pl-2">
+        {/* Where events are created, renamed and deleted alike. */}
         <Link
           href="/events/manage"
           data-manage-events
-          className="rounded-md px-2 py-2 text-sm whitespace-nowrap text-zinc-600 underline hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium whitespace-nowrap text-black hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-900"
         >
           <span className="sm:hidden" aria-hidden="true">
             Manage
           </span>
           <span className="max-sm:sr-only">Manage events</span>
         </Link>
-
-        <button
-          type="button"
-          onClick={onNewEvent}
-          disabled={atLimit}
-          title={
-            atLimit
-              ? `${MAX_ACTIVE_EVENTS} events are already active.`
-              : undefined
-          }
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium whitespace-nowrap text-black disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-50"
-        >
-          <span className="sm:hidden" aria-hidden="true">
-            +
-          </span>
-          <span className="max-sm:sr-only">+ New event</span>
-        </button>
       </div>
     </div>
   );
