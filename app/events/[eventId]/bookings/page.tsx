@@ -45,6 +45,7 @@ export default function BookingsScreen() {
     addBooking,
     editBookingDetails,
     editAttendee,
+    moveGuests,
     cancelOneAttendee,
     cancelWholeBooking,
   } = useEventContext();
@@ -215,6 +216,16 @@ export default function BookingsScreen() {
               }
               onPatchAttendee={(attendeeId, patch) =>
                 editAttendee(event.id, booking.id, attendeeId, patch)
+              }
+              onMoveGuests={(attendeeIds, tableNumber) =>
+                moveGuests(
+                  event.id,
+                  attendeeIds.map((attendeeId) => ({
+                    bookingId: booking.id,
+                    attendeeId,
+                  })),
+                  tableNumber,
+                )
               }
               onCancelAttendee={(attendeeId) =>
                 cancelOneAttendee(event.id, booking.id, attendeeId)

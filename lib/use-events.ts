@@ -21,6 +21,7 @@ import {
   createBooking,
   createEvent,
   listEvents,
+  moveAttendees,
   removeTable,
   runRetentionSweep,
   setTableSeatCount,
@@ -29,6 +30,7 @@ import {
   updateEventSchedule,
   type AttendeePatch,
   type CreatedBooking,
+  type MoveTarget,
 } from "./repository";
 import { MAX_ACTIVE_EVENTS, type Event } from "./types";
 
@@ -83,6 +85,12 @@ export interface UseEventsResult {
     bookingId: string,
     attendeeId: string,
     patch: AttendeePatch,
+  ) => Promise<Event>;
+  /** Move named guests to a table, or off their tables with null. */
+  moveGuests: (
+    eventId: string,
+    targets: readonly MoveTarget[],
+    tableNumber: number | null,
   ) => Promise<Event>;
   cancelOneAttendee: (
     eventId: string,
@@ -218,6 +226,15 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  const moveGuests = useCallback(
+    (
+      eventId: string,
+      targets: readonly MoveTarget[],
+      tableNumber: number | null,
+    ) => applyChange(() => moveAttendees(eventId, targets, tableNumber)),
+    [applyChange],
+  );
+
   const cancelOneAttendee = useCallback(
     (eventId: string, bookingId: string, attendeeId: string) =>
       applyChange(() => cancelAttendee(eventId, bookingId, attendeeId)),
@@ -243,6 +260,7 @@ export function useEvents(): UseEventsResult {
     addBooking,
     editBookingDetails,
     editAttendee,
+    moveGuests,
     cancelOneAttendee,
     cancelWholeBooking,
     reload: load,

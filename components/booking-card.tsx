@@ -8,7 +8,7 @@ import {
 } from "@/components/attendee-row";
 import { PartyDetailsForm } from "@/components/party-details-form";
 import { formatAmount } from "@/lib/money";
-import type { AttendeePatch } from "@/lib/repository";
+import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
 
 interface Props {
@@ -17,6 +17,11 @@ interface Props {
   expanded: boolean;
   onToggle: () => void;
   onPatchAttendee: (attendeeId: string, patch: AttendeePatch) => Promise<unknown>;
+  /** Moves exactly these guests, leaving the rest of the party where it is. */
+  onMoveGuests: (
+    attendeeIds: readonly string[],
+    tableNumber: number | null,
+  ) => Promise<unknown>;
   onCancelAttendee: (attendeeId: string) => Promise<unknown>;
   onCancelBooking: () => Promise<unknown>;
   onSaveDetails: (details: {
@@ -40,6 +45,7 @@ export function BookingCard({
   expanded,
   onToggle,
   onPatchAttendee,
+  onMoveGuests,
   onCancelAttendee,
   onCancelBooking,
   onSaveDetails,
@@ -49,6 +55,20 @@ export function BookingCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const guestsId = useId();
+
+  // Guests picked for a move, by id. Held here rather than per row so several
+  // can travel together, and so the destinations can be worked out against
+  // the whole selection at once.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+
+  function toggleSelected(attendeeId: string, wanted: boolean) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (wanted) next.add(attendeeId);
+      else next.delete(attendeeId);
+      return next;
+    });
+  }
 
   const live = booking.attendees.filter((attendee) =>
     SEAT_OCCUPYING_STATUSES.includes(attendee.status),
@@ -76,6 +96,36 @@ export function BookingCard({
         : ""
       : `${tables.length === 1 ? "table" : "tables"} ${tables.join(", ")}` +
         (unseated > 0 ? ` · ${unseated} unseated` : "");
+
+  // Only guests holding a seat need one at the destination; a cancelled guest
+  // travels with them without taking a seat.
+  const selectedGuests = booking.attendees.filter((attendee) =>
+    selected.has(attendee.id),
+  );
+  const seatsNeeded = selectedGuests.filter((attendee) =>
+    SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+  ).length;
+  // Discounting the travellers, so the table they are leaving does not look
+  // occupied by the very guests about to vacate it.
+  const destinations = tableOccupancy(event, selected);
+  const allSelected =
+    booking.attendees.length > 0 && selected.size === booking.attendees.length;
+
+  async function move(choice: string) {
+    setBusy(true);
+    setError("");
+    try {
+      await onMoveGuests(
+        [...selected],
+        choice === "none" ? null : Number(choice),
+      );
+      setSelected(new Set());
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function cancelAll() {
     setBusy(true);
@@ -205,14 +255,83 @@ export function BookingCard({
       {/* Kept in the DOM but hidden while collapsed, so a half-typed guest
           name is not thrown away by closing the party. */}
       <div id={guestsId} hidden={!expanded}>
+        {selected.size > 0 && (
+          <div
+            data-move-bar={booking.id}
+            className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-zinc-100 px-2 py-1.5 dark:bg-zinc-900"
+          >
+            <span className="text-xs font-medium text-black dark:text-zinc-50">
+              {selected.size} guest{selected.size === 1 ? "" : "s"} picked
+            </span>
+
+            {/* Choosing a destination performs the move, as elsewhere in the
+                app, rather than arming a separate confirm button. The value
+                stays empty so the label returns after each move. */}
+            <select
+              value=""
+              disabled={busy}
+              aria-label={`Move ${selected.size} picked guests`}
+              data-move-to={booking.id}
+              onChange={(changed) => void move(changed.target.value)}
+              className="h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+            >
+              <option value="">Move to…</option>
+              <option value="none">No table</option>
+              {destinations.map((entry) => {
+                const room = entry.free >= seatsNeeded;
+                return (
+                  <option
+                    key={entry.tableNumber}
+                    value={entry.tableNumber}
+                    disabled={!room}
+                  >
+                    {`Table ${entry.tableNumber} · ${entry.free} free`}
+                    {room ? "" : " — too few"}
+                  </option>
+                );
+              })}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setSelected(new Set())}
+              disabled={busy}
+              data-move-clear={booking.id}
+              className="h-9 rounded-md px-2 text-xs font-medium text-zinc-700 underline disabled:opacity-50 dark:text-zinc-300"
+            >
+              Clear
+            </button>
+
+            {seatsNeeded !== selected.size && (
+              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                {`${seatsNeeded} of them need a seat`}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* The columns are narrower than a phone, so they scroll sideways
             here rather than wrapping each guest onto several lines. */}
         <div className="mt-2 overflow-x-auto">
           <div className={ATTENDEE_MIN_WIDTH}>
             <div
               className={`${ATTENDEE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
-              aria-hidden="true"
             >
+              <input
+                type="checkbox"
+                checked={allSelected}
+                disabled={busy}
+                aria-label={`Select every guest in ${booking.partyName}`}
+                data-select-all={booking.id}
+                onChange={(changed) =>
+                  setSelected(
+                    changed.target.checked
+                      ? new Set(booking.attendees.map((guest) => guest.id))
+                      : new Set(),
+                  )
+                }
+                className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+              />
               <span>Name</span>
               <span>Table</span>
               <span>Status</span>
@@ -227,6 +346,8 @@ export function BookingCard({
                   event={event}
                   attendee={attendee}
                   position={index + 1}
+                  selected={selected.has(attendee.id)}
+                  onSelect={(wanted) => toggleSelected(attendee.id, wanted)}
                   onPatch={(patch) => onPatchAttendee(attendee.id, patch)}
                   onCancel={() => onCancelAttendee(attendee.id)}
                 />

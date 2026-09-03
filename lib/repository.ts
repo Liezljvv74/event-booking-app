@@ -188,7 +188,23 @@ async function mutateEvent(
 }
 
 /**
- * Guests holding a seat at this table, optionally ignoring one of them.
+ * Attendees to leave out of a seat count: one, several, or none.
+ *
+ * A guest being moved must not be counted against the table they are moving
+ * to, and a batch move has to discount all of them at once or the last guest
+ * of the batch appears to be competing with the first for a seat.
+ */
+export type Ignored = string | ReadonlySet<string>;
+
+const NO_ONE: ReadonlySet<string> = new Set();
+
+function asIdSet(ignore?: Ignored): ReadonlySet<string> {
+  if (ignore === undefined) return NO_ONE;
+  return typeof ignore === "string" ? new Set([ignore]) : ignore;
+}
+
+/**
+ * Guests holding a seat at this table, optionally ignoring some of them.
  *
  * The single place that decides what "occupied" means, so the seat count on
  * the Tables screen, the options offered in a guest's table dropdown and the
@@ -197,13 +213,14 @@ async function mutateEvent(
 function countSeatedAt(
   event: Event,
   tableNumber: number,
-  ignoreAttendeeId?: string,
+  ignore?: Ignored,
 ): number {
+  const ignored = asIdSet(ignore);
   return event.bookings
     .flatMap((booking) => booking.attendees)
     .filter(
       (attendee) =>
-        attendee.id !== ignoreAttendeeId &&
+        !ignored.has(attendee.id) &&
         attendee.assignedTableNumber === tableNumber &&
         SEAT_OCCUPYING_STATUSES.includes(attendee.status),
     ).length;
@@ -316,14 +333,14 @@ export const MAX_GUESTS_PER_BOOKING = 500;
 export function freeSeatsAtTable(
   event: Event,
   tableNumber: number,
-  ignoreAttendeeId?: string,
+  ignore?: Ignored,
 ): number {
   const table = event.tables.find(
     (candidate) => candidate.tableNumber === tableNumber,
   );
   if (!table) return 0;
 
-  return table.seatCount - countSeatedAt(event, tableNumber, ignoreAttendeeId);
+  return table.seatCount - countSeatedAt(event, tableNumber, ignore);
 }
 
 /** One party's share of a table. Several parties can sit at the same table. */
@@ -351,20 +368,23 @@ export interface TableOccupancy {
  * but nothing showed it either, so the free seats were invisible until a
  * dropdown refused a table. This is what the screens read to say so.
  *
- * Pass an attendee id to leave them out of the count, which is what a guest's
- * own table dropdown needs: their current table must not look full to them.
+ * Pass attendee ids to leave them out of the count, which is what a guest's
+ * own table dropdown needs: their current table must not look full to them,
+ * and what a batch move needs for the table it is moving guests to.
  */
 export function tableOccupancy(
   event: Event,
-  ignoreAttendeeId?: string,
+  ignore?: Ignored,
 ): TableOccupancy[] {
+  const ignored = asIdSet(ignore);
+
   return event.tables.map((table) => {
     const parties: SeatedParty[] = [];
 
     for (const booking of event.bookings) {
       const guestCount = booking.attendees.filter(
         (attendee) =>
-          attendee.id !== ignoreAttendeeId &&
+          !ignored.has(attendee.id) &&
           attendee.assignedTableNumber === table.tableNumber &&
           SEAT_OCCUPYING_STATUSES.includes(attendee.status),
       ).length;
@@ -618,6 +638,93 @@ export function updateAttendee(
     }
 
     return withAttendee(event, bookingId, attendeeId, () => next);
+  });
+}
+
+/** One guest to move, named by their party so they can be found. */
+export interface MoveTarget {
+  bookingId: string;
+  attendeeId: string;
+}
+
+export class NotEnoughFreeSeatsError extends Error {
+  constructor(tableNumber: number, needed: number, free: number) {
+    const room =
+      free === 0
+        ? "no free seats"
+        : `only ${free} free seat${free === 1 ? "" : "s"}`;
+    super(
+      `Table ${tableNumber} has ${room}, but ${needed} guest` +
+        `${needed === 1 ? "" : "s"} would move there.`,
+    );
+    this.name = "NotEnoughFreeSeatsError";
+  }
+}
+
+/**
+ * Move guests to a table, or off their tables when given null.
+ *
+ * A guest moves on their own account: any guest of any party can be sent to
+ * any table with room, and the rest of their party stays where it is. Passing
+ * several guests moves exactly those, not their parties.
+ *
+ * Applied as one change, so either everyone named moves or nobody does.
+ * Moving guests one at a time can half-succeed — three guests sent to a table
+ * with two free seats would leave two of them moved and the third behind,
+ * splitting the group the move was meant to keep together.
+ *
+ * Cancelled guests hold no seat, so they never count against the destination,
+ * but their table is still recorded: restoring them puts them back with the
+ * guests they were moved alongside.
+ */
+export function moveAttendees(
+  eventId: string,
+  targets: readonly MoveTarget[],
+  tableNumber: number | null,
+): Promise<Event> {
+  if (targets.length === 0) {
+    throw new Error("Choose at least one guest to move.");
+  }
+
+  return mutateEvent(eventId, (event) => {
+    // Resolved before anything is written, so a stale id fails the whole move
+    // rather than moving the guests that happened to still exist.
+    const moving = targets.map((target) =>
+      findAttendee(event, target.bookingId, target.attendeeId),
+    );
+    const movingIds = new Set(moving.map((attendee) => attendee.id));
+
+    if (tableNumber !== null) {
+      const exists = event.tables.some(
+        (candidate) => candidate.tableNumber === tableNumber,
+      );
+      if (!exists) throw new Error(`There is no table ${tableNumber}.`);
+
+      const needed = moving.filter((attendee) =>
+        SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+      ).length;
+      const free = freeSeatsAtTable(event, tableNumber, movingIds);
+
+      if (needed > free) {
+        throw new NotEnoughFreeSeatsError(
+          tableNumber,
+          needed,
+          Math.max(0, free),
+        );
+      }
+    }
+
+    return {
+      ...event,
+      bookings: event.bookings.map((booking) => ({
+        ...booking,
+        attendees: booking.attendees.map((attendee) =>
+          movingIds.has(attendee.id)
+            ? { ...attendee, assignedTableNumber: tableNumber }
+            : attendee,
+        ),
+      })),
+    };
   });
 }
 

@@ -18,16 +18,19 @@ const STATUS_LABELS: Record<AttendeeStatus, string> = {
  * rules out per-field labels; the header carries them once instead.
  */
 export const ATTENDEE_GRID =
-  "grid grid-cols-[minmax(7rem,1fr)_5rem_8rem_5.5rem_5rem] items-center gap-2";
+  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_5rem_8rem_5.5rem_5rem] items-center gap-2";
 
 /** Narrower than a phone, so the columns scroll sideways instead of wrapping. */
-export const ATTENDEE_MIN_WIDTH = "min-w-[33rem]";
+export const ATTENDEE_MIN_WIDTH = "min-w-[34.5rem]";
 
 interface Props {
   event: Event;
   attendee: Attendee;
   /** Position in the party, used to label a guest who has no name yet. */
   position: number;
+  /** Ticked for a batch move. Guests are picked one by one, not by party. */
+  selected: boolean;
+  onSelect: (selected: boolean) => void;
   onPatch: (patch: AttendeePatch) => Promise<unknown>;
   onCancel: () => Promise<unknown>;
 }
@@ -39,6 +42,8 @@ export function AttendeeRow({
   event,
   attendee,
   position,
+  selected,
+  onSelect,
   onPatch,
   onCancel,
 }: Props) {
@@ -102,6 +107,16 @@ export function AttendeeRow({
   return (
     <li data-attendee={attendee.id} className={cancelled ? "opacity-60" : ""}>
       <div className={ATTENDEE_GRID}>
+        <input
+          type="checkbox"
+          checked={selected}
+          disabled={busy}
+          aria-label={`Select guest ${position} to move`}
+          data-select-attendee={attendee.id}
+          onChange={(changed) => onSelect(changed.target.checked)}
+          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+        />
+
         <input
           type="text"
           value={name}
