@@ -15,7 +15,7 @@ import { NewEventForm } from "@/components/new-event-form";
 import { SectionNav } from "@/components/section-nav";
 
 function EventChrome({ children }: { children: React.ReactNode }) {
-  const { state, error, activeEvents, atEventLimit, addEvent } =
+  const { state, error, activeEvents, atEventLimit, lastTimes, addEvent } =
     useEventContext();
   const params = useParams<{ eventId: string }>();
   const router = useRouter();
@@ -62,6 +62,7 @@ function EventChrome({ children }: { children: React.ReactNode }) {
         {creating && (
           <div className="mb-6">
             <NewEventForm
+              lastTimes={lastTimes}
               onCreate={async (input) => {
                 const created = await addEvent(input);
                 setCreating(false);

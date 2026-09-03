@@ -175,6 +175,32 @@ function mostRecentEvent(events: readonly Event[]): Event | null {
 }
 
 /** Fresh ids, so editing the new event's expenses never touches the source. */
+/** Clock times an event runs between, either of which may be unset. */
+export interface EventTimes {
+  startTime: string | null;
+  endTime: string | null;
+}
+
+/**
+ * The times to offer when creating an event, taken from the one saved most
+ * recently.
+ *
+ * A venue's functions tend to run to the same hours, so entering 19:00 to
+ * 23:30 once should be enough for the run of them. This follows the same
+ * "most recently saved" rule that decides whose expenses are copied forward,
+ * so both defaults on the New event form come from the same event.
+ *
+ * Either time is null when that event had it unset, and both are null before
+ * there is any event to copy from.
+ */
+export async function lastSavedTimes(): Promise<EventTimes> {
+  const latest = mostRecentEvent(await listEvents());
+  return {
+    startTime: latest?.startTime ?? null,
+    endTime: latest?.endTime ?? null,
+  };
+}
+
 function copyExpenses(expenses: readonly Expense[]): Expense[] {
   return expenses.map((expense) => ({
     id: newId(),

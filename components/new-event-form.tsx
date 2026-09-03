@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { endsAfterMidnight, todayIso } from "@/lib/event-time";
+import type { EventTimes } from "@/lib/repository";
 import type { NewEventInput } from "@/lib/use-events";
 
 interface Props {
+  /**
+   * Times from the event saved most recently, filled in ready to edit. A
+   * venue's functions tend to run to the same hours, so the common case is
+   * to leave them as they are.
+   */
+  lastTimes: EventTimes;
   onCreate: (input: NewEventInput) => Promise<unknown>;
   onCancel: () => void;
 }
@@ -13,11 +20,13 @@ const fieldClass =
   "h-11 rounded-md border border-zinc-300 bg-white px-3 text-base text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 const labelClass = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
-export function NewEventForm({ onCreate, onCancel }: Props) {
+export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState(todayIso());
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  // Read once, at mount: the form is unmounted between uses, so there is no
+  // stale copy to keep in step, and typing over a default must stick.
+  const [startTime, setStartTime] = useState(lastTimes.startTime ?? "");
+  const [endTime, setEndTime] = useState(lastTimes.endTime ?? "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -65,9 +74,9 @@ export function NewEventForm({ onCreate, onCancel }: Props) {
         New event
       </h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Expenses are copied from your most recent event so you can start from
-        the previous event&apos;s costs. Times are optional and can be added
-        later.
+        The times and the expenses both start from your most recent event, so
+        a run of functions keeping the same hours needs them entered once.
+        Change or clear either as you like; times are optional.
       </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -22,6 +22,7 @@ import {
   clearExpenses,
   createBooking,
   createEvent,
+  lastSavedTimes,
   listEvents,
   listExpenseTemplates,
   moveAttendees,
@@ -35,6 +36,7 @@ import {
   updateEventSchedule,
   type AttendeePatch,
   type CreatedBooking,
+  type EventTimes,
   type ExpenseInput,
   type ExpensePatch,
   type MoveTarget,
@@ -79,6 +81,11 @@ export interface UseEventsResult {
    * through this hook.
    */
   expenseTemplates: ExpenseTemplate[];
+  /**
+   * Times carried over from the event saved most recently, for the New event
+   * form to start from. Both null when there is no event to copy.
+   */
+  lastTimes: EventTimes;
   addEvent: (input: NewEventInput) => Promise<Event>;
   updateSchedule: (id: string, schedule: ScheduleInput) => Promise<Event>;
   addEventTable: (eventId: string) => Promise<Event>;
@@ -151,6 +158,10 @@ export function useEvents(): UseEventsResult {
   const [expenseTemplates, setExpenseTemplates] = useState<ExpenseTemplate[]>(
     [],
   );
+  const [lastTimes, setLastTimes] = useState<EventTimes>({
+    startTime: null,
+    endTime: null,
+  });
 
   const load = useCallback(async () => {
     if (!isBrowser()) {
@@ -165,6 +176,7 @@ export function useEvents(): UseEventsResult {
       await runRetentionSweep();
       setActiveEvents(await readActiveEvents());
       setExpenseTemplates(await listExpenseTemplates());
+      setLastTimes(await lastSavedTimes());
       setState("ready");
       setError("");
     } catch (caught) {
@@ -186,6 +198,7 @@ export function useEvents(): UseEventsResult {
   const addEvent = useCallback(async (input: NewEventInput) => {
     const created = await createEvent(input);
     setActiveEvents(await readActiveEvents());
+    setLastTimes(await lastSavedTimes());
     return created;
   }, []);
 
@@ -193,6 +206,7 @@ export function useEvents(): UseEventsResult {
     async (id: string, schedule: ScheduleInput) => {
       const updated = await updateEventSchedule(id, schedule);
       setActiveEvents(await readActiveEvents());
+      setLastTimes(await lastSavedTimes());
       return updated;
     },
     [],
@@ -318,6 +332,7 @@ export function useEvents(): UseEventsResult {
     activeEvents,
     atEventLimit: activeEvents.length >= MAX_ACTIVE_EVENTS,
     expenseTemplates,
+    lastTimes,
     addEvent,
     updateSchedule,
     addEventTable,

@@ -13,7 +13,7 @@ import { useEvents } from "@/lib/use-events";
 import { MAX_ACTIVE_EVENTS } from "@/lib/types";
 
 export default function Home() {
-  const { state, error, activeEvents, addEvent } = useEvents();
+  const { state, error, activeEvents, lastTimes, addEvent } = useEvents();
   const router = useRouter();
   const [creating, setCreating] = useState(false);
 
@@ -52,6 +52,7 @@ export default function Home() {
     return (
       <div className="p-4 sm:p-6">
         <NewEventForm
+          lastTimes={lastTimes}
           onCreate={async (input) => {
             const created = await addEvent(input);
             router.replace(`/events/${created.id}`);
