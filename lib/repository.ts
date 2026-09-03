@@ -438,6 +438,13 @@ export interface TableOccupancy {
   free: number;
   /** Parties seated here, in the order they were booked. */
   parties: SeatedParty[];
+  /**
+   * Who is sitting here, in booking order. A party can be taken down before
+   * its guests are named, so those are counted in `unnamed` rather than
+   * padding this list with blanks.
+   */
+  guestNames: string[];
+  unnamed: number;
 }
 
 /**
@@ -460,20 +467,29 @@ export function tableOccupancy(
 
   return event.tables.map((table) => {
     const parties: SeatedParty[] = [];
+    const guestNames: string[] = [];
+    let unnamed = 0;
 
     for (const booking of event.bookings) {
-      const guestCount = booking.attendees.filter(
+      const seated = booking.attendees.filter(
         (attendee) =>
           !ignored.has(attendee.id) &&
           attendee.assignedTableNumber === table.tableNumber &&
           SEAT_OCCUPYING_STATUSES.includes(attendee.status),
-      ).length;
-      if (guestCount === 0) continue;
+      );
+      if (seated.length === 0) continue;
+
       parties.push({
         bookingId: booking.id,
         partyName: booking.partyName,
-        guestCount,
+        guestCount: seated.length,
       });
+
+      for (const attendee of seated) {
+        const name = attendee.name.trim();
+        if (name === "") unnamed += 1;
+        else guestNames.push(name);
+      }
     }
 
     const taken = parties.reduce((total, party) => total + party.guestCount, 0);
@@ -486,6 +502,8 @@ export function tableOccupancy(
       // on screen would read as a feature.
       free: Math.max(0, table.seatCount - taken),
       parties,
+      guestNames,
+      unnamed,
     };
   });
 }
