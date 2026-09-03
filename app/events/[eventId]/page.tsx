@@ -27,12 +27,9 @@ function summarise(event: Event) {
 
   return {
     tables: event.tables.length,
-    // Parties, not people. The guest total sits beside it because "3
-    // bookings" says nothing about whether that is six people or thirty.
-    bookings: event.bookings.length,
-    guestsTotal: attendees.length,
-    // Seat-occupying is every status but cancelled, so this is the count of
-    // guests no longer coming.
+    // Seat-occupying is every status but cancelled, so the guests holding a
+    // seat are exactly the guests still coming.
+    guestsConfirmed: seatsTaken,
     guestsCancelled: attendees.length - seatsTaken,
     seatsTotal,
     seatsAvailable: Math.max(0, seatsTotal - seatsTaken),
@@ -46,18 +43,6 @@ interface Figure {
   value: string;
   /** Named when a card carries two numbers, so neither can be misread. */
   unit?: string;
-}
-
-/**
- * Every guest, and how many of them are still coming when those differ.
- *
- * Written as "16/18" the way a party card writes "5/6 guests", so the total
- * stays visible without a second line that would make this card taller than
- * the others beside it.
- */
-function guestCount(summary: { guestsTotal: number; guestsCancelled: number }) {
-  if (summary.guestsCancelled === 0) return String(summary.guestsTotal);
-  return `${summary.guestsTotal - summary.guestsCancelled}/${summary.guestsTotal}`;
 }
 
 function Stat({
@@ -134,11 +119,17 @@ export default function EventDashboard() {
 
       <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Tables" figures={[{ value: String(summary.tables) }]} />
+        {/* Both counts always show, including a zero, so the card does not
+            change height the moment someone cancels. The card is labelled
+            "Guests" and the units read "confirmed" and "cancelled": spelling
+            out "Confirmed Guests" beside the number pushes the pair onto a
+            second line at the narrow end of the four-column layout, which
+            would make this the tall card in the row. */}
         <Stat
-          label="Bookings"
+          label="Guests"
           figures={[
-            { value: String(summary.bookings), unit: "parties" },
-            { value: guestCount(summary), unit: "guests" },
+            { value: String(summary.guestsConfirmed), unit: "confirmed" },
+            { value: String(summary.guestsCancelled), unit: "cancelled" },
           ]}
         />
         <Stat
