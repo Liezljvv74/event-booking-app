@@ -7,7 +7,6 @@ import {
   AttendeeRow,
 } from "@/components/attendee-row";
 import { CancelledGroup } from "@/components/cancelled-group";
-import { PartyDetailsForm } from "@/components/party-details-form";
 import { formatAmount } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
@@ -56,6 +55,35 @@ export function BookingCard({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const guestsId = useId();
+
+  // Drafts of the two fields the header carries, held only while editing.
+  const [draftName, setDraftName] = useState(booking.partyName);
+  const [draftPhone, setDraftPhone] = useState(booking.telephone);
+
+  function openEdit() {
+    // Read from the booking each time, so a cancelled edit is not remembered.
+    setDraftName(booking.partyName);
+    setDraftPhone(booking.telephone);
+    setError("");
+    setEditing(true);
+  }
+
+  async function saveDetails(formEvent: React.FormEvent<HTMLFormElement>) {
+    formEvent.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await onSaveDetails({
+        partyName: draftName,
+        telephone: draftPhone,
+      });
+      setEditing(false);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Guests picked for a move, by id. Held here rather than per row so several
   // can travel together, and so the destinations can be worked out against
@@ -140,6 +168,52 @@ export function BookingCard({
       data-booking={booking.id}
       className="rounded-lg border border-zinc-200 p-2 dark:border-zinc-800"
     >
+      {/* Editing replaces the header rather than opening a panel beneath it.
+          The name and the telephone are what the header already shows, so a
+          second view of them said nothing the first had not. */}
+      {editing ? (
+        <form
+          onSubmit={saveDetails}
+          data-party-form={booking.id}
+          className="flex flex-wrap items-center gap-2"
+        >
+          <input
+            type="text"
+            value={draftName}
+            disabled={busy}
+            autoFocus
+            aria-label={`Party name of ${booking.partyName}`}
+            data-party-name-input={booking.id}
+            onChange={(changed) => setDraftName(changed.target.value)}
+            className="h-9 min-w-[8rem] flex-1 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          />
+          <input
+            type="tel"
+            value={draftPhone}
+            disabled={busy}
+            aria-label={`Telephone for ${booking.partyName}`}
+            data-party-phone-input={booking.id}
+            onChange={(changed) => setDraftPhone(changed.target.value)}
+            className="h-9 min-w-[8rem] flex-1 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          />
+          <button
+            type="submit"
+            disabled={busy}
+            data-party-save={booking.id}
+            className="h-9 rounded-md bg-black px-3 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+          >
+            {busy ? "Saving…" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            disabled={busy}
+            className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+          >
+            Cancel
+          </button>
+        </form>
+      ) : (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
         {/* The party name is the control that opens the guests, so the whole
             label is the click target rather than a separate small caret. */}
@@ -181,7 +255,7 @@ export function BookingCard({
 
           <button
             type="button"
-            onClick={() => setEditing((was) => !was)}
+            onClick={openEdit}
             data-party-edit={booking.id}
             aria-label={`Edit ${booking.partyName} details`}
             className="h-9 rounded-md border border-zinc-300 px-2 text-xs font-medium text-black dark:border-zinc-700 dark:text-zinc-50"
@@ -228,23 +302,12 @@ export function BookingCard({
           )}
         </div>
       </div>
+      )}
 
       {error !== "" && (
         <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-400">
           {error}
         </p>
-      )}
-
-      {editing && (
-        <PartyDetailsForm
-          booking={booking}
-          onSave={async (details) => {
-            const saved = await onSaveDetails(details);
-            setEditing(false);
-            return saved;
-          }}
-          onCancel={() => setEditing(false)}
-        />
       )}
 
       {/* Kept in the DOM but hidden while collapsed, so a half-typed guest

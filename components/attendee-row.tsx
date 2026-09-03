@@ -73,7 +73,7 @@ export function CancelledRow({ attendee }: { attendee: Attendee }) {
         <span className={`px-2 ${muted}`}>
           {attendee.assignedTableNumber ?? "—"}
         </span>
-        <span className={`px-2 ${muted}`}>Cancelled</span>
+        <span className={`px-2 ${muted}`}>{STATUS_LABELS.cancelled}</span>
         <span className={`px-2 text-right ${muted}`}>
           {formatCents(attendee.ticketPriceCents)}
         </span>

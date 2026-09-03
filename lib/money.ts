@@ -9,13 +9,12 @@
  * validation message rather than silently storing 0.
  */
 export function parseCents(input: string): number | null {
-  const cleaned = input
-    .replace(/[^\d.,-]/g, "")
-    .replace(/\s/g, "")
-    // Treat a comma as the decimal separator when no dot is present.
-    .replace(/,(?=[^,]*$)/, (match, offset: number, whole: string) =>
-      whole.includes(".") ? "" : ".",
-    )
+  const stripped = input.replace(/[^\d.,-]/g, "").replace(/\s/g, "");
+  // A comma is the decimal separator when no dot is present, and a thousands
+  // mark when one is.
+  const lastComma = stripped.includes(".") ? "" : ".";
+  const cleaned = stripped
+    .replace(/,(?=[^,]*$)/, lastComma)
     .replace(/,/g, "");
 
   if (cleaned === "" || cleaned === "-" || cleaned === ".") return null;

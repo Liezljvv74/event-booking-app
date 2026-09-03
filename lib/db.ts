@@ -15,6 +15,11 @@ export const STORE_EXPENSE_TEMPLATES = "expenseTemplates";
 export const STORE_SETTINGS = "settings";
 
 /** Index on Event.status, used to count active events and sweep closed ones. */
+/**
+ * Part of the stored schema. Nothing queries it now that events are filtered
+ * in memory, but dropping it would leave databases created before and after
+ * the change with different shapes for no gain.
+ */
 export const INDEX_EVENTS_BY_STATUS = "by_status";
 
 export function isBrowser(): boolean {
@@ -205,16 +210,6 @@ export async function remove(
   await promisifyRequest(transaction.objectStore(storeName).delete(key));
 }
 
-export function countByIndex(
-  transaction: IDBTransaction,
-  storeName: string,
-  indexName: string,
-  key: IDBValidKey,
-): Promise<number> {
-  return promisifyRequest(
-    transaction.objectStore(storeName).index(indexName).count(key),
-  );
-}
 
 /** Generate an id without a dependency, falling back where crypto is absent. */
 export function newId(): string {
@@ -224,25 +219,4 @@ export function newId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** Close and forget the connection. Used by tests and the reset path. */
-export async function closeDatabase(): Promise<void> {
-  if (!connection) return;
-  const database = await connection.catch(() => null);
-  database?.close();
-  connection = null;
-}
 
-/**
- * Drop the whole database. Backs the "reset app data" path, and lets a test
- * start from a known-empty store.
- */
-export async function deleteDatabase(): Promise<void> {
-  await closeDatabase();
-  await new Promise<void>((resolve, reject) => {
-    const request = indexedDB.deleteDatabase(DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-    request.onblocked = () =>
-      reject(new Error("Database deletion blocked by another open tab."));
-  });
-}

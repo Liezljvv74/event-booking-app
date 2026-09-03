@@ -23,11 +23,9 @@ import {
   type Table,
 } from "./types";
 import {
-  INDEX_EVENTS_BY_STATUS,
   STORE_EVENTS,
   STORE_EXPENSE_TEMPLATES,
   STORE_SETTINGS,
-  countByIndex,
   getAll,
   getOne,
   newId,
@@ -84,10 +82,6 @@ export async function listEvents(): Promise<Event[]> {
     .sort((a, b) => a.eventDate.localeCompare(b.eventDate));
 }
 
-export async function listActiveEvents(): Promise<Event[]> {
-  const events = await listEvents();
-  return events.filter((event) => event.status === "active");
-}
 
 export async function getEvent(id: string): Promise<Event | null> {
   const event = await runTransaction(STORE_EVENTS, "readonly", (transaction) =>
@@ -96,12 +90,6 @@ export async function getEvent(id: string): Promise<Event | null> {
   return event === null ? null : withStoredDefaults(event);
 }
 
-/** Persist an event wholesale. Callers mutate a copy, then save it. */
-export function saveEvent(event: Event): Promise<void> {
-  return runTransaction(STORE_EVENTS, "readwrite", (transaction) =>
-    put(transaction, STORE_EVENTS, event),
-  );
-}
 
 export function deleteEvent(id: string): Promise<void> {
   return runTransaction(STORE_EVENTS, "readwrite", (transaction) =>
@@ -1120,12 +1108,6 @@ export function unusedExpenseTemplates(
   );
 }
 
-/** Permanent removal from the library, per the spec's explicit option. */
-export function deleteExpenseTemplate(id: string): Promise<void> {
-  return runTransaction(STORE_EXPENSE_TEMPLATES, "readwrite", (transaction) =>
-    remove(transaction, STORE_EXPENSE_TEMPLATES, id),
-  );
-}
 
 /* ---------------------------------------------------------------- settings */
 
@@ -1136,18 +1118,6 @@ export async function getSettings(): Promise<Settings> {
   return { ...DEFAULT_SETTINGS, ...row?.value };
 }
 
-export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
-  return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
-    const row = await getOne<SettingsRow>(
-      transaction,
-      STORE_SETTINGS,
-      SETTINGS_KEY,
-    );
-    const value: Settings = { ...DEFAULT_SETTINGS, ...row?.value, ...patch };
-    await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });
-    return value;
-  });
-}
 
 /* ------------------------------------------------- auto-close & retention */
 
@@ -1223,9 +1193,3 @@ export async function runRetentionSweep(
   });
 }
 
-/** Active-event count, for disabling "New Event" at the spec's limit. */
-export function countActiveEvents(): Promise<number> {
-  return runTransaction(STORE_EVENTS, "readonly", (transaction) =>
-    countByIndex(transaction, STORE_EVENTS, INDEX_EVENTS_BY_STATUS, "active"),
-  );
-}
