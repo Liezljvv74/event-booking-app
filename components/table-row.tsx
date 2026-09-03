@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { occupiedSeats } from "@/lib/repository";
-import type { Event, Table } from "@/lib/types";
+import type { TableOccupancy } from "@/lib/repository";
+import type { Table } from "@/lib/types";
 
 interface Props {
-  event: Event;
   table: Table;
+  /** Derived once for the whole event, so every row agrees on the counts. */
+  occupancy: TableOccupancy;
   onSetSeats: (seatCount: number) => Promise<unknown>;
   onRemove: () => Promise<unknown>;
 }
 
-export function TableRow({ event, table, onSetSeats, onRemove }: Props) {
+export function TableRow({ table, occupancy, onSetSeats, onRemove }: Props) {
   const [seats, setSeats] = useState(String(table.seatCount));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -27,7 +28,7 @@ export function TableRow({ event, table, onSetSeats, onRemove }: Props) {
     setSeats(String(table.seatCount));
   }
 
-  const occupied = occupiedSeats(event, table.tableNumber);
+  const { taken: occupied, free, parties } = occupancy;
 
   async function commit() {
     const parsed = Number(seats);
@@ -99,11 +100,21 @@ export function TableRow({ event, table, onSetSeats, onRemove }: Props) {
           />
         </label>
 
-        {occupied > 0 && (
-          <span className="text-sm text-zinc-600 dark:text-zinc-400">
-            {occupied} seated
-          </span>
-        )}
+        <span
+          data-table-free={table.tableNumber}
+          className={`text-sm ${
+            free === 0
+              ? "text-zinc-500 dark:text-zinc-500"
+              : "font-medium text-emerald-700 dark:text-emerald-500"
+          }`}
+        >
+          {free === 0 ? "full" : `${free} free`}
+          {occupied > 0 && (
+            <span className="font-normal text-zinc-600 dark:text-zinc-400">
+              {` · ${occupied} seated`}
+            </span>
+          )}
+        </span>
 
         <div className="ml-auto flex items-center gap-2">
           {confirming ? (
@@ -144,6 +155,25 @@ export function TableRow({ event, table, onSetSeats, onRemove }: Props) {
           )}
         </div>
       </div>
+
+      {parties.length > 0 && (
+        <ul
+          data-table-parties={table.tableNumber}
+          className="mt-2 flex flex-wrap gap-1.5"
+        >
+          {parties.map((party) => (
+            <li
+              key={party.bookingId}
+              className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+            >
+              {party.partyName}
+              <span className="text-zinc-500 dark:text-zinc-500">
+                {` ${party.guestCount}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {error !== "" && (
         <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">

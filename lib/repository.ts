@@ -187,15 +187,31 @@ async function mutateEvent(
   });
 }
 
-/** How many seats at this table are held by attendees who have not cancelled. */
-export function occupiedSeats(event: Event, tableNumber: number): number {
+/**
+ * Guests holding a seat at this table, optionally ignoring one of them.
+ *
+ * The single place that decides what "occupied" means, so the seat count on
+ * the Tables screen, the options offered in a guest's table dropdown and the
+ * check that refuses an over-full table can never disagree.
+ */
+function countSeatedAt(
+  event: Event,
+  tableNumber: number,
+  ignoreAttendeeId?: string,
+): number {
   return event.bookings
     .flatMap((booking) => booking.attendees)
     .filter(
       (attendee) =>
+        attendee.id !== ignoreAttendeeId &&
         attendee.assignedTableNumber === tableNumber &&
         SEAT_OCCUPYING_STATUSES.includes(attendee.status),
     ).length;
+}
+
+/** How many seats at this table are held by attendees who have not cancelled. */
+export function occupiedSeats(event: Event, tableNumber: number): number {
+  return countSeatedAt(event, tableNumber);
 }
 
 /**
@@ -307,16 +323,71 @@ export function freeSeatsAtTable(
   );
   if (!table) return 0;
 
-  const taken = event.bookings
-    .flatMap((booking) => booking.attendees)
-    .filter(
-      (attendee) =>
-        attendee.id !== ignoreAttendeeId &&
-        attendee.assignedTableNumber === tableNumber &&
-        SEAT_OCCUPYING_STATUSES.includes(attendee.status),
-    ).length;
+  return table.seatCount - countSeatedAt(event, tableNumber, ignoreAttendeeId);
+}
 
-  return table.seatCount - taken;
+/** One party's share of a table. Several parties can sit at the same table. */
+export interface SeatedParty {
+  bookingId: string;
+  partyName: string;
+  /** Guests of this party holding a seat here, never zero. */
+  guestCount: number;
+}
+
+export interface TableOccupancy {
+  tableNumber: number;
+  seatCount: number;
+  taken: number;
+  free: number;
+  /** Parties seated here, in the order they were booked. */
+  parties: SeatedParty[];
+}
+
+/**
+ * Who is sitting at each table, and how much room is left.
+ *
+ * A table is shared, not owned: a party of four at a ten-seat table leaves
+ * six seats that any other party may take. Nothing enforced that either way,
+ * but nothing showed it either, so the free seats were invisible until a
+ * dropdown refused a table. This is what the screens read to say so.
+ *
+ * Pass an attendee id to leave them out of the count, which is what a guest's
+ * own table dropdown needs: their current table must not look full to them.
+ */
+export function tableOccupancy(
+  event: Event,
+  ignoreAttendeeId?: string,
+): TableOccupancy[] {
+  return event.tables.map((table) => {
+    const parties: SeatedParty[] = [];
+
+    for (const booking of event.bookings) {
+      const guestCount = booking.attendees.filter(
+        (attendee) =>
+          attendee.id !== ignoreAttendeeId &&
+          attendee.assignedTableNumber === table.tableNumber &&
+          SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+      ).length;
+      if (guestCount === 0) continue;
+      parties.push({
+        bookingId: booking.id,
+        partyName: booking.partyName,
+        guestCount,
+      });
+    }
+
+    const taken = parties.reduce((total, party) => total + party.guestCount, 0);
+
+    return {
+      tableNumber: table.tableNumber,
+      seatCount: table.seatCount,
+      taken,
+      // Clamped: an over-full table is a bug elsewhere, but a negative count
+      // on screen would read as a feature.
+      free: Math.max(0, table.seatCount - taken),
+      parties,
+    };
+  });
 }
 
 export class TableFullError extends Error {
@@ -329,11 +400,16 @@ export class TableFullError extends Error {
 /**
  * Pick a table that seats the whole party together.
  *
- * Prefers the tightest table the party still fits in, so a party of two does
- * not take a ten-seat table while a two-seater sits empty. Ties break on the
- * lower table number so the choice is predictable. Returns null when no
- * single table can hold them all, in which case they stay unseated rather
- * than being split up.
+ * Tables are shared, not claimed: this counts free seats, so a party of four
+ * already at a ten-seat table leaves six seats that the next party of six or
+ * fewer will be given. Prefers the tightest table the party still fits in,
+ * which both keeps a party of two off a ten-seater while a two-seater sits
+ * empty and packs the part-filled tables before opening a fresh one. Ties
+ * break on the lower table number so the choice is predictable.
+ *
+ * Returns null when no single table can hold them all, in which case they
+ * stay unseated rather than being split across tables behind the manager's
+ * back — the screen then says where the free seats are.
  */
 export function pickTableForParty(
   event: Event,

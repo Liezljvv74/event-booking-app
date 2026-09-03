@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
 import { TableRow } from "@/components/table-row";
+import { tableOccupancy } from "@/lib/repository";
 import { DEFAULT_SEAT_COUNT } from "@/lib/types";
 
 export default function TablesScreen() {
@@ -22,6 +23,14 @@ export default function TablesScreen() {
     (total, table) => total + table.seatCount,
     0,
   );
+
+  // Derived once and handed to each row, keyed by table number so a row is
+  // never matched to its neighbour's counts.
+  const occupancy = tableOccupancy(event);
+  const byTableNumber = new Map(
+    occupancy.map((entry) => [entry.tableNumber, entry]),
+  );
+  const totalFree = occupancy.reduce((total, entry) => total + entry.free, 0);
 
   async function add() {
     setAdding(true);
@@ -46,7 +55,7 @@ export default function TablesScreen() {
           className="text-sm text-zinc-600 dark:text-zinc-400"
         >
           {event.tables.length} table{event.tables.length === 1 ? "" : "s"} ·{" "}
-          {totalSeats} seat{totalSeats === 1 ? "" : "s"}
+          {totalSeats} seat{totalSeats === 1 ? "" : "s"} · {totalFree} free
         </p>
       </div>
 
@@ -59,15 +68,16 @@ export default function TablesScreen() {
       {event.tables.length === 0 ? (
         <p className="mt-4 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
           No tables yet. Each new table starts with {DEFAULT_SEAT_COUNT} seats,
-          which you can change per table.
+          which you can change per table. Tables are shared: several parties
+          can sit at one table until its seats run out.
         </p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
           {event.tables.map((table) => (
             <TableRow
               key={table.id}
-              event={event}
               table={table}
+              occupancy={byTableNumber.get(table.tableNumber)!}
               onSetSeats={(seatCount) =>
                 setSeatCount(event.id, table.id, seatCount)
               }

@@ -66,14 +66,16 @@ export function BookingCard({
 
   // Collapsed, the party line is all the manager sees, so it has to say where
   // the party is sitting and whether anyone still needs a seat.
+  // Pluralised on the number of tables alone. Tying it to the unseated count
+  // as well read "tables 2 · 7 unseated" for a party sitting at one table
+  // with the rest still to place — now the ordinary way a shared table fills.
   const seating =
     tables.length === 0
       ? live.length > 0
         ? "unseated"
         : ""
-      : tables.length === 1 && unseated === 0
-        ? `table ${tables[0]}`
-        : `tables ${tables.join(", ")}${unseated > 0 ? ` · ${unseated} unseated` : ""}`;
+      : `${tables.length === 1 ? "table" : "tables"} ${tables.join(", ")}` +
+        (unseated > 0 ? ` · ${unseated} unseated` : "");
 
   async function cancelAll() {
     setBusy(true);

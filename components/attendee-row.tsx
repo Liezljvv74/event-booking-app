@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatCents, parseCents } from "@/lib/money";
-import type { AttendeePatch } from "@/lib/repository";
+import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import type { Attendee, AttendeeStatus, Event } from "@/lib/types";
 
 const STATUS_LABELS: Record<AttendeeStatus, string> = {
@@ -62,6 +62,11 @@ export function AttendeeRow({
   }
 
   const cancelled = attendee.status === "cancelled";
+
+  // Ignoring this guest, so the table they already sit at does not count
+  // itself as full. A cancelled guest holds no seat, so no table is out of
+  // reach for them.
+  const seating = tableOccupancy(event, attendee.id);
 
   async function apply(patch: AttendeePatch, revert?: () => void) {
     setBusy(true);
@@ -129,11 +134,29 @@ export function AttendeeRow({
           className={controlClass}
         >
           <option value="">—</option>
-          {event.tables.map((table) => (
-            <option key={table.id} value={table.tableNumber}>
-              {table.tableNumber}
-            </option>
-          ))}
+          {seating.map((entry) => {
+            const current = entry.tableNumber === attendee.assignedTableNumber;
+            // Offered but unselectable beats accepted then refused. Never the
+            // guest's own table, which they are entitled to stay at.
+            const full = !cancelled && !current && entry.free === 0;
+            return (
+              <option
+                key={entry.tableNumber}
+                value={entry.tableNumber}
+                disabled={full}
+              >
+                {/* The chosen option's text is what the closed field shows,
+                    and the column fits a number and no more. So the free
+                    seats are spelled out on the tables this guest could move
+                    to, not on the one they are already at. */}
+                {current
+                  ? entry.tableNumber
+                  : full
+                    ? `${entry.tableNumber} · full`
+                    : `${entry.tableNumber} · ${entry.free} free`}
+              </option>
+            );
+          })}
         </select>
 
         <select

@@ -6,7 +6,38 @@ import { useParams } from "next/navigation";
 import { BookingCard } from "@/components/booking-card";
 import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
-import { SEAT_OCCUPYING_STATUSES } from "@/lib/types";
+import { tableOccupancy } from "@/lib/repository";
+import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
+
+/** How many tables to name before the line gets too long to scan. */
+const MAX_TABLES_LISTED = 8;
+
+/**
+ * Why a party could not be seated together, and where the room actually is.
+ *
+ * A party is never split across tables on its own, so this is the manager's
+ * cue to place the guests by hand — pointing at the roomiest table rather
+ * than leaving them to hunt for it.
+ */
+function describeUnseated(event: Event, guestCount: number): string {
+  const room = tableOccupancy(event)
+    .filter((entry) => entry.free > 0)
+    .sort((a, b) => b.free - a.free || a.tableNumber - b.tableNumber);
+
+  if (room.length === 0) {
+    return (
+      `Every table is full, so this party of ${guestCount} is unseated. ` +
+      `Add a table, or more seats to an existing one.`
+    );
+  }
+
+  const roomiest = room[0];
+  return (
+    `No single table has ${guestCount} free seats, so this party is unseated. ` +
+    `Table ${roomiest.tableNumber} has the most room, with ${roomiest.free}. ` +
+    `Seat the guests individually, or add seats.`
+  );
+}
 
 export default function BookingsScreen() {
   const {
@@ -49,6 +80,12 @@ export default function BookingsScreen() {
     0,
   );
 
+  // Tables are shared, so what matters when placing a party is not which
+  // tables are empty but which still have room.
+  const withRoom = tableOccupancy(event).filter((entry) => entry.free > 0);
+  const listed = withRoom.slice(0, MAX_TABLES_LISTED);
+  const beyond = withRoom.length - listed.length;
+
   return (
     <section>
       {/* Heading, counts and the New booking button share one row: ten guest
@@ -81,6 +118,28 @@ export default function BookingsScreen() {
         )}
       </div>
 
+      {event.tables.length > 0 && (
+        <p
+          data-free-seats
+          className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-400"
+        >
+          {withRoom.length === 0 ? (
+            <>All {seatsTotal} seats are taken.</>
+          ) : (
+            <>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                Free seats
+              </span>
+              {" — "}
+              {listed
+                .map((entry) => `table ${entry.tableNumber}: ${entry.free}`)
+                .join(", ")}
+              {beyond > 0 ? `, and ${beyond} more` : ""}
+            </>
+          )}
+        </p>
+      )}
+
       {/* Guests can be booked before any table exists, but they cannot be
           seated, so say so rather than leaving an empty Table dropdown. */}
       {event.tables.length === 0 && (
@@ -107,7 +166,10 @@ export default function BookingsScreen() {
       )}
 
       {notice !== "" && (
-        <p className="mt-3 max-w-prose text-sm text-amber-700 dark:text-amber-500">
+        <p
+          data-booking-notice
+          className="mt-3 max-w-prose text-sm text-amber-700 dark:text-amber-500"
+        >
           {notice}
         </p>
       )}
@@ -122,7 +184,7 @@ export default function BookingsScreen() {
               setExpanded((current) => new Set(current).add(created.bookingId));
               setNotice(
                 created.seatedAtTable === null
-                  ? `No single table has ${input.guestCount} free seats, so this party is unseated. Add seats, or seat them individually.`
+                  ? describeUnseated(created.event, input.guestCount)
                   : "",
               );
               return created;
@@ -135,7 +197,9 @@ export default function BookingsScreen() {
       {event.bookings.length === 0 ? (
         <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
           No bookings yet. A booking is a party name, a telephone number and a
-          guest count.
+          guest count. Each party is seated at the table with the least room to
+          spare that still fits them, so tables fill up before new ones are
+          opened.
         </p>
       ) : (
         <ul className="mt-3 flex flex-col gap-3">
