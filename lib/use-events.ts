@@ -22,7 +22,6 @@ import {
   clearExpenses,
   createBooking,
   createEvent,
-  deleteExpenseTemplate,
   listEvents,
   listExpenseTemplates,
   moveAttendees,
@@ -125,8 +124,6 @@ export interface UseEventsResult {
   clearExpenseLine: (eventId: string, expenseId: string) => Promise<Event>;
   /** Clear every line at once, each one remembered the same way. */
   clearAllExpenses: (eventId: string) => Promise<Event>;
-  /** Drop a saved line from the library for good. Cannot be undone. */
-  forgetExpense: (templateId: string) => Promise<void>;
   cancelWholeBooking: (eventId: string, bookingId: string) => Promise<Event>;
   reload: () => Promise<void>;
 }
@@ -309,11 +306,6 @@ export function useEvents(): UseEventsResult {
     [applyLibraryChange],
   );
 
-  const forgetExpense = useCallback(async (templateId: string) => {
-    await deleteExpenseTemplate(templateId);
-    setExpenseTemplates(await listExpenseTemplates());
-  }, []);
-
   const cancelWholeBooking = useCallback(
     (eventId: string, bookingId: string) =>
       applyChange(() => cancelBooking(eventId, bookingId)),
@@ -341,7 +333,6 @@ export function useEvents(): UseEventsResult {
     editExpense,
     clearExpenseLine,
     clearAllExpenses,
-    forgetExpense,
     reload: load,
   };
 }

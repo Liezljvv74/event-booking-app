@@ -980,26 +980,22 @@ export function rememberExpenseTemplate(
 }
 
 /**
- * Saved lines still free to use on this event.
+ * Saved lines not already on this event.
  *
  * A saved line is offered in the Description dropdown of every expense line,
- * and taking one puts it out of reach of the others: two lines both called
- * "Venue hire" would be indistinguishable in the list and would collapse
- * back into a single library entry the moment either was cleared. Clearing
- * the line that holds it returns it to the library and to the dropdowns.
- *
- * Pass the id of the line being edited to keep its own description on offer,
- * so re-picking what a line already holds is not treated as a clash.
+ * and a description already in the list is offered nowhere — including on the
+ * line that holds it, where picking it again would change nothing. Two lines
+ * both called "Venue hire" would be indistinguishable in the list anyway, and
+ * would collapse back into a single library entry the moment either was
+ * cleared. Clearing the line that holds a description returns it to the
+ * dropdowns.
  */
 export function unusedExpenseTemplates(
   templates: readonly ExpenseTemplate[],
   expenses: readonly Expense[],
-  keepForExpenseId?: string,
 ): ExpenseTemplate[] {
   const taken = new Set(
-    expenses
-      .filter((expense) => expense.id !== keepForExpenseId)
-      .map((expense) => expense.description.trim().toLowerCase()),
+    expenses.map((expense) => expense.description.trim().toLowerCase()),
   );
 
   return templates.filter(

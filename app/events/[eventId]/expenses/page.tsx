@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
-import { ExpenseLibrary } from "@/components/expense-library";
 import {
   EXPENSE_GRID,
   EXPENSE_MIN_WIDTH,
@@ -36,7 +35,6 @@ export default function ExpensesScreen() {
     clearExpenseLine,
     clearAllExpenses,
     expenseTemplates,
-    forgetExpense,
   } = useEventContext();
   const params = useParams<{ eventId: string }>();
   const [confirmingClearAll, setConfirmingClearAll] = useState(false);
@@ -49,6 +47,9 @@ export default function ExpensesScreen() {
   if (!event) return null;
 
   const summary = totals(event.expenses);
+  // One list for every Description dropdown on the screen: a saved line is
+  // offered while no line holds its description, and nowhere once one does.
+  const available = unusedExpenseTemplates(expenseTemplates, event.expenses);
 
   async function clearAll() {
     setBusy(true);
@@ -122,9 +123,9 @@ export default function ExpensesScreen() {
 
       <p className="mt-1.5 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
         A line needs a description and an amount. Provider, the paid tick and
-        notes can be filled in whenever you know them. Each Description has a
-        dropdown of the lines you have cleared before, so a cost that recurs
-        need not be retyped.
+        notes can be filled in whenever you know them. Each Description offers
+        the lines you have cleared before, minus any already in the list, so a
+        cost that recurs need not be retyped.
       </p>
 
       {error !== "" && (
@@ -155,13 +156,7 @@ export default function ExpensesScreen() {
                 <ExpenseRow
                   key={expense.id}
                   expense={expense}
-                  // Its own description stays on offer; the ones other lines
-                  // hold do not.
-                  templates={unusedExpenseTemplates(
-                    expenseTemplates,
-                    event.expenses,
-                    expense.id,
-                  )}
+                  templates={available}
                   onPatch={(patch) => editExpense(event.id, expense.id, patch)}
                   onClear={() => clearExpenseLine(event.id, expense.id)}
                 />
@@ -200,10 +195,7 @@ export default function ExpensesScreen() {
 
           <div className="mt-3">
             <NewExpenseRow
-              templates={unusedExpenseTemplates(
-                expenseTemplates,
-                event.expenses,
-              )}
+              templates={available}
               onAdd={(input) => addExpenseLine(event.id, input)}
             />
           </div>
@@ -217,11 +209,6 @@ export default function ExpensesScreen() {
         </p>
       )}
 
-      <ExpenseLibrary
-        templates={expenseTemplates}
-        usedDescriptions={event.expenses.map((expense) => expense.description)}
-        onForget={forgetExpense}
-      />
     </section>
   );
 }
