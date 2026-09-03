@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { formatCents, parseCents } from "@/lib/money";
+import { useId, useState } from "react";
+import { formatAmount, formatCents, parseCents } from "@/lib/money";
 import type { ExpensePatch } from "@/lib/repository";
-import type { Expense } from "@/lib/types";
+import type { Expense, ExpenseTemplate } from "@/lib/types";
 
 /**
  * One grid template shared by the header, every line and the add row, so the
@@ -21,11 +21,17 @@ export const expenseFieldClass =
 
 interface Props {
   expense: Expense;
+  /**
+   * Saved lines this line may take. One already held by another line on the
+   * event is not among them until that line is cleared.
+   */
+  templates: readonly ExpenseTemplate[];
   onPatch: (patch: ExpensePatch) => Promise<unknown>;
   onClear: () => Promise<unknown>;
 }
 
-export function ExpenseRow({ expense, onPatch, onClear }: Props) {
+export function ExpenseRow({ expense, templates, onPatch, onClear }: Props) {
+  const savedLinesId = useId();
   const [description, setDescription] = useState(expense.description);
   const [provider, setProvider] = useState(expense.provider);
   const [amount, setAmount] = useState(formatCents(expense.amountCents));
@@ -63,12 +69,35 @@ export function ExpenseRow({ expense, onPatch, onClear }: Props) {
   }
 
   function commitText(
-    field: "description" | "provider" | "notes",
+    field: "provider" | "notes",
     typed: string,
     reset: (value: string) => void,
   ) {
     if (typed.trim() === expense[field]) return;
     void apply({ [field]: typed }, () => reset(expense[field]));
+  }
+
+  function savedLineNamed(value: string): ExpenseTemplate | undefined {
+    const wanted = value.trim().toLowerCase();
+    return templates.find(
+      (template) => template.description.trim().toLowerCase() === wanted,
+    );
+  }
+
+  function commitDescription() {
+    const typed = description.trim();
+    if (typed === expense.description) return;
+
+    // A saved line brings its amount along, but only into a line that has
+    // none yet. Overwriting a figure already entered would lose it, and the
+    // dropdown sits in the description column, not the amount one.
+    const saved = savedLineNamed(typed);
+    const patch: ExpensePatch =
+      saved !== undefined && expense.amountCents === 0
+        ? { description: typed, amountCents: saved.amountCents }
+        : { description: typed };
+
+    void apply(patch, () => setDescription(expense.description));
   }
 
   function commitAmount() {
@@ -98,15 +127,14 @@ export function ExpenseRow({ expense, onPatch, onClear }: Props) {
       <div className={EXPENSE_GRID}>
         <input
           type="text"
+          list={savedLinesId}
           value={description}
           disabled={busy}
           aria-label={`Description of ${expense.description}`}
           data-expense-description={expense.id}
           onChange={(changed) => setDescription(changed.target.value)}
-          onBlur={() => commitText("description", description, setDescription)}
-          onKeyDown={keyCommit(() =>
-            commitText("description", description, setDescription),
-          )}
+          onBlur={commitDescription}
+          onKeyDown={keyCommit(commitDescription)}
           className={expenseFieldClass}
         />
 
@@ -176,6 +204,14 @@ export function ExpenseRow({ expense, onPatch, onClear }: Props) {
           Clear
         </button>
       </div>
+
+      <datalist id={savedLinesId} data-saved-lines={expense.id}>
+        {templates.map((template) => (
+          <option key={template.id} value={template.description}>
+            {formatAmount(template.amountCents)}
+          </option>
+        ))}
+      </datalist>
 
       {error !== "" && (
         <p

@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   EXPENSE_GRID,
   expenseFieldClass,
 } from "@/components/expense-row";
-import { parseCents } from "@/lib/money";
+import { formatAmount, formatCents, parseCents } from "@/lib/money";
 import type { ExpenseInput } from "@/lib/repository";
+import type { ExpenseTemplate } from "@/lib/types";
 
 interface Props {
+  /** Saved lines not already held by a line on this event. */
+  templates: readonly ExpenseTemplate[];
   onAdd: (input: ExpenseInput) => Promise<unknown>;
 }
 
@@ -24,7 +27,8 @@ interface Props {
  * what is wrong, in a browser tooltip worded by the browser, and it would
  * still wave through a description of nothing but spaces.
  */
-export function NewExpenseRow({ onAdd }: Props) {
+export function NewExpenseRow({ templates, onAdd }: Props) {
+  const savedLinesId = useId();
   const [description, setDescription] = useState("");
   const [provider, setProvider] = useState("");
   const [amount, setAmount] = useState("");
@@ -32,6 +36,21 @@ export function NewExpenseRow({ onAdd }: Props) {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  /**
+   * Picking a saved line fills the amount in as well, but only while the
+   * amount box is still empty, so a figure already typed is never replaced.
+   */
+  function changeDescription(value: string) {
+    setDescription(value);
+    if (amount.trim() !== "") return;
+
+    const wanted = value.trim().toLowerCase();
+    const saved = templates.find(
+      (template) => template.description.trim().toLowerCase() === wanted,
+    );
+    if (saved !== undefined) setAmount(formatCents(saved.amountCents));
+  }
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
@@ -74,13 +93,13 @@ export function NewExpenseRow({ onAdd }: Props) {
       <div className={EXPENSE_GRID}>
         <input
           type="text"
+          list={savedLinesId}
           value={description}
           disabled={saving}
           aria-required="true"
-          placeholder="Venue hire"
           aria-label="New expense description"
           name="description"
-          onChange={(changed) => setDescription(changed.target.value)}
+          onChange={(changed) => changeDescription(changed.target.value)}
           className={expenseFieldClass}
         />
 
@@ -138,6 +157,14 @@ export function NewExpenseRow({ onAdd }: Props) {
           {saving ? "…" : "Add"}
         </button>
       </div>
+
+      <datalist id={savedLinesId} data-saved-lines="new">
+        {templates.map((template) => (
+          <option key={template.id} value={template.description}>
+            {formatAmount(template.amountCents)}
+          </option>
+        ))}
+      </datalist>
 
       {error !== "" && (
         <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">

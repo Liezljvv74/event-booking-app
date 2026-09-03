@@ -28,7 +28,6 @@ import {
   moveAttendees,
   removeExpense,
   removeTable,
-  reuseExpenseTemplate,
   runRetentionSweep,
   setTableSeatCount,
   updateAttendee,
@@ -126,8 +125,6 @@ export interface UseEventsResult {
   clearExpenseLine: (eventId: string, expenseId: string) => Promise<Event>;
   /** Clear every line at once, each one remembered the same way. */
   clearAllExpenses: (eventId: string) => Promise<Event>;
-  /** Add a saved line to this event, keeping it in the library. */
-  reuseExpense: (eventId: string, templateId: string) => Promise<Event>;
   /** Drop a saved line from the library for good. Cannot be undone. */
   forgetExpense: (templateId: string) => Promise<void>;
   cancelWholeBooking: (eventId: string, bookingId: string) => Promise<Event>;
@@ -290,8 +287,8 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
-  // Clearing a line puts it in the library, and reusing one bumps its order,
-  // so these refresh the library as well as the event.
+  // Clearing a line puts it in the library, so these refresh the library as
+  // well as the event.
   const applyLibraryChange = useCallback(
     async (change: () => Promise<Event>): Promise<Event> => {
       const updated = await applyChange(change);
@@ -309,12 +306,6 @@ export function useEvents(): UseEventsResult {
 
   const clearAllExpenses = useCallback(
     (eventId: string) => applyLibraryChange(() => clearExpenses(eventId)),
-    [applyLibraryChange],
-  );
-
-  const reuseExpense = useCallback(
-    (eventId: string, templateId: string) =>
-      applyLibraryChange(() => reuseExpenseTemplate(eventId, templateId)),
     [applyLibraryChange],
   );
 
@@ -350,7 +341,6 @@ export function useEvents(): UseEventsResult {
     editExpense,
     clearExpenseLine,
     clearAllExpenses,
-    reuseExpense,
     forgetExpense,
     reload: load,
   };

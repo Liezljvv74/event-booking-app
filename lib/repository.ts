@@ -935,7 +935,14 @@ export async function listExpenseTemplates(): Promise<ExpenseTemplate[]> {
     (transaction) =>
       getAll<ExpenseTemplate>(transaction, STORE_EXPENSE_TEMPLATES),
   );
-  return templates.sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+  // Most recently used first. Clearing every line at once stamps them all
+  // within the same millisecond, so description breaks the tie rather than
+  // leaving the dropdown order down to whatever the store hands back.
+  return templates.sort(
+    (a, b) =>
+      b.lastUsedAt - a.lastUsedAt ||
+      a.description.localeCompare(b.description),
+  );
 }
 
 /**
@@ -973,33 +980,31 @@ export function rememberExpenseTemplate(
 }
 
 /**
- * Add a saved line to an event and bump it up the library.
+ * Saved lines still free to use on this event.
  *
- * The library is a list of costs that recur, so reaching for one is a signal
- * about what you reach for often: touching lastUsedAt keeps the dropdown
- * ordered by that rather than by when the line happened to be cleared.
+ * A saved line is offered in the Description dropdown of every expense line,
+ * and taking one puts it out of reach of the others: two lines both called
+ * "Venue hire" would be indistinguishable in the list and would collapse
+ * back into a single library entry the moment either was cleared. Clearing
+ * the line that holds it returns it to the library and to the dropdowns.
  *
- * Only the description and the amount come across. Provider and notes were
- * deliberately left out of the library — they belonged to the event that was
- * settled — so a reused line arrives unpaid with those blank, ready to fill
- * in for this event.
+ * Pass the id of the line being edited to keep its own description on offer,
+ * so re-picking what a line already holds is not treated as a clash.
  */
-export async function reuseExpenseTemplate(
-  eventId: string,
-  templateId: string,
-): Promise<Event> {
-  const templates = await listExpenseTemplates();
-  const template = templates.find((candidate) => candidate.id === templateId);
-  if (!template) {
-    throw new Error("That saved line is no longer in your library.");
-  }
+export function unusedExpenseTemplates(
+  templates: readonly ExpenseTemplate[],
+  expenses: readonly Expense[],
+  keepForExpenseId?: string,
+): ExpenseTemplate[] {
+  const taken = new Set(
+    expenses
+      .filter((expense) => expense.id !== keepForExpenseId)
+      .map((expense) => expense.description.trim().toLowerCase()),
+  );
 
-  const event = await addExpense(eventId, {
-    description: template.description,
-    amountCents: template.amountCents,
-  });
-  await rememberExpenseTemplate(template);
-  return event;
+  return templates.filter(
+    (template) => !taken.has(template.description.trim().toLowerCase()),
+  );
 }
 
 /** Permanent removal from the library, per the spec's explicit option. */

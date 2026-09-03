@@ -11,6 +11,7 @@ import {
 } from "@/components/expense-row";
 import { NewExpenseRow } from "@/components/new-expense-row";
 import { formatAmount, sumCents } from "@/lib/money";
+import { unusedExpenseTemplates } from "@/lib/repository";
 import type { Expense } from "@/lib/types";
 
 /** The three figures the paid tick makes worth having on this screen. */
@@ -35,7 +36,6 @@ export default function ExpensesScreen() {
     clearExpenseLine,
     clearAllExpenses,
     expenseTemplates,
-    reuseExpense,
     forgetExpense,
   } = useEventContext();
   const params = useParams<{ eventId: string }>();
@@ -122,8 +122,9 @@ export default function ExpensesScreen() {
 
       <p className="mt-1.5 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
         A line needs a description and an amount. Provider, the paid tick and
-        notes can be filled in whenever you know them. Cleared lines stay
-        available to reuse when you create your next event.
+        notes can be filled in whenever you know them. Each Description has a
+        dropdown of the lines you have cleared before, so a cost that recurs
+        need not be retyped.
       </p>
 
       {error !== "" && (
@@ -154,6 +155,13 @@ export default function ExpensesScreen() {
                 <ExpenseRow
                   key={expense.id}
                   expense={expense}
+                  // Its own description stays on offer; the ones other lines
+                  // hold do not.
+                  templates={unusedExpenseTemplates(
+                    expenseTemplates,
+                    event.expenses,
+                    expense.id,
+                  )}
                   onPatch={(patch) => editExpense(event.id, expense.id, patch)}
                   onClear={() => clearExpenseLine(event.id, expense.id)}
                 />
@@ -192,6 +200,10 @@ export default function ExpensesScreen() {
 
           <div className="mt-3">
             <NewExpenseRow
+              templates={unusedExpenseTemplates(
+                expenseTemplates,
+                event.expenses,
+              )}
               onAdd={(input) => addExpenseLine(event.id, input)}
             />
           </div>
@@ -208,7 +220,6 @@ export default function ExpensesScreen() {
       <ExpenseLibrary
         templates={expenseTemplates}
         usedDescriptions={event.expenses.map((expense) => expense.description)}
-        onReuse={(templateId) => reuseExpense(event.id, templateId)}
         onForget={forgetExpense}
       />
     </section>
