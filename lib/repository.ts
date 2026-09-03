@@ -972,6 +972,36 @@ export function rememberExpenseTemplate(
   );
 }
 
+/**
+ * Add a saved line to an event and bump it up the library.
+ *
+ * The library is a list of costs that recur, so reaching for one is a signal
+ * about what you reach for often: touching lastUsedAt keeps the dropdown
+ * ordered by that rather than by when the line happened to be cleared.
+ *
+ * Only the description and the amount come across. Provider and notes were
+ * deliberately left out of the library — they belonged to the event that was
+ * settled — so a reused line arrives unpaid with those blank, ready to fill
+ * in for this event.
+ */
+export async function reuseExpenseTemplate(
+  eventId: string,
+  templateId: string,
+): Promise<Event> {
+  const templates = await listExpenseTemplates();
+  const template = templates.find((candidate) => candidate.id === templateId);
+  if (!template) {
+    throw new Error("That saved line is no longer in your library.");
+  }
+
+  const event = await addExpense(eventId, {
+    description: template.description,
+    amountCents: template.amountCents,
+  });
+  await rememberExpenseTemplate(template);
+  return event;
+}
+
 /** Permanent removal from the library, per the spec's explicit option. */
 export function deleteExpenseTemplate(id: string): Promise<void> {
   return runTransaction(STORE_EXPENSE_TEMPLATES, "readwrite", (transaction) =>

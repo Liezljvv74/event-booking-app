@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
+import { ExpenseLibrary } from "@/components/expense-library";
 import {
   EXPENSE_GRID,
   EXPENSE_MIN_WIDTH,
@@ -33,6 +34,9 @@ export default function ExpensesScreen() {
     editExpense,
     clearExpenseLine,
     clearAllExpenses,
+    expenseTemplates,
+    reuseExpense,
+    forgetExpense,
   } = useEventContext();
   const params = useParams<{ eventId: string }>();
   const [confirmingClearAll, setConfirmingClearAll] = useState(false);
@@ -200,6 +204,13 @@ export default function ExpensesScreen() {
           event as a starting point.
         </p>
       )}
+
+      <ExpenseLibrary
+        templates={expenseTemplates}
+        usedDescriptions={event.expenses.map((expense) => expense.description)}
+        onReuse={(templateId) => reuseExpense(event.id, templateId)}
+        onForget={forgetExpense}
+      />
     </section>
   );
 }

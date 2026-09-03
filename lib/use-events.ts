@@ -22,10 +22,13 @@ import {
   clearExpenses,
   createBooking,
   createEvent,
+  deleteExpenseTemplate,
   listEvents,
+  listExpenseTemplates,
   moveAttendees,
   removeExpense,
   removeTable,
+  reuseExpenseTemplate,
   runRetentionSweep,
   setTableSeatCount,
   updateAttendee,
@@ -38,7 +41,11 @@ import {
   type ExpensePatch,
   type MoveTarget,
 } from "./repository";
-import { MAX_ACTIVE_EVENTS, type Event } from "./types";
+import {
+  MAX_ACTIVE_EVENTS,
+  type Event,
+  type ExpenseTemplate,
+} from "./types";
 
 export interface NewBookingInput {
   partyName: string;
@@ -68,6 +75,12 @@ export interface UseEventsResult {
   /** Active events only: the spec gives tabs to active events. */
   activeEvents: Event[];
   atEventLimit: boolean;
+  /**
+   * Cleared expense lines, newest use first. Kept here rather than in the
+   * screen because clearing a line is what creates one, and that happens
+   * through this hook.
+   */
+  expenseTemplates: ExpenseTemplate[];
   addEvent: (input: NewEventInput) => Promise<Event>;
   updateSchedule: (id: string, schedule: ScheduleInput) => Promise<Event>;
   addEventTable: (eventId: string) => Promise<Event>;
@@ -113,6 +126,10 @@ export interface UseEventsResult {
   clearExpenseLine: (eventId: string, expenseId: string) => Promise<Event>;
   /** Clear every line at once, each one remembered the same way. */
   clearAllExpenses: (eventId: string) => Promise<Event>;
+  /** Add a saved line to this event, keeping it in the library. */
+  reuseExpense: (eventId: string, templateId: string) => Promise<Event>;
+  /** Drop a saved line from the library for good. Cannot be undone. */
+  forgetExpense: (templateId: string) => Promise<void>;
   cancelWholeBooking: (eventId: string, bookingId: string) => Promise<Event>;
   reload: () => Promise<void>;
 }
@@ -137,6 +154,9 @@ export function useEvents(): UseEventsResult {
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
   const [activeEvents, setActiveEvents] = useState<Event[]>([]);
+  const [expenseTemplates, setExpenseTemplates] = useState<ExpenseTemplate[]>(
+    [],
+  );
 
   const load = useCallback(async () => {
     if (!isBrowser()) {
@@ -150,6 +170,7 @@ export function useEvents(): UseEventsResult {
       // and deletions a fresh load would.
       await runRetentionSweep();
       setActiveEvents(await readActiveEvents());
+      setExpenseTemplates(await listExpenseTemplates());
       setState("ready");
       setError("");
     } catch (caught) {
@@ -269,16 +290,38 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
-  const clearExpenseLine = useCallback(
-    (eventId: string, expenseId: string) =>
-      applyChange(() => removeExpense(eventId, expenseId)),
+  // Clearing a line puts it in the library, and reusing one bumps its order,
+  // so these refresh the library as well as the event.
+  const applyLibraryChange = useCallback(
+    async (change: () => Promise<Event>): Promise<Event> => {
+      const updated = await applyChange(change);
+      setExpenseTemplates(await listExpenseTemplates());
+      return updated;
+    },
     [applyChange],
   );
 
-  const clearAllExpenses = useCallback(
-    (eventId: string) => applyChange(() => clearExpenses(eventId)),
-    [applyChange],
+  const clearExpenseLine = useCallback(
+    (eventId: string, expenseId: string) =>
+      applyLibraryChange(() => removeExpense(eventId, expenseId)),
+    [applyLibraryChange],
   );
+
+  const clearAllExpenses = useCallback(
+    (eventId: string) => applyLibraryChange(() => clearExpenses(eventId)),
+    [applyLibraryChange],
+  );
+
+  const reuseExpense = useCallback(
+    (eventId: string, templateId: string) =>
+      applyLibraryChange(() => reuseExpenseTemplate(eventId, templateId)),
+    [applyLibraryChange],
+  );
+
+  const forgetExpense = useCallback(async (templateId: string) => {
+    await deleteExpenseTemplate(templateId);
+    setExpenseTemplates(await listExpenseTemplates());
+  }, []);
 
   const cancelWholeBooking = useCallback(
     (eventId: string, bookingId: string) =>
@@ -291,6 +334,7 @@ export function useEvents(): UseEventsResult {
     error,
     activeEvents,
     atEventLimit: activeEvents.length >= MAX_ACTIVE_EVENTS,
+    expenseTemplates,
     addEvent,
     updateSchedule,
     addEventTable,
@@ -306,6 +350,8 @@ export function useEvents(): UseEventsResult {
     editExpense,
     clearExpenseLine,
     clearAllExpenses,
+    reuseExpense,
+    forgetExpense,
     reload: load,
   };
 }
