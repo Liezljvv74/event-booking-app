@@ -27,8 +27,7 @@ export interface PriceRow {
 }
 
 const fieldClass =
-  "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
-const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
+  "h-11 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 sm:h-9 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 
 /** What the rows hold, in a form two of them can be compared by. */
 export function rowsSignature(rows: readonly PriceRow[]): string {
@@ -186,66 +185,64 @@ export function TicketPricesEditor({
 
   return (
     <div data-ticket-prices={scope || undefined}>
+      {/* One label for the block. The fields themselves are unlabelled —
+          three across leaves no room, and an amount beside a description
+          reads as what it is — but without this the New event form would
+          show a row of nameless boxes between the name and the date. */}
+      <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+        Ticket prices
+      </div>
+
       {control.rows.length > 0 && (
-        <ul className="flex flex-col gap-1">
+        <ul className="mt-1 grid gap-x-3 gap-y-1.5 sm:grid-cols-2 md:grid-cols-3">
           {control.rows.map((row, index) => (
+            /* Price, what it includes, and the cross that deletes the pair,
+               kept together as one group so three fit on a line. */
             <li
               key={row.key}
               data-ticket-price-row={index}
-              className="grid gap-1.5 sm:grid-cols-[8rem_1fr_auto]"
+              className="grid grid-cols-[5rem_1fr_auto] items-center gap-1"
             >
-              <label className="flex flex-col gap-1">
-                {/* Labelled on the first line only: repeating "Price" down
-                    the list would read as four separate questions. */}
-                <span className={index === 0 ? labelClass : "sr-only"}>
-                  Price
-                </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={row.amount}
-                  disabled={disabled}
-                  aria-label={`Ticket price ${index + 1}${suffix}`}
-                  data-ticket-amount={index}
-                  onChange={(changed) =>
-                    control.setAmount(row.key, changed.target.value)
-                  }
-                  className={fieldClass}
-                  placeholder="0.00"
-                />
-              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={row.amount}
+                disabled={disabled}
+                aria-label={`Ticket price ${index + 1}${suffix}`}
+                data-ticket-amount={index}
+                onChange={(changed) =>
+                  control.setAmount(row.key, changed.target.value)
+                }
+                className={fieldClass}
+                placeholder="0.00"
+              />
 
-              <label className="flex flex-col gap-1">
-                <span className={index === 0 ? labelClass : "sr-only"}>
-                  What it includes
-                </span>
-                <input
-                  type="text"
-                  value={row.includes}
-                  disabled={disabled}
-                  aria-label={`What ticket price ${index + 1}${suffix} includes`}
-                  data-ticket-includes={index}
-                  onChange={(changed) =>
-                    control.setIncludes(row.key, changed.target.value)
-                  }
-                  className={fieldClass}
-                  placeholder="Dinner, drinks, table wine"
-                />
-              </label>
+              <input
+                type="text"
+                value={row.includes}
+                disabled={disabled}
+                aria-label={`What ticket price ${index + 1}${suffix} includes`}
+                data-ticket-includes={index}
+                onChange={(changed) =>
+                  control.setIncludes(row.key, changed.target.value)
+                }
+                className={fieldClass}
+                placeholder="What it includes"
+              />
 
-              {/* Aligned with the fields rather than their labels. */}
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={() => control.removeRow(row.key)}
-                  disabled={disabled}
-                  aria-label={`Remove ticket price ${index + 1}${suffix}`}
-                  data-ticket-remove={index}
-                  className="h-11 rounded-md border border-zinc-300 px-3 text-sm font-medium text-black disabled:opacity-50 sm:h-9 sm:w-auto dark:border-zinc-700 dark:text-zinc-50"
-                >
-                  Remove
-                </button>
-              </div>
+              {/* Square, so it reads as a cross rather than a word. The
+                  accessible name still says which price it would delete. */}
+              <button
+                type="button"
+                onClick={() => control.removeRow(row.key)}
+                disabled={disabled}
+                aria-label={`Remove ticket price ${index + 1}${suffix}`}
+                title="Delete this price"
+                data-ticket-remove={index}
+                className="h-11 w-11 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 sm:h-9 sm:w-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
             </li>
           ))}
         </ul>
@@ -256,7 +253,7 @@ export function TicketPricesEditor({
         onClick={control.add}
         disabled={disabled}
         data-ticket-add
-        className="mt-1 h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+        className="mt-1.5 h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
       >
         {control.rows.length === 0
           ? "+ Add a ticket price"

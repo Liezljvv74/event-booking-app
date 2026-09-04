@@ -212,11 +212,14 @@ nothing derives from it, and it may be left blank.
 
 The list is entered between the event's name and its date on the New event
 form, and below the fields on Manage events, where the name, date, times and
-Save share one line so that more events reach the screen. Saving replaces the
-list, so removing a price is expressed by leaving it out. A line nobody
-touched is not a price and not a mistake — the create form opens with one
-empty — but a line describing something with no amount against it is refused
-rather than dropped.
+Save share one line so that more events reach the screen. Three prices fit
+across a line, each an amount, what it includes, and a cross that deletes the
+pair; the fields carry no labels of their own, since an amount beside a
+description reads as what it is, and three labelled columns would not fit.
+Saving replaces the list, so removing a price is expressed by leaving it out.
+A line nobody touched is not a price and not a mistake — the create form
+opens with one empty — but a line describing something with no amount against
+it is refused rather than dropped.
 
 A booking copies an amount out of the list; it does not point at it. So
 correcting a price later never rewrites a booking already taken, and a guest's
