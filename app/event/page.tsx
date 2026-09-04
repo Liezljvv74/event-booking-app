@@ -130,7 +130,9 @@ function Stat({
  * name and the prices, so all of that is stated here and altered there.
  */
 function Schedule({ event }: { event: Event }) {
-  const times = formatTimeRange(event.startTime, event.endTime);
+  const times = formatTimeRange(event.startTime, event.endTime, {
+    markNextDay: false,
+  });
 
   return (
     <p

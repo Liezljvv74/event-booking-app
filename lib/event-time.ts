@@ -52,16 +52,23 @@ export function endsAfterMidnight(
 
 /**
  * "18:00 – 23:30", "from 18:00", "until 23:30", or "" when neither is set.
- * A range crossing midnight is marked so the end time is not misread.
+ *
+ * A range crossing midnight can be marked "(next day)" so the end time is not
+ * misread, which the event tabs do: a tab is a line of small print skimmed
+ * next to three others. The dashboard asks for it off — the event's schedule
+ * is set in the heading there, and a late finish reads plainly enough at that
+ * size without the note.
  */
 export function formatTimeRange(
   startTime: string | null,
   endTime: string | null,
+  { markNextDay = true }: { markNextDay?: boolean } = {},
 ): string {
   if (startTime === null && endTime === null) return "";
   if (endTime === null) return `from ${startTime}`;
   if (startTime === null) return `until ${endTime}`;
 
-  const suffix = endsAfterMidnight(startTime, endTime) ? " (next day)" : "";
+  const suffix =
+    markNextDay && endsAfterMidnight(startTime, endTime) ? " (next day)" : "";
   return `${startTime} – ${endTime}${suffix}`;
 }
