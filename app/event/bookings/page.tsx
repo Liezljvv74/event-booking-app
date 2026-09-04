@@ -176,6 +176,7 @@ export default function BookingsScreen() {
       {creating && (
         <div className="mt-3">
           <NewBookingForm
+            ticketPrices={event.ticketPrices}
             onCreate={async (input) => {
               const created = await addBooking(event.id, input);
               setCreating(false);

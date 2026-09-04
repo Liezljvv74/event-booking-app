@@ -21,6 +21,7 @@ import {
   type ExpenseTemplate,
   type Settings,
   type Table,
+  type TicketPrice,
 } from "./types";
 import {
   STORE_EVENTS,
@@ -105,6 +106,39 @@ export class TooManyActiveEventsError extends Error {
 }
 
 /**
+ * A ticket price as a screen supplies it: an amount already in cents, and
+ * whatever the manager wrote about what it includes. Ids belong to the store,
+ * so they are minted here rather than by the form.
+ */
+export interface TicketPriceInput {
+  amountCents: number;
+  includes: string;
+}
+
+/**
+ * Turn supplied prices into stored ones, rejecting what cannot be a price.
+ *
+ * Ids are new every save. Nothing refers to a ticket price by id — a booking
+ * copies the amount rather than pointing at it — so there is no reference to
+ * break, and generating them here keeps forms from having to invent ids for
+ * rows a person may yet delete.
+ */
+function normaliseTicketPrices(
+  inputs: readonly TicketPriceInput[],
+): TicketPrice[] {
+  return inputs.map((input) => {
+    if (!Number.isFinite(input.amountCents) || input.amountCents < 0) {
+      throw new Error("A ticket price cannot be negative.");
+    }
+    return {
+      id: newId(),
+      amountCents: Math.round(input.amountCents),
+      includes: input.includes.trim(),
+    };
+  });
+}
+
+/**
  * Create an event, seeding its expenses from the most recent existing event
  * so the manager starts from the previous event's costs rather than a blank
  * list.
@@ -117,6 +151,7 @@ export function createEvent(input: {
   eventDate: string;
   startTime?: string | null;
   endTime?: string | null;
+  ticketPrices?: readonly TicketPriceInput[];
   seedExpensesFromEventId?: string;
 }): Promise<Event> {
   return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
@@ -143,6 +178,7 @@ export function createEvent(input: {
       startTime: input.startTime ?? null,
       endTime: input.endTime ?? null,
       status: "active",
+      ticketPrices: normaliseTicketPrices(input.ticketPrices ?? []),
       tables: [],
       bookings: [],
       expenses: copyExpenses(source?.expenses ?? []),
@@ -214,6 +250,12 @@ export interface EventDetailsPatch {
   eventDate?: string;
   startTime?: string | null;
   endTime?: string | null;
+  /**
+   * The event's prices in full, not lines to add: saving replaces the list,
+   * so removing a price is expressed by leaving it out. Omitting the field
+   * leaves the stored prices alone, which is what the schedule editor does.
+   */
+  ticketPrices?: readonly TicketPriceInput[];
 }
 
 /**
@@ -228,7 +270,17 @@ export function updateEventDetails(
   patch: EventDetailsPatch,
 ): Promise<Event> {
   return mutateEvent(id, (event) => {
-    const updated: Event = { ...event, ...patch };
+    // Spread first for the fields that carry across as they are, then put
+    // the prices back: the patch holds them without ids, which is not what
+    // the store keeps.
+    const updated: Event = {
+      ...event,
+      ...patch,
+      ticketPrices:
+        patch.ticketPrices === undefined
+          ? event.ticketPrices
+          : normaliseTicketPrices(patch.ticketPrices),
+    };
     const name = updated.name.trim();
 
     if (name === "") throw new Error("Give the event a name.");

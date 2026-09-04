@@ -30,6 +30,22 @@ export interface Table {
   seatCount: number;
 }
 
+/**
+ * One price an event is sold at, and what that price buys.
+ *
+ * An event can be sold at several prices at once — dinner and dance against
+ * dance only, say — so this is a list rather than a single figure on the
+ * event. What each price includes is the manager's own wording; it is there
+ * to be read off when someone asks what they are paying for, so nothing
+ * derives from it and it may be left blank.
+ */
+export interface TicketPrice {
+  id: string;
+  amountCents: number;
+  /** Free text, blank when the price needs no explaining. */
+  includes: string;
+}
+
 export interface Attendee {
   id: string;
   name: string;
@@ -85,6 +101,16 @@ export interface Event {
   startTime: string | null;
   endTime: string | null;
   status: EventStatus;
+  /**
+   * What the event is sold at, in the order they were entered. Empty on an
+   * event whose prices have not been decided, and on every event created
+   * before prices existed.
+   *
+   * These are what the event charges, not what any guest has been charged:
+   * a booking copies an amount out of this list and can then be edited
+   * freely, so changing a price here never rewrites a booking already taken.
+   */
+  ticketPrices: TicketPrice[];
   tables: Table[];
   bookings: Booking[];
   expenses: Expense[];

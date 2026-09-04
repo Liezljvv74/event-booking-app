@@ -1,23 +1,53 @@
 "use client";
 
 import { useState } from "react";
-import { parseCents } from "@/lib/money";
+import { formatAmount, formatCents, parseCents } from "@/lib/money";
 import type { NewBookingInput } from "@/lib/use-events";
+import type { TicketPrice } from "@/lib/types";
 
 interface Props {
+  /**
+   * What the event is sold at, offered as choices so a price does not have
+   * to be remembered and typed. Empty on an event with no prices set, and
+   * then the amount is typed as it always was.
+   */
+  ticketPrices: readonly TicketPrice[];
   onCreate: (input: NewBookingInput) => Promise<unknown>;
   onCancel: () => void;
+}
+
+/** The option value standing for "not one of the event's prices". */
+const CUSTOM = "custom";
+
+/** "500.00 — Dinner, drinks, table wine", or just the amount if it says nothing. */
+function describePrice(price: TicketPrice): string {
+  const amount = formatAmount(price.amountCents);
+  return price.includes === "" ? amount : `${amount} — ${price.includes}`;
 }
 
 const fieldClass =
   "h-11 rounded-md border border-zinc-300 bg-white px-3 text-base text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 const labelClass = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
-export function NewBookingForm({ onCreate, onCancel }: Props) {
+export function NewBookingForm({
+  ticketPrices,
+  onCreate,
+  onCancel,
+}: Props) {
   const [partyName, setPartyName] = useState("");
   const [telephone, setTelephone] = useState("");
   const [guestCount, setGuestCount] = useState("2");
-  const [ticketPrice, setTicketPrice] = useState("0.00");
+  /**
+   * Which of the event's prices this party is on, or CUSTOM for an amount
+   * typed by hand. The event's first price is the common case, so it starts
+   * selected; with no prices to choose from there is nothing but CUSTOM.
+   */
+  const [choice, setChoice] = useState(ticketPrices.length === 0 ? CUSTOM : "0");
+  const chosen = ticketPrices[Number(choice)];
+  // Typing over a chosen price starts from it rather than from zero.
+  const [ticketPrice, setTicketPrice] = useState(
+    ticketPrices.length === 0 ? "0.00" : formatCents(ticketPrices[0].amountCents),
+  );
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -29,10 +59,20 @@ export function NewBookingForm({ onCreate, onCancel }: Props) {
       setError("Enter a whole number of guests, at least 1.");
       return;
     }
-    const cents = parseCents(ticketPrice);
-    if (cents === null || cents < 0) {
-      setError("Enter a ticket price of zero or more.");
+    let cents: number;
+    if (choice === CUSTOM) {
+      const typed = parseCents(ticketPrice);
+      if (typed === null || typed < 0) {
+        setError("Enter a ticket price of zero or more.");
+        return;
+      }
+      cents = typed;
+    } else if (chosen === undefined) {
+      // The event's prices changed in another tab while this was open.
+      setError("That ticket price is no longer one of the event's. Pick again.");
       return;
+    } else {
+      cents = chosen.amountCents;
     }
 
     setSaving(true);
@@ -104,15 +144,57 @@ export function NewBookingForm({ onCreate, onCancel }: Props) {
 
         <label className="flex flex-col gap-1">
           <span className={labelClass}>Ticket price each</span>
-          <input
-            type="text"
-            name="ticketPrice"
-            inputMode="decimal"
-            value={ticketPrice}
-            onChange={(changed) => setTicketPrice(changed.target.value)}
-            className={fieldClass}
-          />
+          {ticketPrices.length === 0 ? (
+            <input
+              type="text"
+              name="ticketPrice"
+              inputMode="decimal"
+              value={ticketPrice}
+              onChange={(changed) => setTicketPrice(changed.target.value)}
+              className={fieldClass}
+            />
+          ) : (
+            <select
+              name="ticketPriceChoice"
+              value={choice}
+              onChange={(changed) => {
+                const picked = changed.target.value;
+                setChoice(picked);
+                // Carry the picked amount into the box, so switching to a
+                // typed amount starts from the nearest thing to it.
+                const price = ticketPrices[Number(picked)];
+                if (price !== undefined) {
+                  setTicketPrice(formatCents(price.amountCents));
+                }
+              }}
+              className={fieldClass}
+            >
+              {ticketPrices.map((price, index) => (
+                <option key={price.id} value={String(index)}>
+                  {describePrice(price)}
+                </option>
+              ))}
+              <option value={CUSTOM}>Another amount…</option>
+            </select>
+          )}
         </label>
+
+        {/* Only once "Another amount" is chosen, so the usual path is one
+            field rather than two. */}
+        {ticketPrices.length > 0 && choice === CUSTOM && (
+          <label className="flex flex-col gap-1">
+            <span className={labelClass}>Amount each</span>
+            <input
+              type="text"
+              name="ticketPrice"
+              inputMode="decimal"
+              value={ticketPrice}
+              autoFocus
+              onChange={(changed) => setTicketPrice(changed.target.value)}
+              className={fieldClass}
+            />
+          </label>
+        )}
       </div>
 
       {error !== "" && (

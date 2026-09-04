@@ -18,6 +18,12 @@ npm run dev
 Then open <http://localhost:3002>. Port 3002 is fixed in `package.json`; the
 spec pins it.
 
+Or double-click **`open-app.cmd`**, which does the same thing without a
+terminal: it installs dependencies on a first run, starts the server, waits
+for it to answer and then opens the browser. Closing its window stops the
+app. It has to serve the pages rather than open them off the disk, because
+they ask for their files by absolute path.
+
 ```bash
 npm run build     # typecheck, compile, and write the static site to out/
 npx tsc --noEmit  # types only
@@ -122,6 +128,7 @@ app/
     bookings/page.tsx            parties, guests, seating
     expenses/page.tsx            expense lines and the saved-line library
 components/                      the pieces those screens are built from
+  ticket-prices-editor.tsx       an event's prices, and the rows behind them
 lib/
   db.ts                          IndexedDB plumbing: stores, transactions
   types.ts                       the domain: Event, Table, Booking, Attendee…
@@ -165,11 +172,17 @@ saved rather than an optimistic guess that could drift from it.
 ## What each screen does
 
 **Manage events** (`/events/manage`) — the whole lifecycle of an event:
-create, rename, change date and times, delete. Closed events appear here in
-their own section and nowhere else in the app, so this is the only place one
-can be looked at or removed early. Deleting names what goes with it.
+create, rename, change date and times, edit its ticket prices, delete. Each
+event is one line — name, then date, start, end and Save to the right of it —
+with its ticket prices beneath, and the page is deliberately tight so that as
+many events as possible are on the screen at once. Closed events appear here
+in their own section and nowhere else in the app, so this is the only place
+one can be looked at or removed early. Deleting names what goes with it.
 
-**Dashboard** — six figures on one line (guests confirmed and cancelled,
+**Dashboard** — the event's ticket prices are read off the heading, between
+the name and the date. They are shown rather than edited here: they are set
+when the event is created and changed on Manage events. Then six figures on
+one line (guests confirmed and cancelled,
 seats available, amount due at the venue, expenses, expected income, expected
 profit), then the seating list: each table with its seat count, what is free
 and who is sitting there. Guests with no name yet are counted rather than
@@ -183,9 +196,31 @@ the guests already seated there is refused.
 
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each. Guests are
-edited individually: name, table, payment status, ticket price. A party is
-auto-seated at the table with the least room to spare that still fits it, so
-part-filled tables fill before new ones open.
+edited individually: name, table, payment status, ticket price. The price a
+party is taken at is chosen from the event's own ticket prices, each shown
+with what it includes, with **Another amount** for anything off the list. A
+party is auto-seated at the table with the least room to spare that still
+fits it, so part-filled tables fill before new ones open.
+
+### Ticket prices
+
+An event is sold at a list of prices rather than one, because the same
+function is commonly sold two or three ways — dinner and dance against dance
+only. Each line is an amount and free text saying what it includes, and the
+text is there to be read off when someone asks what they are paying for:
+nothing derives from it, and it may be left blank.
+
+The list is entered between the event's name and its date on the New event
+form, and below the fields on Manage events, where the name, date, times and
+Save share one line so that more events reach the screen. Saving replaces the
+list, so removing a price is expressed by leaving it out. A line nobody
+touched is not a price and not a mistake — the create form opens with one
+empty — but a line describing something with no amount against it is refused
+rather than dropped.
+
+A booking copies an amount out of the list; it does not point at it. So
+correcting a price later never rewrites a booking already taken, and a guest's
+price stays editable per guest as it always was.
 
 **Expenses** — a six-column table (description, provider, amount, paid, notes)
 edited in place. Only description and amount are required. Clearing a line
@@ -237,6 +272,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Retention window, then silent delete | Logic done; not changeable without Settings |
 | **Settings screen** | **Not built** — retention period, desktop save folder |
 | **Export All Data (Excel or JSON)** | **Not built** |
+| Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
 | Mobile | Done — narrow screens scroll their columns sideways rather than breaking |
 
@@ -258,6 +294,14 @@ Those scripts are **not** checked in. They need `playwright-core`, and the
 spec asks for a minimal dependency list, so adding them was not assumed. If
 they should live here, that is a decision to take deliberately — it means one
 dev dependency and a `scripts/` folder.
+
+Ticket prices were checked the same way, over the built export: creating an
+event with two prices, picking one for a booking and confirming the guest
+lines took it, typing an amount off the list, editing and removing prices on
+Manage events, and confirming a described line with no amount is refused
+rather than saved. The version 3 upgrade was tested against a database built
+by hand at version 2 — an event stored without any ticket prices came back
+with an empty list, its bookings, guests, tables and expenses intact.
 
 The move to a static export was checked the same way: the contents of `out/`
 were served from a subdirectory, mimicking a project page, and the app driven

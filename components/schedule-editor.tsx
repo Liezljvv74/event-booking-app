@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { endsAfterMidnight, formatEventDate, formatTimeRange } from "@/lib/event-time";
+import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import type { ScheduleInput } from "@/lib/use-events";
 import type { Event } from "@/lib/types";
 
@@ -83,11 +83,6 @@ export function ScheduleEditor({ event, onSave }: Props) {
     );
   }
 
-  const crossesMidnight = endsAfterMidnight(
-    startTime === "" ? null : startTime,
-    endTime === "" ? null : endTime,
-  );
-
   return (
     <form
       onSubmit={submit}
@@ -125,12 +120,6 @@ export function ScheduleEditor({ event, onSave }: Props) {
           />
         </label>
       </div>
-
-      {crossesMidnight && (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          Ends after midnight, the day after the event date.
-        </p>
-      )}
 
       {error !== "" && (
         <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">

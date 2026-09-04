@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { endsAfterMidnight } from "@/lib/event-time";
 import type { EventDetailsPatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import { eventHref } from "@/lib/event-routes";
+import {
+  TicketPricesEditor,
+  signatureOfPrices,
+  useTicketPriceRows,
+} from "@/components/ticket-prices-editor";
 
 interface Props {
   event: Event;
@@ -14,7 +18,7 @@ interface Props {
 }
 
 const fieldClass =
-  "h-11 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+  "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
 
 /** What removing this event would destroy, so the confirm can say so. */
@@ -42,6 +46,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
   const [eventDate, setEventDate] = useState(event.eventDate);
   const [startTime, setStartTime] = useState(event.startTime ?? "");
   const [endTime, setEndTime] = useState(event.endTime ?? "");
+  const prices = useTicketPriceRows(event.ticketPrices);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,18 +69,16 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
     setEventDate(event.eventDate);
     setStartTime(event.startTime ?? "");
     setEndTime(event.endTime ?? "");
+    prices.reset(event.ticketPrices);
   }
 
   const changed =
     name !== event.name ||
     eventDate !== event.eventDate ||
     startTime !== (event.startTime ?? "") ||
-    endTime !== (event.endTime ?? "");
+    endTime !== (event.endTime ?? "") ||
+    prices.signature !== signatureOfPrices(event.ticketPrices);
 
-  const crossesMidnight = endsAfterMidnight(
-    startTime === "" ? null : startTime,
-    endTime === "" ? null : endTime,
-  );
   const held = contents(event);
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -89,6 +92,11 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
       setError("Pick an event date.");
       return;
     }
+    const priced = prices.toInputs();
+    if ("error" in priced) {
+      setError(priced.error);
+      return;
+    }
 
     setBusy(true);
     setError("");
@@ -98,6 +106,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
         eventDate,
         startTime: startTime === "" ? null : startTime,
         endTime: endTime === "" ? null : endTime,
+        ticketPrices: priced.prices,
       });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
@@ -121,9 +130,11 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
   return (
     <li
       data-manage-event={event.id}
-      className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+      className="rounded-lg border border-zinc-200 p-2 dark:border-zinc-800"
     >
       <form onSubmit={submit}>
+        {/* Name, date, times and Save on one line, so a screenful of events
+            is a screenful rather than four of them. */}
         <div className="grid gap-2 sm:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem_auto]">
           <label className="flex flex-col gap-1">
             <span className={labelClass}>Event name</span>
@@ -191,27 +202,33 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
               type="submit"
               disabled={busy || !changed}
               data-manage-save={event.id}
-              className="h-11 w-full rounded-md bg-black px-4 text-sm font-medium text-white disabled:opacity-40 sm:w-auto dark:bg-zinc-50 dark:text-black"
+              className="h-11 w-full rounded-md bg-black px-4 text-sm font-medium text-white disabled:opacity-40 sm:h-9 sm:w-auto dark:bg-zinc-50 dark:text-black"
             >
               {busy ? "Saving…" : changed ? "Save" : "Saved"}
             </button>
           </div>
         </div>
+
+        {/* Below the row rather than inside it. How many prices an event has
+            varies, and keeping them out of the grid is what lets the date
+            fields sit beside the name. */}
+        <div className="mt-1.5">
+          <TicketPricesEditor
+            control={prices}
+            disabled={busy}
+            scope={event.id}
+            ofWhat={event.name}
+          />
+        </div>
       </form>
 
-      {crossesMidnight && (
-        <p className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-          Ends after midnight, the day after the event date.
-        </p>
-      )}
-
       {error !== "" && (
-        <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-1.5 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       )}
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <p
           data-manage-contents={event.id}
           className="text-xs text-zinc-600 dark:text-zinc-400"

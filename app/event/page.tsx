@@ -5,7 +5,11 @@ import { useEventContext } from "@/components/event-provider";
 import { ScheduleEditor } from "@/components/schedule-editor";
 import { formatAmount, sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
-import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
+import {
+  SEAT_OCCUPYING_STATUSES,
+  type Event,
+  type TicketPrice,
+} from "@/lib/types";
 import { eventHref, useEventId } from "@/lib/event-routes";
 
 /**
@@ -120,6 +124,32 @@ function Stat({
   );
 }
 
+/**
+ * What the event is sold at, read off rather than edited: the prices are set
+ * when the event is created and changed on Manage events, so this is here to
+ * be answered from when someone asks what a ticket buys.
+ */
+function TicketPrices({ prices }: { prices: readonly TicketPrice[] }) {
+  if (prices.length === 0) return null;
+
+  return (
+    <p
+      data-ticket-price-summary
+      className="text-xs text-zinc-600 dark:text-zinc-400"
+    >
+      {prices.map((price, index) => (
+        <span key={price.id}>
+          {index > 0 && <span aria-hidden="true"> · </span>}
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+            {formatAmount(price.amountCents)}
+          </span>
+          {price.includes !== "" && ` ${price.includes}`}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 /** Who is at a table: the names, with unnamed guests counted rather than listed. */
 function Seated({ table }: { table: TableOccupancy }) {
   if (table.taken === 0) {
@@ -163,6 +193,7 @@ export default function EventDashboard() {
         <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
           {event.name}
         </h1>
+        <TicketPrices prices={event.ticketPrices} />
         <ScheduleEditor
           event={event}
           onSave={(schedule) => updateSchedule(event.id, schedule)}

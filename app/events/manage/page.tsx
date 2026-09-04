@@ -67,7 +67,7 @@ export default function ManageEventsScreen() {
   const first = active[0] ?? allEvents[0];
 
   return (
-    <div className="flex-1 p-4 sm:p-6">
+    <div className="flex-1 p-3 sm:p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
           Manage events
@@ -80,14 +80,8 @@ export default function ManageEventsScreen() {
         </Link>
       </div>
 
-      <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
-        Create an event here, change one&apos;s name, date or times, or delete
-        one you no longer want. Deleting takes its tables, bookings and
-        expenses with it and cannot be undone.
-      </p>
-
       {creating ? (
-        <div className="mt-4">
+        <div className="mt-3">
           <NewEventForm
             lastTimes={lastTimes}
             onCreate={async (input) => {
@@ -111,7 +105,7 @@ export default function ManageEventsScreen() {
               ? `${MAX_ACTIVE_EVENTS} events are already active. Delete one to make room.`
               : undefined
           }
-          className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
+          className="mt-3 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
         >
           + New event
         </button>
@@ -130,7 +124,7 @@ export default function ManageEventsScreen() {
           tables and bookings.
         </p>
       ) : (
-        <section className="mt-6">
+        <section className="mt-4">
           <div className="flex flex-wrap items-baseline gap-x-3">
             <h2 className="text-base font-semibold text-black dark:text-zinc-50">
               Active
@@ -149,7 +143,7 @@ export default function ManageEventsScreen() {
               date.
             </p>
           ) : (
-            <ul className="mt-2 flex flex-col gap-2">
+            <ul className="mt-1.5 flex flex-col gap-1.5">
               {active.map((event) => (
                 <EventEditor
                   key={event.id}
@@ -164,7 +158,7 @@ export default function ManageEventsScreen() {
       )}
 
       {closed.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-5">
           <h2 className="text-base font-semibold text-black dark:text-zinc-50">
             Closed
           </h2>
@@ -173,7 +167,7 @@ export default function ManageEventsScreen() {
             is the only screen they appear on, so delete one here to be rid of
             it sooner.
           </p>
-          <ul className="mt-2 flex flex-col gap-2">
+          <ul className="mt-1.5 flex flex-col gap-1.5">
             {closed.map((event) => (
               <EventEditor
                 key={event.id}

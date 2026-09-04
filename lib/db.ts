@@ -8,7 +8,7 @@
  */
 
 const DATABASE_NAME = "event-booking-manager";
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 export const STORE_EVENTS = "events";
 export const STORE_EXPENSE_TEMPLATES = "expenseTemplates";
@@ -37,13 +37,21 @@ function promisifyRequest<T>(request: IDBRequest<T>): Promise<T> {
 }
 
 /**
- * Backfill startTime and endTime on events stored before version 2.
+ * Fill in fields that events stored by an older version do not have:
+ * startTime and endTime, added in version 2, and ticketPrices, added in
+ * version 3.
  *
  * Runs inside the versionchange transaction, so the fields exist before any
  * application code reads a record. Without this, an older event would come
- * back with undefined where the type promises string | null.
+ * back with undefined where the types promise string | null and an array.
+ *
+ * One pass fills whichever are missing rather than one pass per version.
+ * That keeps a single cursor over the store — two walking it at once in the
+ * same transaction is asking for trouble — and it means a database skipping
+ * straight from version 1 to 3 is brought fully up to date, which upgrading
+ * one version at a time would have to be careful to do.
  */
-function backfillEventTimes(transaction: IDBTransaction): void {
+function backfillEventFields(transaction: IDBTransaction): void {
   const request = transaction.objectStore(STORE_EVENTS).openCursor();
 
   request.onsuccess = () => {
@@ -51,11 +59,18 @@ function backfillEventTimes(transaction: IDBTransaction): void {
     if (!cursor) return;
 
     const record = cursor.value as Record<string, unknown>;
-    if (record.startTime === undefined || record.endTime === undefined) {
+    if (
+      record.startTime === undefined ||
+      record.endTime === undefined ||
+      record.ticketPrices === undefined
+    ) {
       cursor.update({
         ...record,
         startTime: record.startTime ?? null,
         endTime: record.endTime ?? null,
+        // An event from before prices existed was sold at whatever its
+        // bookings say; there is nothing to invent a list from.
+        ticketPrices: record.ticketPrices ?? [],
       });
     }
     cursor.continue();
@@ -102,8 +117,12 @@ export function openDatabase(): Promise<IDBDatabase> {
       // Stores are created above, so an existing database only needs its
       // records brought forward.
       const transaction = request.transaction;
-      if (upgrade.oldVersion >= 1 && upgrade.oldVersion < 2 && transaction) {
-        backfillEventTimes(transaction);
+      if (
+        upgrade.oldVersion >= 1 &&
+        upgrade.oldVersion < DATABASE_VERSION &&
+        transaction
+      ) {
+        backfillEventFields(transaction);
       }
     };
 

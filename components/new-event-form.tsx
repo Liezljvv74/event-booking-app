@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { endsAfterMidnight, todayIso } from "@/lib/event-time";
+import { todayIso } from "@/lib/event-time";
 import type { EventTimes } from "@/lib/repository";
 import type { NewEventInput } from "@/lib/use-events";
+import {
+  TicketPricesEditor,
+  useTicketPriceRows,
+} from "@/components/ticket-prices-editor";
 
 interface Props {
   /**
@@ -27,15 +31,10 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
   // stale copy to keep in step, and typing over a default must stick.
   const [startTime, setStartTime] = useState(lastTimes.startTime ?? "");
   const [endTime, setEndTime] = useState(lastTimes.endTime ?? "");
+  // A new event has no prices to load, and opens with one blank line ready.
+  const prices = useTicketPriceRows([], { startWithBlank: true });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  // Not an error: a function can start at 20:00 and end at 01:00. Say so
-  // rather than blocking, so a late event can still be entered.
-  const crossesMidnight = endsAfterMidnight(
-    startTime === "" ? null : startTime,
-    endTime === "" ? null : endTime,
-  );
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
@@ -49,6 +48,11 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
       setError("Pick an event date.");
       return;
     }
+    const priced = prices.toInputs();
+    if ("error" in priced) {
+      setError(priced.error);
+      return;
+    }
 
     setSaving(true);
     setError("");
@@ -58,6 +62,7 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
         eventDate,
         startTime: startTime === "" ? null : startTime,
         endTime: endTime === "" ? null : endTime,
+        ticketPrices: priced.prices,
       });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
@@ -74,9 +79,9 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
         New event
       </h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        The times and the expenses both start from your most recent event, so
-        a run of functions keeping the same hours needs them entered once.
-        Change or clear either as you like; times are optional.
+        The times and the expenses both start from your most recent event, so a
+        run of functions keeping the same hours needs them entered once. Change
+        or clear either as you like; times are optional.
       </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -92,6 +97,10 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
             placeholder="Spring Gala"
           />
         </label>
+
+        <div className="sm:col-span-2">
+          <TicketPricesEditor control={prices} disabled={saving} />
+        </div>
 
         <label className="flex flex-col gap-1">
           <span className={labelClass}>Event date</span>
@@ -127,12 +136,6 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
           </label>
         </div>
       </div>
-
-      {crossesMidnight && (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          Ends after midnight, the day after the event date.
-        </p>
-      )}
 
       {error !== "" && (
         <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">

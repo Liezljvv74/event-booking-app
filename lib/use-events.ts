@@ -42,6 +42,7 @@ import {
   type ExpenseInput,
   type ExpensePatch,
   type MoveTarget,
+  type TicketPriceInput,
 } from "./repository";
 import {
   MAX_ACTIVE_EVENTS,
@@ -63,6 +64,8 @@ export interface NewEventInput {
   eventDate: string;
   startTime: string | null;
   endTime: string | null;
+  /** What the event is sold at. Empty when prices are not settled yet. */
+  ticketPrices: readonly TicketPriceInput[];
 }
 
 export interface ScheduleInput {
