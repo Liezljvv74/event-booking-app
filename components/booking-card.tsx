@@ -388,7 +388,7 @@ export function BookingCard({
               <span>Name</span>
               <span>Table</span>
               <span>Status</span>
-              <span className="text-right">Ticket</span>
+              <span>Ticket</span>
               <span />
             </div>
 

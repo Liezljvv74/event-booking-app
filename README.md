@@ -135,6 +135,7 @@ lib/
   repository.ts                  every read and write, and the rules
   use-events.ts                  the one React hook the screens talk to
   money.ts                       integer cents in, decimal strings out
+  ticket-prices.ts               the cheapest price, and how a price reads
   event-time.ts                  dates and clock times
   event-routes.ts                the URL of every event screen, in one place
 next.config.ts                   the static export and its base path
@@ -198,9 +199,12 @@ the guests already seated there is refused.
 generates that many guest lines. Parties collapse to one line each. Guests are
 edited individually: name, table, payment status, ticket price. The price a
 party is taken at is chosen from the event's own ticket prices, each shown
-with what it includes, with **Another amount** for anything off the list. A
-party is auto-seated at the table with the least room to spare that still
-fits it, so part-filled tables fill before new ones open.
+with what it includes, with **Another amount** for anything off the list; the
+cheapest starts selected, so a new guest is priced without anything being
+picked. Each guest's own price is the same dropdown, so a guest is moved from
+dance-only to dinner by choosing the other price rather than by knowing what
+it costs. A party is auto-seated at the table with the least room to spare
+that still fits it, so part-filled tables fill before new ones open.
 
 ### Ticket prices
 
@@ -224,7 +228,18 @@ it is refused rather than dropped.
 
 A booking copies an amount out of the list; it does not point at it. So
 correcting a price later never rewrites a booking already taken, and a guest's
-price stays editable per guest as it always was.
+price stays editable per guest as it always was. Because a guest records an
+amount rather than which price it came from, the dropdown that offers the
+prices finds the guest's own by matching the amount — and when it matches
+none, because it was typed or because the event's prices have since changed,
+that amount is offered as an extra line so the field still states what the
+guest is being charged.
+
+New guests default to the cheapest price rather than to whichever was entered
+first. The cheapest is what a party is quoted unless they ask for the fuller
+ticket, so it is the answer that needs no thought in the common case, and a
+default nobody looked at then undercharges rather than billing someone for
+something they never agreed to.
 
 **Expenses** — a six-column table (description, provider, amount, paid, notes)
 edited in place. Only description and amount are required. Clearing a line
@@ -306,6 +321,16 @@ Manage events, and confirming a described line with no amount is refused
 rather than saved. The version 3 upgrade was tested against a database built
 by hand at version 2 — an event stored without any ticket prices came back
 with an empty list, its bookings, guests, tables and expenses intact.
+
+Defaulting a new guest to the cheapest price was checked over the built export
+in the same way: an event sold at 750, 400 and 900 opened its New booking form
+on 400 with the prices still in entry order, and the three guests it created
+all arrived on 400; a guest was moved onto another of the event's prices from
+their own row; an amount typed behind **Another amount** committed on both
+Enter and leaving the field, and came back as the dropdown's shown value; a
+guest already on an amount off the list had it offered as an extra line; and
+an event whose prices were never set kept the typed price field it has always
+had.
 
 The move to a static export was checked the same way: the contents of `out/`
 were served from a subdirectory, mimicking a project page, and the app driven

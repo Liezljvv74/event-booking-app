@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatCents, parseCents } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
+import { describeTicketPrice } from "@/lib/ticket-prices";
 import type { Attendee, AttendeeStatus, Event } from "@/lib/types";
 
 const STATUS_LABELS: Record<AttendeeStatus, string> = {
@@ -29,10 +30,18 @@ const LIVE_STATUSES: readonly AttendeeStatus[] = [
  * rules out per-field labels; the header carries them once instead.
  */
 export const ATTENDEE_GRID =
-  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_5rem_8rem_5.5rem_5rem] items-center gap-2";
+  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_5rem_8rem_7rem_5rem] items-center gap-2";
 
 /** Narrower than a phone, so the columns scroll sideways instead of wrapping. */
-export const ATTENDEE_MIN_WIDTH = "min-w-[34.5rem]";
+export const ATTENDEE_MIN_WIDTH = "min-w-[36rem]";
+
+/**
+ * Option values in the ticket column that are not one of the event's prices:
+ * the amount this guest is on when it is off the event's list, and the choice
+ * that opens the box to type an amount.
+ */
+const OFF_LIST = "off-list";
+const CUSTOM = "custom";
 
 interface Props {
   event: Event;
@@ -74,7 +83,7 @@ export function CancelledRow({ attendee }: { attendee: Attendee }) {
           {attendee.assignedTableNumber ?? "—"}
         </span>
         <span className={`px-2 ${muted}`}>{STATUS_LABELS.cancelled}</span>
-        <span className={`px-2 text-right ${muted}`}>
+        <span className={`px-2 ${muted}`}>
           {formatCents(attendee.ticketPriceCents)}
         </span>
         <span aria-hidden="true" />
@@ -96,6 +105,12 @@ export function AttendeeRow({
   const [price, setPrice] = useState(formatCents(attendee.ticketPriceCents));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  /**
+   * True while the price is being typed rather than picked. Set by choosing
+   * "Another amount", and cleared once the typed amount is committed, so the
+   * cell goes back to the dropdown showing whatever was entered.
+   */
+  const [typing, setTyping] = useState(false);
 
   // The stored values win when they change underneath, so a refused edit does
   // not leave a field showing something that was never saved. Adjusted during
@@ -118,6 +133,14 @@ export function AttendeeRow({
   // Ignoring this guest, so the table they already sit at does not count
   // itself as full.
   const seating = tableOccupancy(event, attendee.id);
+
+  // Which of the event's prices this guest is on. Matched on the amount,
+  // because a guest records what they are charged and not which price it came
+  // from; two prices of the same amount are the same charge either way.
+  const matched = event.ticketPrices.find(
+    (candidate) => candidate.amountCents === attendee.ticketPriceCents,
+  );
+  const onList = event.ticketPrices.length > 0;
 
   async function apply(patch: AttendeePatch, revert?: () => void) {
     setBusy(true);
@@ -237,23 +260,78 @@ export function AttendeeRow({
           ))}
         </select>
 
-        <input
-          type="text"
-          inputMode="decimal"
-          value={price}
-          disabled={busy}
-          aria-label={`Ticket price for guest ${position}`}
-          data-attendee-price={attendee.id}
-          onChange={(changed) => setPrice(changed.target.value)}
-          onBlur={commitPrice}
-          onKeyDown={(pressed) => {
-            if (pressed.key === "Enter") {
-              pressed.preventDefault();
+        {/* A guest is priced by picking one of the event's prices, since that
+            is what almost every guest is on. Typing an amount is still open
+            to whoever needs it, behind the last option — and it is the only
+            control on an event whose prices were never set. */}
+        {onList && !typing ? (
+          <select
+            value={matched?.id ?? OFF_LIST}
+            disabled={busy}
+            aria-label={`Ticket price for guest ${position}`}
+            data-attendee-price-choice={attendee.id}
+            onChange={(changed) => {
+              const picked = changed.target.value;
+              if (picked === CUSTOM) {
+                setTyping(true);
+                return;
+              }
+              const chosen = event.ticketPrices.find(
+                (candidate) => candidate.id === picked,
+              );
+              // A refused change leaves the store untouched, and the dropdown
+              // reads from the store, so there is nothing to put back.
+              if (chosen !== undefined) {
+                void apply({ ticketPriceCents: chosen.amountCents });
+              }
+            }}
+            className={controlClass}
+          >
+            {event.ticketPrices.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {/* The chosen option's text is what the closed field shows,
+                    and the column fits an amount and no more. So what a price
+                    includes is spelled out on the prices this guest could
+                    move to, not on the one they are already on. */}
+                {candidate.id === matched?.id
+                  ? formatCents(candidate.amountCents)
+                  : describeTicketPrice(candidate)}
+              </option>
+            ))}
+            {/* An amount typed by hand, or one left behind by an event whose
+                prices have since changed. Shown so the field states what the
+                guest is actually being charged. */}
+            {matched === undefined && (
+              <option value={OFF_LIST}>
+                {formatCents(attendee.ticketPriceCents)}
+              </option>
+            )}
+            <option value={CUSTOM}>Another amount…</option>
+          </select>
+        ) : (
+          <input
+            type="text"
+            inputMode="decimal"
+            value={price}
+            disabled={busy}
+            autoFocus={typing}
+            aria-label={`Ticket price for guest ${position}`}
+            data-attendee-price={attendee.id}
+            onChange={(changed) => setPrice(changed.target.value)}
+            onBlur={() => {
               commitPrice();
-            }
-          }}
-          className={`${controlClass} text-right`}
-        />
+              setTyping(false);
+            }}
+            onKeyDown={(pressed) => {
+              if (pressed.key === "Enter") {
+                pressed.preventDefault();
+                commitPrice();
+                setTyping(false);
+              }
+            }}
+            className={controlClass}
+          />
+        )}
 
         <button
           type="button"
