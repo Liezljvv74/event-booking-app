@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEventContext } from "@/components/event-provider";
-import { ScheduleEditor } from "@/components/schedule-editor";
+import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import { formatAmount, sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
 import {
@@ -125,6 +125,25 @@ function Stat({
 }
 
 /**
+ * When the event runs, read off rather than edited. The date and times are
+ * set when the event is created and changed on Manage events, along with the
+ * name and the prices, so all of that is stated here and altered there.
+ */
+function Schedule({ event }: { event: Event }) {
+  const times = formatTimeRange(event.startTime, event.endTime);
+
+  return (
+    <p
+      data-schedule
+      className="text-xl font-semibold text-zinc-600 dark:text-zinc-400"
+    >
+      {formatEventDate(event.eventDate)}
+      {times === "" ? " · no times set" : ` · ${times}`}
+    </p>
+  );
+}
+
+/**
  * What the event is sold at, read off rather than edited: the prices are set
  * when the event is created and changed on Manage events, so this is here to
  * be answered from when someone asks what a ticket buys.
@@ -175,7 +194,7 @@ function Seated({ table }: { table: TableOccupancy }) {
 }
 
 export default function EventDashboard() {
-  const { activeEvents, updateSchedule } = useEventContext();
+  const { activeEvents } = useEventContext();
   const eventId = useEventId();
 
   const event = activeEvents.find((candidate) => candidate.id === eventId);
@@ -186,18 +205,16 @@ export default function EventDashboard() {
 
   return (
     <section>
-      {/* Name, date, times and the Edit button on one line, the schedule set
-          in the heading's own size and weight. Wraps rather than shrinking,
-          and the edit form takes the full width when it opens. */}
+      {/* Name, prices, date and times on one line, the schedule set in the
+          heading's own size and weight. Wraps rather than shrinking. Nothing
+          here is editable: an event's own details are edited on Manage
+          events, which is a section along the nav above. */}
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
           {event.name}
         </h1>
         <TicketPrices prices={event.ticketPrices} />
-        <ScheduleEditor
-          event={event}
-          onSave={(schedule) => updateSchedule(event.id, schedule)}
-        />
+        <Schedule event={event} />
       </div>
 
       {/* All six on one line from the large breakpoint up, which is what

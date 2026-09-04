@@ -1,40 +1,34 @@
 "use client";
 
 /**
- * Entry screen. The event list lives in IndexedDB, so which event to open
- * cannot be known until the browser has read it; this loads, then hands off
- * to that event's URL.
+ * Entry screen, and nothing more than a signpost.
+ *
+ * Which event to open cannot be known until the browser has read IndexedDB,
+ * so this loads and then hands off: to the first active event, or to Manage
+ * events when there is none. Creating an event used to happen here as well,
+ * which made a second New event form to keep in step with the real one;
+ * Manage events owns that now, and it is where an empty app lands.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { NewEventForm } from "@/components/new-event-form";
 import { useEvents } from "@/lib/use-events";
-import { MAX_ACTIVE_EVENTS } from "@/lib/types";
-import { eventHref } from "@/lib/event-routes";
+import { eventHref, MANAGE_EVENTS_PATH } from "@/lib/event-routes";
 
 export default function Home() {
-  const { state, error, activeEvents, lastTimes, addEvent } = useEvents();
+  const { state, error, activeEvents } = useEvents();
   const router = useRouter();
-  const [creating, setCreating] = useState(false);
 
   const firstEventId = activeEvents[0]?.id ?? null;
 
   useEffect(() => {
-    if (state !== "ready" || firstEventId === null || creating) return;
+    if (state !== "ready") return;
     // Replace, not push: pushing would leave "/" in the history, and going
     // back would land here and immediately redirect forward again.
-    router.replace(eventHref(firstEventId));
-  }, [state, firstEventId, creating, router]);
-
-  if (state === "loading") {
-    return (
-      <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Loading your events…
-      </p>
+    router.replace(
+      firstEventId === null ? MANAGE_EVENTS_PATH : eventHref(firstEventId),
     );
-  }
+  }, [state, firstEventId, router]);
 
   if (state === "error") {
     return (
@@ -50,59 +44,9 @@ export default function Home() {
     );
   }
 
-  if (creating) {
-    return (
-      <div className="p-4 sm:p-6">
-        <NewEventForm
-          lastTimes={lastTimes}
-          onCreate={async (input) => {
-            const created = await addEvent(input);
-            router.replace(eventHref(created.id));
-            return created;
-          }}
-          onCancel={() => setCreating(false)}
-        />
-      </div>
-    );
-  }
-
-  if (firstEventId !== null) {
-    return (
-      <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Opening your events…
-      </p>
-    );
-  }
-
   return (
-    <div className="p-4 sm:p-6">
-      <div className="max-w-prose">
-        <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
-          No active events
-        </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          Create your first event to start adding tables and bookings. You can
-          have up to {MAX_ACTIVE_EVENTS} active at once.
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="h-11 rounded-md bg-black px-4 text-base font-medium text-white dark:bg-zinc-50 dark:text-black"
-          >
-            + New event
-          </button>
-          {/* Closed events live on for the retention period and appear
-              nowhere else, so the way to them cannot be behind having an
-              active event to open. */}
-          <Link
-            href="/events/manage"
-            className="text-sm text-zinc-700 underline dark:text-zinc-300"
-          >
-            Manage events
-          </Link>
-        </div>
-      </div>
-    </div>
+    <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
+      Opening your events…
+    </p>
   );
 }

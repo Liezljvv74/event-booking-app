@@ -253,7 +253,8 @@ export interface EventDetailsPatch {
   /**
    * The event's prices in full, not lines to add: saving replaces the list,
    * so removing a price is expressed by leaving it out. Omitting the field
-   * leaves the stored prices alone, which is what the schedule editor does.
+   * leaves the stored prices alone, for a caller that changes something else
+   * about the event.
    */
   ticketPrices?: readonly TicketPriceInput[];
 }

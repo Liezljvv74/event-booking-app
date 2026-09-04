@@ -27,6 +27,14 @@ export const EVENT_SECTIONS = [
 
 export type EventSection = (typeof EVENT_SECTIONS)[number]["segment"];
 
+/**
+ * Manage events, the one screen that is about the whole set of events rather
+ * than one of them. It sits at the end of the section nav beside the four
+ * above, but it carries no event id: it lists closed events too, and those
+ * belong to no tab.
+ */
+export const MANAGE_EVENTS_PATH = "/events/manage";
+
 /** The path of a section, with no event attached to it yet. */
 export function eventSectionPath(section: EventSection): string {
   return section === "" ? "/event" : `/event/${section}`;

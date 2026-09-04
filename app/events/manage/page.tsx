@@ -1,60 +1,29 @@
 "use client";
 
 /**
- * Every event in one place: rename, re-date, re-time, or delete.
+ * Every event in one place: create, rename, re-date, re-time, re-price, or
+ * delete. Every function that is about an event as a whole lives here, so
+ * none of the event's own screens has to carry a second way of doing it.
  *
- * Deliberately outside the /event layout. That layout is chrome
- * for one event — tabs and section nav — and this screen is about all of
- * them, closed ones included, which never appear in those tabs at all.
+ * The last section of the nav rather than one of the event's own four. It is
+ * about all of the events, closed ones included, and those appear in no tab.
  */
 
 import { useState } from "react";
-import Link from "next/link";
+import { useEventContext } from "@/components/event-provider";
 import { EventEditor } from "@/components/event-editor";
 import { NewEventForm } from "@/components/new-event-form";
 import { formatEventDate } from "@/lib/event-time";
-import { useEvents } from "@/lib/use-events";
 import { MAX_ACTIVE_EVENTS, type Event } from "@/lib/types";
-import { eventHref } from "@/lib/event-routes";
 
 function byDateThenName(a: Event, b: Event): number {
   return a.eventDate.localeCompare(b.eventDate) || a.name.localeCompare(b.name);
 }
 
 export default function ManageEventsScreen() {
-  const {
-    state,
-    error,
-    allEvents,
-    atEventLimit,
-    lastTimes,
-    addEvent,
-    editEventDetails,
-    removeEvent,
-  } = useEvents();
+  const { allEvents, atEventLimit, lastTimes, addEvent, editEventDetails, removeEvent } =
+    useEventContext();
   const [creating, setCreating] = useState(false);
-
-  if (state === "loading") {
-    return (
-      <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Loading your events…
-      </p>
-    );
-  }
-
-  if (state === "error") {
-    return (
-      <div className="p-6">
-        <h1 className="text-lg font-semibold text-red-600 dark:text-red-400">
-          Could not open local storage
-        </h1>
-        <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
-          {error} This app keeps everything in the browser, so it needs
-          IndexedDB. Private browsing windows often block it.
-        </p>
-      </div>
-    );
-  }
 
   const active = allEvents
     .filter((event) => event.status === "active")
@@ -64,21 +33,13 @@ export default function ManageEventsScreen() {
     .sort(byDateThenName)
     .reverse();
 
-  const first = active[0] ?? allEvents[0];
-
   return (
-    <div className="flex-1 p-3 sm:p-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
-          Manage events
-        </h1>
-        <Link
-          href={first === undefined ? "/" : eventHref(first.id)}
-          className="text-sm text-zinc-700 underline dark:text-zinc-300"
-        >
-          Back to your events
-        </Link>
-      </div>
+    <section>
+      {/* The tabs above are the way back to an event, so the heading is the
+          heading and nothing else. */}
+      <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+        Manage events
+      </h1>
 
       {creating ? (
         <div className="mt-3">
@@ -186,6 +147,6 @@ export default function ManageEventsScreen() {
           {allEvents.length} event{allEvents.length === 1 ? "" : "s"} stored
         </p>
       )}
-    </div>
+    </section>
   );
 }

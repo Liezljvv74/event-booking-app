@@ -119,15 +119,18 @@ been added to it.
 
 ```
 app/
-  page.tsx                       first run, and the redirect into an event
-  events/manage/page.tsx         create, rename, re-date, delete any event
+  page.tsx                       the redirect into an event, or to Manage events
+  events/manage/
+    layout.tsx                   the same chrome, with no tab current
+    page.tsx                     create, rename, re-date, re-price, delete
   event/                         one event, chosen by ?id= in the URL
-    layout.tsx                   event tabs + section nav (the chrome)
+    layout.tsx                   the chrome, around one event's screens
     page.tsx                     dashboard
     tables/page.tsx              tables and seat counts
     bookings/page.tsx            parties, guests, seating
     expenses/page.tsx            expense lines and the saved-line library
 components/                      the pieces those screens are built from
+  app-chrome.tsx                 event tabs + section nav, shared by both layouts
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
 lib/
   db.ts                          IndexedDB plumbing: stores, transactions
@@ -180,10 +183,19 @@ many events as possible are on the screen at once. Closed events appear here
 in their own section and nowhere else in the app, so this is the only place
 one can be looked at or removed early. Deleting names what goes with it.
 
+It is the last item in the section nav, after the event's own four, ruled off
+from them because those are this event and this is all of them. It used to be
+a button among the event tabs, where it read as a fifth event, and the screen
+it opened stood outside the app's chrome — reaching it felt like leaving. Now
+the tabs and the nav sit above it like they do above every other screen, and
+it shares the loaded events with them, so an event created or deleted here
+appears or disappears in the tabs at once.
+
 **Dashboard** — the event's ticket prices are read off the heading, after
-the name. They are shown rather than edited here: they are set
-when the event is created and changed on Manage events. Then six figures on
-one line (guests confirmed and cancelled,
+the name, along with its date and times. Nothing there is editable: an
+event's own details are set when it is created and changed on Manage events,
+which is one page owning the lot rather than three screens each owning a
+piece of it. Then six figures on one line (guests confirmed and cancelled,
 seats available, amount due at the venue, expenses, expected income, expected
 profit), then the seating list: each table with its seat count, what is free
 and who is sitting there. Guests with no name yet are counted rather than
@@ -269,6 +281,15 @@ The ones that were argued out and would otherwise be re-litigated:
   one library entry the moment either was cleared.
 - **A new event starts from the last event saved** — its times and its expense
   lines both, by the same "most recently saved" rule.
+- **One page owns an event's own details.** Name, date, times and ticket
+  prices are created and changed on Manage events and nowhere else. The
+  dashboard used to edit the date and times inline and the entry screen used
+  to carry a second New event form; both are gone, so there is one form to
+  keep correct rather than three, and the dashboard is what it says it is —
+  figures, read.
+- **Nothing to open means Manage events.** The entry screen is a signpost: to
+  the first active event, or, when there is none, to the one screen that can
+  create one.
 - **Total number of bookings is deliberately absent** from the dashboard. It is
   spec item 3; it was removed on request in favour of the guest counts.
 - **The `by_status` index is unused on purpose.** Events are filtered in
@@ -281,6 +302,7 @@ The ones that were argued out and would otherwise be re-litigated:
 |---|---|
 | Local, no backend, IndexedDB | Done |
 | Up to 4 active events, tabs | Done |
+| Every event managed in one place | Done — **not in the spec**, added on request |
 | Expenses copied forward to a new event | Done |
 | Tables: numbered list, seats per table | Done |
 | Bookings, attendees, per-guest editing | Done |
@@ -331,6 +353,16 @@ Enter and leaving the field, and came back as the dropdown's shown value; a
 guest already on an amount off the list had it offered as an extra line; and
 an event whose prices were never set kept the typed price field it has always
 had.
+
+Moving Manage events into the section nav was checked over the built export
+too, at desktop and phone widths: the nav marks it as where you are and its
+four event links carry the event last open; the tabs and the nav sit above
+it; an event created there appears in the tabs at once and one deleted there
+disappears from them, including the event being looked at; with no events at
+all the tab strip is gone, the nav is the Manage events item alone and the
+entry screen redirects there; and on a phone the sections scroll while
+Manage events stays on screen. The dashboard was confirmed to have no edit
+control left on it, showing the date and times as text.
 
 The move to a static export was checked the same way: the contents of `out/`
 were served from a subdirectory, mimicking a project page, and the app driven

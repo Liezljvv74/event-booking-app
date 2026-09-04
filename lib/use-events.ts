@@ -68,12 +68,6 @@ export interface NewEventInput {
   ticketPrices: readonly TicketPriceInput[];
 }
 
-export interface ScheduleInput {
-  eventDate: string;
-  startTime: string | null;
-  endTime: string | null;
-}
-
 export interface UseEventsResult {
   state: LoadState;
   error: string;
@@ -97,8 +91,7 @@ export interface UseEventsResult {
    */
   lastTimes: EventTimes;
   addEvent: (input: NewEventInput) => Promise<Event>;
-  updateSchedule: (id: string, schedule: ScheduleInput) => Promise<Event>;
-  /** Edit an event's name, date or times. */
+  /** Edit an event's name, date, times or ticket prices. */
   editEventDetails: (id: string, patch: EventDetailsPatch) => Promise<Event>;
   /** Delete an event and everything recorded against it. Cannot be undone. */
   removeEvent: (id: string) => Promise<void>;
@@ -226,16 +219,6 @@ export function useEvents(): UseEventsResult {
     setLastTimes(await lastSavedTimes());
     return created;
   }, [refreshEvents]);
-
-  const updateSchedule = useCallback(
-    async (id: string, schedule: ScheduleInput) => {
-      const updated = await updateEventDetails(id, schedule);
-      await refreshEvents();
-      setLastTimes(await lastSavedTimes());
-      return updated;
-    },
-    [refreshEvents],
-  );
 
   const editEventDetails = useCallback(
     async (id: string, patch: EventDetailsPatch) => {
@@ -381,7 +364,6 @@ export function useEvents(): UseEventsResult {
     expenseTemplates,
     lastTimes,
     addEvent,
-    updateSchedule,
     editEventDetails,
     removeEvent,
     addEventTable,

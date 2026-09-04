@@ -15,13 +15,14 @@ interface Props {
  * browser's back and forward buttons move between events. They look like
  * tabs but are navigation, so this is a nav with aria-current rather than a
  * tablist — a tablist would promise arrow-key semantics these do not have.
+ *
+ * Every event here is an active one, and each is a real event. Manage events
+ * used to sit at the right-hand end and is now a section in the nav below,
+ * where it does not read as a fifth event.
  */
 export function EventTabs({ events, selectedId }: Props) {
   return (
     <div className="flex items-stretch border-b border-zinc-200 dark:border-zinc-800">
-      {/* Only the tabs scroll. The Manage events link sits outside this
-          container so four long names cannot push it off a phone screen;
-          min-w-0 lets the strip shrink instead of widening the row. */}
       <nav
         aria-label="Events"
         className="flex min-w-0 flex-1 items-stretch gap-1 overflow-x-auto px-2 pt-1.5"
@@ -50,20 +51,6 @@ export function EventTabs({ events, selectedId }: Props) {
           );
         })}
       </nav>
-
-      <div className="flex shrink-0 items-center pr-2 pl-2">
-        {/* Where events are created, renamed and deleted alike. */}
-        <Link
-          href="/events/manage"
-          data-manage-events
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium whitespace-nowrap text-black hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-900"
-        >
-          <span className="sm:hidden" aria-hidden="true">
-            Manage
-          </span>
-          <span className="max-sm:sr-only">Manage events</span>
-        </Link>
-      </div>
     </div>
   );
 }
