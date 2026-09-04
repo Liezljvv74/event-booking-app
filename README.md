@@ -192,9 +192,9 @@ it shares the loaded events with them, so an event created or deleted here
 appears or disappears in the tabs at once.
 
 **Dashboard** — the event's ticket prices are read off the heading, after
-the name, along with its date and times. An event running past midnight is
-marked "(next day)" in the tabs, where a time is small print skimmed beside
-three others, but not in the dashboard heading, where it was asked for off. Nothing there is editable: an
+the name, along with its date and times. An event running past midnight is not
+marked as such anywhere: 20:00 – 01:30 says it, and the note that used to
+follow the end time was asked for off. Nothing there is editable: an
 event's own details are set when it is created and changed on Manage events,
 which is one page owning the lot rather than three screens each owning a
 piece of it. Then six figures on one line (guests confirmed and cancelled,
