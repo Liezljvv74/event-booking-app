@@ -21,8 +21,8 @@ interface Props {
 }
 
 const fieldClass =
-  "h-11 rounded-md border border-zinc-300 bg-white px-3 text-base text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
-const labelClass = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
+  "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
 
 export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
   const [name, setName] = useState("");
@@ -84,57 +84,63 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
         or clear either as you like; times are optional.
       </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 sm:col-span-2">
+      {/* Name, then the date and times to the right of it, the same shape
+          an event has on Manage events. */}
+      <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem]">
+        <label className="flex flex-col gap-1">
           <span className={labelClass}>Event name</span>
           <input
             type="text"
             name="name"
             value={name}
+            disabled={saving}
             onChange={(changed) => setName(changed.target.value)}
-            autoFocus
             className={fieldClass}
+            autoFocus
             placeholder="Spring Gala"
           />
         </label>
 
-        <div className="sm:col-span-2">
-          <TicketPricesEditor control={prices} disabled={saving} />
-        </div>
-
         <label className="flex flex-col gap-1">
-          <span className={labelClass}>Event date</span>
+          <span className={labelClass}>Date</span>
           <input
             type="date"
             name="eventDate"
             value={eventDate}
+            disabled={saving}
             onChange={(changed) => setEventDate(changed.target.value)}
             className={fieldClass}
           />
         </label>
 
-        <div className="flex gap-3">
-          <label className="flex flex-1 flex-col gap-1">
-            <span className={labelClass}>Start time</span>
-            <input
-              type="time"
-              name="startTime"
-              value={startTime}
-              onChange={(changed) => setStartTime(changed.target.value)}
-              className={fieldClass}
-            />
-          </label>
-          <label className="flex flex-1 flex-col gap-1">
-            <span className={labelClass}>End time</span>
-            <input
-              type="time"
-              name="endTime"
-              value={endTime}
-              onChange={(changed) => setEndTime(changed.target.value)}
-              className={fieldClass}
-            />
-          </label>
-        </div>
+        <label className="flex flex-col gap-1">
+          <span className={labelClass}>Start</span>
+          <input
+            type="time"
+            name="startTime"
+            value={startTime}
+            disabled={saving}
+            onChange={(changed) => setStartTime(changed.target.value)}
+            className={fieldClass}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className={labelClass}>End</span>
+          <input
+            type="time"
+            name="endTime"
+            value={endTime}
+            disabled={saving}
+            onChange={(changed) => setEndTime(changed.target.value)}
+            className={fieldClass}
+          />
+        </label>
+      </div>
+
+      {/* Below the row, because the date now sits where they used to. */}
+      <div className="mt-1.5">
+        <TicketPricesEditor control={prices} disabled={saving} />
       </div>
 
       {error !== "" && (

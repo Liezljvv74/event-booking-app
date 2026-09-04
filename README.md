@@ -179,8 +179,8 @@ many events as possible are on the screen at once. Closed events appear here
 in their own section and nowhere else in the app, so this is the only place
 one can be looked at or removed early. Deleting names what goes with it.
 
-**Dashboard** — the event's ticket prices are read off the heading, between
-the name and the date. They are shown rather than edited here: they are set
+**Dashboard** — the event's ticket prices are read off the heading, after
+the name. They are shown rather than edited here: they are set
 when the event is created and changed on Manage events. Then six figures on
 one line (guests confirmed and cancelled,
 seats available, amount due at the venue, expenses, expected income, expected
@@ -210,9 +210,10 @@ only. Each line is an amount and free text saying what it includes, and the
 text is there to be read off when someone asks what they are paying for:
 nothing derives from it, and it may be left blank.
 
-The list is entered between the event's name and its date on the New event
-form, and below the fields on Manage events, where the name, date, times and
-Save share one line so that more events reach the screen. Three prices fit
+The list is entered below the fields on both screens that set an event's
+details. The New event form and an event's row on Manage events have the same
+shape: the name, then the date, start and end to the right of it, which is
+what puts the prices underneath rather than in the middle. Three prices fit
 across a line, each an amount, what it includes, and a cross that deletes the
 pair; the fields carry no labels of their own, since an amount beside a
 description reads as what it is, and three labelled columns would not fit.
