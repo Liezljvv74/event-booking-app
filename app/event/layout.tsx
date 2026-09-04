@@ -6,25 +6,26 @@
  * Dashboard, Tables, Bookings and Expenses does not re-read IndexedDB.
  */
 
-import { useParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { EventProvider, useEventContext } from "@/components/event-provider";
 import { EventTabs } from "@/components/event-tabs";
 import { SectionNav } from "@/components/section-nav";
+import { useEventId } from "@/lib/event-routes";
+
+function Loading() {
+  return (
+    <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
+      Loading your events…
+    </p>
+  );
+}
 
 function EventChrome({ children }: { children: React.ReactNode }) {
   const { state, error, activeEvents } = useEventContext();
-  const params = useParams<{ eventId: string }>();
+  const eventId = useEventId();
 
-  const eventId = params.eventId;
-
-  if (state === "loading") {
-    return (
-      <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Loading your events…
-      </p>
-    );
-  }
+  if (state === "loading") return <Loading />;
 
   if (state === "error") {
     return (
@@ -46,7 +47,7 @@ function EventChrome({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1 flex-col">
       <EventTabs events={activeEvents} selectedId={eventId} />
 
-      {known && <SectionNav eventId={eventId} />}
+      {known && eventId !== null && <SectionNav eventId={eventId} />}
 
       <div className="flex-1 p-2 sm:p-6">
         {/* An event can vanish under you: the retention sweep closes events
@@ -78,9 +79,14 @@ function EventChrome({ children }: { children: React.ReactNode }) {
 export default function EventLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  /* Everything below reads the event id out of the query string, which no
+     amount of building can know in advance, so the prerendered HTML is this
+     fallback and the real screen arrives with hydration. */
   return (
-    <EventProvider>
-      <EventChrome>{children}</EventChrome>
-    </EventProvider>
+    <Suspense fallback={<Loading />}>
+      <EventProvider>
+        <EventChrome>{children}</EventChrome>
+      </EventProvider>
+    </Suspense>
   );
 }

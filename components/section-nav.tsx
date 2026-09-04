@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const SECTIONS = [
-  { segment: "", label: "Dashboard" },
-  { segment: "tables", label: "Tables" },
-  { segment: "bookings", label: "Bookings" },
-  { segment: "expenses", label: "Expenses" },
-] as const;
+import {
+  EVENT_SECTIONS,
+  eventHref,
+  eventSectionPath,
+} from "@/lib/event-routes";
 
 /**
  * Links to each screen of the current event. Real URLs, so back and forward
@@ -16,20 +14,22 @@ const SECTIONS = [
  */
 export function SectionNav({ eventId }: { eventId: string }) {
   const pathname = usePathname();
-  const base = `/events/${eventId}`;
 
   return (
     <nav
       aria-label="Event sections"
       className="flex gap-1 overflow-x-auto border-b border-zinc-200 px-2 py-1 dark:border-zinc-800"
     >
-      {SECTIONS.map((section) => {
-        const href = section.segment === "" ? base : `${base}/${section.segment}`;
-        const active = pathname === href;
+      {EVENT_SECTIONS.map((section) => {
+        // Compared on the path alone: which event is in the query string has
+        // no bearing on which section is showing, and a trailing slash is
+        // the host's business rather than a different page.
+        const active =
+          pathname.replace(/\/$/, "") === eventSectionPath(section.segment);
         return (
           <Link
             key={section.label}
-            href={href}
+            href={eventHref(eventId, section.segment)}
             aria-current={active ? "page" : undefined}
             className={`shrink-0 rounded-md px-3 py-1.5 text-sm whitespace-nowrap ${
               active

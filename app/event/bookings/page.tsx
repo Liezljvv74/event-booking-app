@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { BookingCard } from "@/components/booking-card";
 import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
 import { tableOccupancy } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
+import { eventHref, useEventId } from "@/lib/event-routes";
 
 /** How many tables to name before the line gets too long to scan. */
 const MAX_TABLES_LISTED = 8;
@@ -49,7 +49,7 @@ export default function BookingsScreen() {
     cancelOneAttendee,
     cancelWholeBooking,
   } = useEventContext();
-  const params = useParams<{ eventId: string }>();
+  const eventId = useEventId();
   const [creating, setCreating] = useState(false);
   // Parties start collapsed so the screen is a readable list of party names.
   // Several can be open at once, since comparing two parties is common.
@@ -64,9 +64,7 @@ export default function BookingsScreen() {
     });
   }
 
-  const event = activeEvents.find(
-    (candidate) => candidate.id === params.eventId,
-  );
+  const event = activeEvents.find((candidate) => candidate.id === eventId);
   if (!event) return null;
 
   const attendees = event.bookings.flatMap((booking) => booking.attendees);
@@ -147,7 +145,7 @@ export default function BookingsScreen() {
         <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
           This event has no tables yet, so guests cannot be seated.{" "}
           <Link
-            href={`/events/${event.id}/tables`}
+            href={eventHref(event.id, "tables")}
             className="underline dark:text-zinc-300"
           >
             Add tables

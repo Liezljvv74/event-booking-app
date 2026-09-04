@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
 import { ScheduleEditor } from "@/components/schedule-editor";
 import { formatAmount, sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
+import { eventHref, useEventId } from "@/lib/event-routes";
 
 /**
  * The figures the spec asks the dashboard to show.
@@ -146,11 +146,9 @@ function Seated({ table }: { table: TableOccupancy }) {
 
 export default function EventDashboard() {
   const { activeEvents, updateSchedule } = useEventContext();
-  const params = useParams<{ eventId: string }>();
+  const eventId = useEventId();
 
-  const event = activeEvents.find(
-    (candidate) => candidate.id === params.eventId,
-  );
+  const event = activeEvents.find((candidate) => candidate.id === eventId);
   if (!event) return null;
 
   const seating = tableOccupancy(event);
@@ -229,7 +227,7 @@ export default function EventDashboard() {
           <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
             No tables yet, so no one can be seated.{" "}
             <Link
-              href={`/events/${event.id}/tables`}
+              href={eventHref(event.id, "tables")}
               className="underline dark:text-zinc-300"
             >
               Add tables
@@ -279,7 +277,7 @@ export default function EventDashboard() {
             {summary.unseated} guest{summary.unseated === 1 ? "" : "s"} not yet
             seated.{" "}
             <Link
-              href={`/events/${event.id}/bookings`}
+              href={eventHref(event.id, "bookings")}
               className="underline"
             >
               Seat them

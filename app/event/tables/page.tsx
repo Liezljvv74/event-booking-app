@@ -1,22 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
 import { TableRow } from "@/components/table-row";
 import { tableOccupancy } from "@/lib/repository";
 import { DEFAULT_SEAT_COUNT } from "@/lib/types";
+import { useEventId } from "@/lib/event-routes";
 
 export default function TablesScreen() {
   const { activeEvents, addEventTable, setSeatCount, removeEventTable } =
     useEventContext();
-  const params = useParams<{ eventId: string }>();
+  const eventId = useEventId();
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
 
-  const event = activeEvents.find(
-    (candidate) => candidate.id === params.eventId,
-  );
+  const event = activeEvents.find((candidate) => candidate.id === eventId);
   if (!event) return null;
 
   const totalSeats = event.tables.reduce(

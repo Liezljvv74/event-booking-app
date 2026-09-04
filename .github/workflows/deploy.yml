@@ -1,0 +1,69 @@
+# Builds the static export and publishes it to GitHub Pages.
+#
+# Pages has to be switched on for the repository once by hand, under
+# Settings → Pages → Build and deployment → Source: "GitHub Actions". The
+# action's own `enablement` option cannot do it: creating a Pages site needs
+# admin rights that the workflow token does not have. A private repository
+# also needs a plan that covers Pages; a public one does not.
+#
+# After that, the subdirectory the site is served from is read from
+# configure-pages rather than written down here, so renaming the repository
+# does not break links. Deploying this way runs no Jekyll.
+name: Deploy to GitHub Pages
+
+# Run by hand only, from the Actions tab. It stays that way until Pages is
+# switched on: with Pages off the build cannot get past configure-pages, and
+# on a push trigger that means a failed run, and a mail about it, for every
+# commit. Once Pages is on, uncomment the push trigger to publish on every
+# push to main.
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and never cancel one halfway: a partial upload would
+# leave the published site in pieces.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - run: npm ci
+
+      - name: Build the static export
+        run: npm run build
+        env:
+          # "/event-booking-app" for a project page; empty for a user page.
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

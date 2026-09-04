@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import type { Event } from "@/lib/types";
+import { eventHref } from "@/lib/event-routes";
 
 interface Props {
   events: Event[];
@@ -31,7 +32,7 @@ export function EventTabs({ events, selectedId }: Props) {
           return (
             <Link
               key={event.id}
-              href={`/events/${event.id}`}
+              href={eventHref(event.id)}
               aria-current={selected ? "page" : undefined}
               data-event-tab={event.id}
               className={`shrink-0 rounded-t-md px-3 py-2 text-left text-sm ${

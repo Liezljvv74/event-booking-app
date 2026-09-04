@@ -19,10 +19,74 @@ Then open <http://localhost:3002>. Port 3002 is fixed in `package.json`; the
 spec pins it.
 
 ```bash
-npm run build     # typecheck and compile, to prove it builds
+npm run build     # typecheck, compile, and write the static site to out/
 npx tsc --noEmit  # types only
 npx eslint .      # lint
 ```
+
+## Publishing it
+
+`next.config.ts` sets `output: "export"`, so `npm run build` writes a whole
+static site into `out/`: plain HTML, CSS and JavaScript with no Node process
+behind it. That suits this app exactly, because every event has always lived
+in the browser's own IndexedDB and there was never a server to talk to.
+
+`.github/workflows/deploy.yml` builds that output and publishes it. Publishing
+that way runs no Jekyll.
+
+It is set to run by hand only, from the Actions tab, because a push trigger
+would fail on every commit while Pages is off — see below. The push trigger
+is still in the file, commented out, and turning it back on is the last step
+of enabling Pages.
+
+Two things have to be true of the repository first, and neither can be done
+from inside the workflow:
+
+- **Pages must be switched on**, under **Settings → Pages → Build and
+  deployment → Source: GitHub Actions**. The `enablement` option on
+  `actions/configure-pages` looks like it would save this step, but creating
+  a Pages site needs admin rights the workflow token is not given, so it
+  fails with *Resource not accessible by integration*.
+- **The repository must be one the plan allows Pages for.** This one is
+  private, and Pages for private repositories needs a paid plan; on the free
+  plan the repository has to be public. Until one or the other is settled the
+  build stops at `configure-pages` with *Your current plan does not support
+  GitHub Pages for this repository*.
+
+Everything else is already in place and verified: the export builds, and the
+site works when served from a repository subdirectory. So enabling Pages is
+three steps — settle the plan or visibility, set the source to GitHub
+Actions, then uncomment the push trigger in the workflow.
+
+A project page is served out of a subdirectory named after the repository, so
+every asset URL and internal link needs that prefix. The workflow takes it
+from `actions/configure-pages` and passes it in as `NEXT_PUBLIC_BASE_PATH`,
+which `next.config.ts` hands to Next as `basePath`. Nothing writes the
+repository name down, and `npm run dev` passes nothing, so local development
+still serves from the root.
+
+`public/.nojekyll` only matters if the site is ever published from a branch
+rather than from Actions: Jekyll discards directories that begin with an
+underscore, which would take `_next/` and with it the entire application.
+
+### Why the event id moved into the query string
+
+A static export has to write every page to a file at build time. Event ids
+are UUIDs minted in the browser, so `/events/[eventId]` could never have had
+files to serve, and `next build` refuses the route outright without a
+`generateStaticParams()` — for which no list of ids exists, or could.
+
+So the four event screens moved from `/events/<id>/...` to
+`/event/...?id=<id>`: one prerendered page per section, each reading the id
+off the query string once it is running in the browser. The URLs are less
+tidy; in exchange, deep links, reloads and the back and forward buttons all
+keep working, which is what the path-based routing was for in the first
+place. `lib/event-routes.ts` is the only place that shape is written down.
+
+Because the query string is unknowable at build time, the prerendered HTML
+for those pages is the same "Loading your events" line the app already showed
+while it read IndexedDB, and the real screen arrives with hydration. That is
+what the `Suspense` boundary in `app/event/layout.tsx` is for.
 
 ## Non-negotiables
 
@@ -30,6 +94,11 @@ From the spec, and worth keeping in view because several of them are the
 reason things are built the way they are:
 
 - **No deployment.** No hosting config, no CI/CD, no deploy scripts.
+  **Superseded on request:** the app is now published to GitHub Pages, which
+  cost `output: "export"` and `basePath` in `next.config.ts`, one workflow
+  file, and the routing change described below. Every other item on this list
+  still holds, and the export is static, so there is still no server process,
+  no account and no network call.
 - **No backend, no accounts.** No server process, no auth, no login.
 - **Everything in the browser.** All data lives in IndexedDB. Nothing may be
   lost on refresh, close or reopen.
@@ -46,7 +115,7 @@ been added to it.
 app/
   page.tsx                       first run, and the redirect into an event
   events/manage/page.tsx         create, rename, re-date, delete any event
-  events/[eventId]/
+  event/                         one event, chosen by ?id= in the URL
     layout.tsx                   event tabs + section nav (the chrome)
     page.tsx                     dashboard
     tables/page.tsx              tables and seat counts
@@ -60,6 +129,9 @@ lib/
   use-events.ts                  the one React hook the screens talk to
   money.ts                       integer cents in, decimal strings out
   event-time.ts                  dates and clock times
+  event-routes.ts                the URL of every event screen, in one place
+next.config.ts                   the static export and its base path
+.github/workflows/deploy.yml     build, then publish to GitHub Pages
 ```
 
 Roughly 5,600 lines, 2,000 of them in `lib/`.
@@ -169,7 +241,9 @@ The ones that were argued out and would otherwise be re-litigated:
 | Mobile | Done — narrow screens scroll their columns sideways rather than breaking |
 
 Out of scope by the spec and not built: visual floor plan, multi-user, any
-network call, any deployment tooling.
+network call. Deployment tooling was also on that list until the app was
+asked to run from GitHub Pages; see **Publishing it** above for what that
+added.
 
 ## How it has been checked
 
@@ -184,6 +258,12 @@ Those scripts are **not** checked in. They need `playwright-core`, and the
 spec asks for a minimal dependency list, so adding them was not assumed. If
 they should live here, that is a decision to take deliberately — it means one
 dev dependency and a `scripts/` folder.
+
+The move to a static export was checked the same way: the contents of `out/`
+were served from a subdirectory, mimicking a project page, and the app driven
+through it in headless Chrome — creating an event, walking Dashboard, Tables,
+Bookings and Expenses, and reloading a section URL directly. Every screen
+rendered from IndexedDB with a clean console.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 

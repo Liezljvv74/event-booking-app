@@ -3,7 +3,7 @@
 /**
  * Every event in one place: rename, re-date, re-time, or delete.
  *
- * Deliberately outside the /events/[eventId] layout. That layout is chrome
+ * Deliberately outside the /event layout. That layout is chrome
  * for one event — tabs and section nav — and this screen is about all of
  * them, closed ones included, which never appear in those tabs at all.
  */
@@ -15,6 +15,7 @@ import { NewEventForm } from "@/components/new-event-form";
 import { formatEventDate } from "@/lib/event-time";
 import { useEvents } from "@/lib/use-events";
 import { MAX_ACTIVE_EVENTS, type Event } from "@/lib/types";
+import { eventHref } from "@/lib/event-routes";
 
 function byDateThenName(a: Event, b: Event): number {
   return a.eventDate.localeCompare(b.eventDate) || a.name.localeCompare(b.name);
@@ -72,7 +73,7 @@ export default function ManageEventsScreen() {
           Manage events
         </h1>
         <Link
-          href={first === undefined ? "/" : `/events/${first.id}`}
+          href={first === undefined ? "/" : eventHref(first.id)}
           className="text-sm text-zinc-700 underline dark:text-zinc-300"
         >
           Back to your events

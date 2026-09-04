@@ -5,6 +5,7 @@ import Link from "next/link";
 import { endsAfterMidnight } from "@/lib/event-time";
 import type { EventDetailsPatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
+import { eventHref } from "@/lib/event-routes";
 
 interface Props {
   event: Event;
@@ -223,7 +224,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
 
         {event.status === "active" && (
           <Link
-            href={`/events/${event.id}`}
+            href={eventHref(event.id)}
             data-manage-open={event.id}
             className="text-xs text-zinc-700 underline dark:text-zinc-300"
           >

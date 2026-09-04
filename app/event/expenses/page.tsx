@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import { useEventContext } from "@/components/event-provider";
 import {
   EXPENSE_GRID,
@@ -12,6 +11,7 @@ import { NewExpenseRow } from "@/components/new-expense-row";
 import { formatAmount, sumCents } from "@/lib/money";
 import { unusedExpenseTemplates } from "@/lib/repository";
 import type { Expense } from "@/lib/types";
+import { useEventId } from "@/lib/event-routes";
 
 /** The three figures the paid tick makes worth having on this screen. */
 function totals(expenses: readonly Expense[]) {
@@ -36,14 +36,12 @@ export default function ExpensesScreen() {
     clearAllExpenses,
     expenseTemplates,
   } = useEventContext();
-  const params = useParams<{ eventId: string }>();
+  const eventId = useEventId();
   const [confirmingClearAll, setConfirmingClearAll] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const event = activeEvents.find(
-    (candidate) => candidate.id === params.eventId,
-  );
+  const event = activeEvents.find((candidate) => candidate.id === eventId);
   if (!event) return null;
 
   const summary = totals(event.expenses);

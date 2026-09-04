@@ -12,6 +12,7 @@ import Link from "next/link";
 import { NewEventForm } from "@/components/new-event-form";
 import { useEvents } from "@/lib/use-events";
 import { MAX_ACTIVE_EVENTS } from "@/lib/types";
+import { eventHref } from "@/lib/event-routes";
 
 export default function Home() {
   const { state, error, activeEvents, lastTimes, addEvent } = useEvents();
@@ -24,7 +25,7 @@ export default function Home() {
     if (state !== "ready" || firstEventId === null || creating) return;
     // Replace, not push: pushing would leave "/" in the history, and going
     // back would land here and immediately redirect forward again.
-    router.replace(`/events/${firstEventId}`);
+    router.replace(eventHref(firstEventId));
   }, [state, firstEventId, creating, router]);
 
   if (state === "loading") {
@@ -56,7 +57,7 @@ export default function Home() {
           lastTimes={lastTimes}
           onCreate={async (input) => {
             const created = await addEvent(input);
-            router.replace(`/events/${created.id}`);
+            router.replace(eventHref(created.id));
             return created;
           }}
           onCancel={() => setCreating(false)}
