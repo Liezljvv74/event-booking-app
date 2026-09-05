@@ -231,7 +231,9 @@ shows what is free and which parties are on it. Cutting a table's seats below
 the guests already seated there is refused.
 
 **Bookings** — a party is a name, a telephone number and a guest count, which
-generates that many guest lines. Parties collapse to one line each. Guests are
+generates that many guest lines. Parties collapse to one line each, and the
+list runs two abreast on a wide screen so two of them can be read side by
+side. Guests are
 edited individually: name, table, payment status, ticket price. The price a
 party is taken at is chosen from the event's own ticket prices, each shown
 with what it includes, with **Another amount** for anything off the list; the
@@ -356,6 +358,13 @@ The ones that were argued out and would otherwise be re-litigated:
   name is being edited the line above still reads what is saved. It is the
   row's identity in the list rather than a preview of the edit, and it is what
   Cancel puts back.
+- **A grid column that must shrink is `minmax(0,1fr)`, never `1fr`.** Both
+  two-column screens say so explicitly, the single column below the split
+  included. A bare `grid` sizes its implicit column to the widest thing in
+  it, and on Bookings that is the 36rem the guest columns need — so the page
+  itself began scrolling sideways on a phone instead of the guest rows doing
+  it, which is the one thing the spec's mobile rule forbids. It cost nothing
+  to fix and would have been easy to ship.
 - **The two columns measure themselves, not the window.** An opened event and
   the New event form are the same four fields across, and half of a wide
   window is not the same width as a whole narrow one — so the rows inside each
@@ -526,6 +535,17 @@ a party splitting around one already seated, taking the three seats left at
 its table and seven next door. The messages were checked word for word, and
 the split message was confirmed to read in the ordinary text colour while the
 unseated one is amber.
+
+Running the bookings list two abreast has its own pass of 20 assertions:
+two parties sharing a top edge with the second starting where the first ends
+and both the same width; a third wrapping to the next row; both parties open
+at once showing all their guest rows without either scrolling sideways, at
+1600px and again at 1280px where the split begins; an open party beside a
+closed one leaving the closed one its own height rather than a card of empty
+space; one column below the split and on a phone, where the page does not
+scroll sideways and the guest rows do; and the heading, counts and free-seats
+line still running the full width above the list. That pass is what caught
+the phone regression described above.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 

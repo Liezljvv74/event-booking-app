@@ -259,7 +259,19 @@ export default function BookingsScreen() {
           guest count.
         </p>
       ) : (
-        <ul className="mt-3 flex flex-col gap-3">
+        /* Two parties abreast once there is room for both. A party's guest
+           rows need 36rem before they start scrolling sideways, and half of
+           an `xl` screen still clears that, so the split costs nothing.
+
+           Aligned to the top rather than stretched: one party open beside one
+           closed should leave the closed one its own height, not a card of
+           empty space matching the open one.
+
+           Every column is minmax(0,1fr), the one below the split included: a
+           bare `grid` sizes its implicit column to the widest thing in it,
+           which on a phone is the 36rem of guest columns, and the page then
+           scrolls sideways instead of the guest rows doing it. */
+        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {event.bookings.map((booking) => (
             <BookingCard
               key={booking.id}
