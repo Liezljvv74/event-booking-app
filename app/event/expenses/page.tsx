@@ -45,6 +45,23 @@ export default function ExpensesScreen() {
    * it there and saving or cancelling takes it away.
    */
   const [adding, setAdding] = useState(false);
+  /**
+   * Bumped every time the cursor is sent to the blank line. Opening the row
+   * focuses it by itself, but Enter pressed on a line further up while the
+   * row is already open changes nothing about the row — so this is what tells
+   * it to take the cursor anyway.
+   */
+  const [sendCursorToBlank, setSendCursorToBlank] = useState(0);
+
+  /**
+   * A blank line, ready to type into: what the Add button does, and what
+   * Enter on any line does. Typing a list of expenses is then one press per
+   * line rather than a trip back to the button between each of them.
+   */
+  function openBlankLine() {
+    setAdding(true);
+    setSendCursorToBlank((sent) => sent + 1);
+  }
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -129,7 +146,7 @@ export default function ExpensesScreen() {
               Save belonged to which. */}
           <button
             type="button"
-            onClick={() => setAdding(true)}
+            onClick={openBlankLine}
             disabled={adding}
             data-add-line
             className="h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
@@ -182,6 +199,7 @@ export default function ExpensesScreen() {
                   templates={available}
                   onPatch={(patch) => editExpense(event.id, expense.id, patch)}
                   onClear={() => clearExpenseLine(event.id, expense.id)}
+                  onEnter={openBlankLine}
                 />
               ))}
             </ul>
@@ -223,6 +241,7 @@ export default function ExpensesScreen() {
                 onAdd={(input) => addExpenseLine(event.id, input)}
                 onDone={() => setAdding(false)}
                 onCancel={() => setAdding(false)}
+                focusToken={sendCursorToBlank}
               />
             </div>
           )}

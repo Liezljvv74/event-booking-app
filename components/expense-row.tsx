@@ -29,9 +29,22 @@ interface Props {
   templates: readonly ExpenseTemplate[];
   onPatch: (patch: ExpensePatch) => Promise<unknown>;
   onClear: () => Promise<unknown>;
+  /**
+   * Enter was pressed in one of this line's fields. The field is committed
+   * either way; this is the screen's cue to open a blank line below and put
+   * the cursor in it, so a list is typed straight down without going back to
+   * the button between every line.
+   */
+  onEnter: () => void;
 }
 
-export function ExpenseRow({ expense, templates, onPatch, onClear }: Props) {
+export function ExpenseRow({
+  expense,
+  templates,
+  onPatch,
+  onClear,
+  onEnter,
+}: Props) {
   const savedLinesId = useId();
   const [description, setDescription] = useState(expense.description);
   const [provider, setProvider] = useState(expense.provider);
@@ -114,12 +127,21 @@ export function ExpenseRow({ expense, templates, onPatch, onClear }: Props) {
     );
   }
 
-  /** Commit on blur and on Enter, the way every other row in the app does. */
+  /**
+   * Commit on blur and on Enter, the way every other row in the app does —
+   * and on Enter, carry on to the next line.
+   *
+   * The commit is fired and not waited for. Enter is a typing key: the cursor
+   * has to move at the speed of the keystroke rather than at the speed of a
+   * write to IndexedDB, and a refused edit still puts itself right in this
+   * row, which stays on screen behind the new one.
+   */
   function keyCommit(commit: () => void) {
     return (pressed: React.KeyboardEvent) => {
       if (pressed.key !== "Enter") return;
       pressed.preventDefault();
       commit();
+      onEnter();
     };
   }
 

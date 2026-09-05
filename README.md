@@ -369,6 +369,20 @@ with no way to tell which Save belonged to which. The column headings come
 and go with the table, having been six words above an empty space on an event
 with no expenses yet.
 
+**Enter carries on to the next line**, which is how a list of costs is
+actually typed: description, amount, Enter, description, amount, Enter. In
+the blank line it saves what is there and leaves another blank line behind it
+with the cursor already in the description; the Save button is the one that
+stops, closing the row. Enter on a line already in the list commits the field
+being edited, the way Enter has always done there, and then opens a blank
+line below and takes the cursor to it — so a list can be carried on from
+anywhere in it without going back up to the button.
+
+The focusing is asked for through state rather than done where the fields are
+cleared. Every field is disabled while a save is in flight; at the moment the
+fields are emptied, the render that re-enables them has not happened yet, and
+focusing a disabled input does nothing at all.
+
 **Export/Import your data** (`/data`) — two columns, the same shape Manage
 events has: what goes out on the left, what comes in on the right.
 

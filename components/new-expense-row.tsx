@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   EXPENSE_GRID,
   expenseFieldClass,
@@ -18,6 +18,13 @@ interface Props {
   onDone: () => void;
   /** Closed without saving. Whatever was typed goes with it. */
   onCancel: () => void;
+  /**
+   * Bumped whenever the cursor should come back here — when Enter is pressed
+   * on a line further up, with this row already open. A number rather than a
+   * function call because focusing is this component's own business; the
+   * screen only says when.
+   */
+  focusToken: number;
 }
 
 /**
@@ -38,7 +45,13 @@ interface Props {
  * what is wrong, in a browser tooltip worded by the browser, and it would
  * still wave through a description of nothing but spaces.
  */
-export function NewExpenseRow({ templates, onAdd, onDone, onCancel }: Props) {
+export function NewExpenseRow({
+  templates,
+  onAdd,
+  onDone,
+  onCancel,
+  focusToken,
+}: Props) {
   const savedLinesId = useId();
   const [description, setDescription] = useState("");
   const [provider, setProvider] = useState("");
@@ -47,6 +60,24 @@ export function NewExpenseRow({ templates, onAdd, onDone, onCancel }: Props) {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const descriptionField = useRef<HTMLInputElement>(null);
+  /**
+   * Bumped after a line is saved and the row is staying open for the next.
+   *
+   * The focusing cannot happen where the fields are cleared: every field is
+   * disabled while the save is in flight, `setSaving(false)` has not been
+   * rendered yet at that point, and focusing a disabled input does nothing at
+   * all. Asking for it through state instead puts it after the render that
+   * enables them again.
+   */
+  const [cursorWanted, setCursorWanted] = useState(0);
+
+  // On the way in, after each saved line, and again each time the screen says
+  // the cursor belongs here. All three are the same thing to this row: be
+  // ready to be typed into.
+  useEffect(() => {
+    descriptionField.current?.focus();
+  }, [focusToken, cursorWanted]);
 
   /**
    * Picking a saved line fills the amount in as well, but only while the
@@ -63,9 +94,15 @@ export function NewExpenseRow({ templates, onAdd, onDone, onCancel }: Props) {
     if (saved !== undefined) setAmount(formatCents(saved.amountCents));
   }
 
-  async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
-    formEvent.preventDefault();
-
+  /**
+   * Save the line, and either stand down or clear for the next one.
+   *
+   * `andAnother` is what Enter does and the Save button does not. Enter is
+   * how a list is typed — line, Enter, line, Enter — so it leaves a blank row
+   * behind with the cursor in it. The button is how one line is added, so it
+   * closes the row, which is what the screen's own Add button is for undoing.
+   */
+  async function commit(andAnother: boolean) {
     if (description.trim() === "") {
       setError("Give the expense a description.");
       return;
@@ -86,9 +123,18 @@ export function NewExpenseRow({ templates, onAdd, onDone, onCancel }: Props) {
         paid,
         notes,
       });
-      // The line exists now, so the blank one has nothing left to be. Add
-      // brings another, which is the whole point of the button being there.
-      onDone();
+      if (andAnother) {
+        setDescription("");
+        setProvider("");
+        setAmount("");
+        setPaid(false);
+        setNotes("");
+        setCursorWanted((wanted) => wanted + 1);
+      } else {
+        // The line exists now, so the blank one has nothing left to be. Add
+        // brings another, which is what the button above is there for.
+        onDone();
+      }
     } catch (caught) {
       setError(describeError(caught));
     } finally {
@@ -96,8 +142,30 @@ export function NewExpenseRow({ templates, onAdd, onDone, onCancel }: Props) {
     }
   }
 
+  /**
+   * Enter anywhere in the row saves it and opens the next one.
+   *
+   * Handled here rather than by letting the form submit, because the two
+   * ways of finishing a line have to be told apart: Enter carries on, the
+   * Save button stops. Buttons are left alone — Enter on the cross should
+   * press the cross.
+   */
+  function enterCarriesOn(pressed: React.KeyboardEvent) {
+    if (pressed.key !== "Enter") return;
+    if (pressed.target instanceof HTMLButtonElement) return;
+    pressed.preventDefault();
+    void commit(true);
+  }
+
   return (
-    <form onSubmit={submit} data-new-expense>
+    <form
+      onSubmit={(formEvent) => {
+        formEvent.preventDefault();
+        void commit(false);
+      }}
+      onKeyDown={enterCarriesOn}
+      data-new-expense
+    >
       <div className={EXPENSE_GRID}>
         <input
           type="text"
@@ -107,9 +175,7 @@ export function NewExpenseRow({ templates, onAdd, onDone, onCancel }: Props) {
           aria-required="true"
           aria-label="New expense description"
           name="description"
-          /* The row only exists because Add was pressed, so the cursor
-             belongs in it rather than where the button left it. */
-          autoFocus
+          ref={descriptionField}
           onChange={(changed) => changeDescription(changed.target.value)}
           className={expenseFieldClass}
         />
