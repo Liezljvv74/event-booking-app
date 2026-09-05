@@ -304,8 +304,23 @@ guest pays at the venue, so *paid* can be typed beside them as it arrives; a
 guest not paying at all reads *no charge*, which tells the door not to ask.
 Cancelled guests are off it, unnamed guests are found under their party's
 name, and anyone not seated yet is at the end rather than scattered through
-the tables. It writes as Excel's own XML or as plain CSV. *Where* — and this
-is the part with a browser problem inside it.
+the tables.
+
+It writes three ways, the same rows each time. As Excel's own XML, a real
+workbook that opens on a double-click. As a **web page**, self-contained —
+the styling and the script are inside the one file, because it is opened off
+the disk where nothing fetched from elsewhere would arrive — with real tick
+boxes and real fields, a running *n of m arrived* count, and a print
+stylesheet that drops the count, strips the field borders and turns the boxes
+back into empty squares for a clipboard. What is ticked and typed there is
+kept in that browser's local storage under the event's id and keyed to the
+guest rather than to a row number, which would move the moment somebody is
+seated; every touch of storage is wrapped in a try, because a page opened
+from a file has no origin worth the name in some browsers, and a list that
+would not tick because saving failed is worse than one that forgets. Or as
+plain CSV.
+
+*Where* — and this is the part with a browser problem inside it.
 
 Chrome and Edge on the desktop can hand a page a handle to a folder, and that
 handle can be kept in IndexedDB and used again next time. Firefox, Safari and
@@ -540,7 +555,9 @@ The ones that were argued out and would otherwise be re-litigated:
   and deliberately left plain: frozen panes and print setup are each one line
   away and each is a line Excel might call malformed, and a workbook that
   opens with a repair warning is worse than one whose header scrolls off the
-  top.
+  top. The web-page version of the same list is one file for the same reason
+  in a different key: opened off the disk, a stylesheet or a script it asked
+  for from anywhere else would simply never arrive.
 - **The logo is imported, not linked, because of the base path.** A project
   page on GitHub Pages is served out of a subdirectory, so every asset URL
   needs that prefix. `next/image` adds it in its loader — but a static export
@@ -579,7 +596,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Retention window, then silent delete | Logic done; not changeable without Settings |
 | Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
 | **Settings screen** | **Not built** — the retention period is still fixed at 14 days |
-| Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as Excel's own XML or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
+| Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as Excel's own XML, a web page, or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
