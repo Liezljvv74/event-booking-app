@@ -7,15 +7,24 @@
  * what comes in on the right — because they are two halves of one job and
  * neither is a step in the other.
  *
- * Export writes JSON or CSV. JSON is the backup and the only thing import
- * reads; CSV is three spreadsheets to open and look at. Where they are
- * written is remembered between exports, and asked about before every one,
- * so a backup never quietly lands somewhere it was not meant to.
+ * Export writes one of three things. JSON is the backup and the only thing
+ * import reads; CSV is three spreadsheets of everything, to open and look at;
+ * the tables-and-guests list is what the door works from on the night, one
+ * file per event, as Excel's own XML or as plain CSV.
+ *
+ * Where they are written is remembered between exports, and asked about
+ * before every one, so a backup never quietly lands somewhere it was not
+ * meant to.
  */
 
 import { useState } from "react";
 import { useEventContext } from "@/components/event-provider";
-import { exportFiles, parseBackup, type Backup } from "@/lib/data-transfer";
+import {
+  exportFiles,
+  parseBackup,
+  type Backup,
+  type ExportFormat,
+} from "@/lib/data-transfer";
 import {
   canRememberFolder,
   downloadFiles,
@@ -28,7 +37,8 @@ import type { ImportMode } from "@/lib/repository";
 import type { Event } from "@/lib/types";
 
 type Scope = "current" | "all" | "choose";
-type Format = "json" | "csv";
+/** What the three radios offer. The door list then asks how it is written. */
+type Kind = "json" | "csv" | "door";
 
 const cardClass =
   "rounded-lg border border-zinc-200 p-3 dark:border-zinc-800";
@@ -92,7 +102,12 @@ export default function DataScreen() {
   /* ----------------------------------------------------------- exporting */
 
   const [scope, setScope] = useState<Scope>("current");
-  const [format, setFormat] = useState<Format>("json");
+  const [kind, setKind] = useState<Kind>("json");
+  /** Only asked about once the door list is the thing being exported. */
+  const [doorAs, setDoorAs] = useState<"xml" | "csv">("xml");
+
+  const format: ExportFormat =
+    kind === "door" ? (doorAs === "xml" ? "door-xml" : "door-csv") : kind;
   /** Which events are ticked while the scope is "choose". */
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
   /**
@@ -119,6 +134,11 @@ export default function DataScreen() {
 
   const folder = settings.exportDirectory;
   const canRemember = canRememberFolder();
+
+  // Said before the button is pressed, because "3 files" and "1 file" are
+  // different enough to want to know which is about to land in the folder.
+  const fileCount =
+    kind === "csv" ? 3 : kind === "door" ? chosen.length : 1;
 
   function clearExportResult() {
     setExportError("");
@@ -363,8 +383,8 @@ export default function DataScreen() {
                 <input
                   type="radio"
                   name="format"
-                  checked={format === "json"}
-                  onChange={() => setFormat("json")}
+                  checked={kind === "json"}
+                  onChange={() => setKind("json")}
                   data-format="json"
                   className="h-4 w-4"
                 />
@@ -377,8 +397,8 @@ export default function DataScreen() {
                 <input
                   type="radio"
                   name="format"
-                  checked={format === "csv"}
-                  onChange={() => setFormat("csv")}
+                  checked={kind === "csv"}
+                  onChange={() => setKind("csv")}
                   data-format="csv"
                   className="h-4 w-4"
                 />
@@ -387,7 +407,51 @@ export default function DataScreen() {
                   guests, tables, expenses · for a spreadsheet
                 </span>
               </label>
+              <label className={choiceClass}>
+                <input
+                  type="radio"
+                  name="format"
+                  checked={kind === "door"}
+                  onChange={() => setKind("door")}
+                  data-format="door"
+                  className="h-4 w-4"
+                />
+                Tables and guests
+                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                  one file per event · tick guests in at the door
+                </span>
+              </label>
             </div>
+
+            {/* How the door list is written, asked only once it is what is
+                being written. Indented under the choice it belongs to rather
+                than sitting as a fourth thing of its own. */}
+            {kind === "door" && (
+              <div className="mt-1.5 ml-6 flex flex-wrap gap-x-4 gap-y-1">
+                <label className={choiceClass}>
+                  <input
+                    type="radio"
+                    name="doorAs"
+                    checked={doorAs === "xml"}
+                    onChange={() => setDoorAs("xml")}
+                    data-door-format="xml"
+                    className="h-4 w-4"
+                  />
+                  Excel (.xml)
+                </label>
+                <label className={choiceClass}>
+                  <input
+                    type="radio"
+                    name="doorAs"
+                    checked={doorAs === "csv"}
+                    onChange={() => setDoorAs("csv")}
+                    data-door-format="csv"
+                    className="h-4 w-4"
+                  />
+                  CSV
+                </label>
+              </div>
+            )}
           </fieldset>
 
           {/* The folder, and the question about it. It only appears where the
@@ -447,8 +511,8 @@ export default function DataScreen() {
                 {exporting ? "Exporting…" : "Export"}
               </button>
               <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                {chosen.length} event{chosen.length === 1 ? "" : "s"}
-                {format === "csv" ? " · 3 files" : " · 1 file"}
+                {chosen.length} event{chosen.length === 1 ? "" : "s"} ·{" "}
+                {fileCount} file{fileCount === 1 ? "" : "s"}
               </span>
             </div>
           )}

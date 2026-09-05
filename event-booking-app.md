@@ -106,15 +106,24 @@ Show all six of the following, always in this order:
   time. Export and import sit side by side on the one screen.
 - Export covers current and future events by default; "all events" and a
   tick-list of any events wanted are both offered.
-- Format choice: CSV or JSON.
+- Three things can be exported: a backup, a set of reports, and the door
+  list. Format choice per one of them.
   - **JSON** is the backup: the events as they are held, and the only format
     import reads.
   - **CSV** is a report, not a backup: three spreadsheets — guests, tables,
     expenses — with the event name and date repeated down each row. An event
     is nested and a spreadsheet is a grid, so nothing reads them back.
-  - Excel was in the earlier wording. A real `.xlsx` is a zip archive and
-    would mean a library, which the dependency rule above forbids; CSV opens
-    in Excel and costs nothing.
+  - **Tables and guests** is the list the door works from on the night: one
+    file per event, and the columns are a tick box, table number, guest name
+    and paid. Paid reads "yes" where the money is in and is left blank where
+    the guest pays at the venue, so it can be written into as they arrive; a
+    guest who is not paying at all reads "no charge". Cancelled guests are
+    left off. Written either as Excel's own XML — a real workbook that opens
+    on a double-click and can be ticked and typed into — or as plain CSV.
+  - Excel `.xlsx` was in the earlier wording and is not what is written. A
+    `.xlsx` is a zip archive and would mean a library, which the dependency
+    rule above forbids. SpreadsheetML is a single XML file, is Excel's own
+    format, and needs nothing.
 - Desktop: saved to the chosen folder. The folder is remembered, and before
   every export the user is asked whether it is still the right one, with the
   folder-picker one press away if it is not. Mobile, and any browser without

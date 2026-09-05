@@ -288,15 +288,24 @@ appears in no table's tally.
 **Export/Import your data** (`/data`) — two columns, the same shape Manage
 events has: what goes out on the left, what comes in on the right.
 
-Export asks three things. *What* — current and future events by default,
+Export asks three things, and the middle one now has three answers. *What* —
+current and future events by default,
 which is the active ones, since an event stays active until 48 hours after
 its date; or all of them, closed ones included; or a tick-list. *Which
 format* — JSON, one file, the events exactly as they are held and the only
 thing import reads; or CSV, three files, guests and tables and expenses, with
 the event's name and date repeated down every row so a row stands on its own.
 CSV does not come back in and is not meant to: a spreadsheet is a grid and an
-event is not one. *Where* — and this is the part with a browser problem
-inside it.
+event is not one. Or the **tables and guests** list, which is neither of
+those: one file per event, and on it a tick box, the table number, the guest's
+name and whether they have paid — the list the door works from on the night.
+Paid reads *yes* where the money is in and is deliberately blank where the
+guest pays at the venue, so *paid* can be typed beside them as it arrives; a
+guest not paying at all reads *no charge*, which tells the door not to ask.
+Cancelled guests are off it, unnamed guests are found under their party's
+name, and anyone not seated yet is at the end rather than scattered through
+the tables. It writes as Excel's own XML or as plain CSV. *Where* — and this
+is the part with a browser problem inside it.
 
 Chrome and Edge on the desktop can hand a page a handle to a folder, and that
 handle can be kept in IndexedDB and used again next time. Firefox, Safari and
@@ -521,6 +530,17 @@ The ones that were argued out and would otherwise be re-litigated:
   theme; it had just never said so. It also hands the native controls their
   theme, which matters here: every date and time field in the app opens a
   picker the browser draws.
+- **The door list is a real Excel workbook and no library was added to make
+  one.** An `.xlsx` is a zip archive; building one means a zip writer, and the
+  spec's own rule is to add no libraries. SpreadsheetML 2003 — Excel's own XML
+  — is a single plain-text file with the same abilities this list needs: named
+  columns with widths, a bold header, a boxed empty cell to tick, a document
+  that opens on a double-click and saves back from Excel. It is written by
+  hand into a template string, escaped for the four things XML cares about,
+  and deliberately left plain: frozen panes and print setup are each one line
+  away and each is a line Excel might call malformed, and a workbook that
+  opens with a repair warning is worse than one whose header scrolls off the
+  top.
 - **The logo is imported, not linked, because of the base path.** A project
   page on GitHub Pages is served out of a subdirectory, so every asset URL
   needs that prefix. `next/image` adds it in its loader — but a static export
@@ -559,7 +579,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Retention window, then silent delete | Logic done; not changeable without Settings |
 | Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
 | **Settings screen** | **Not built** — the retention period is still fixed at 14 days |
-| Export All Data | Done as JSON and CSV, with import beside it. Excel became CSV: a real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids. Spec amended |
+| Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as Excel's own XML or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
