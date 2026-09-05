@@ -182,12 +182,14 @@ Every screen sits in the same shell: the app header across the top, the
 active events down the left-hand side beneath it, the section nav across the
 top of what is left, and the screen itself under that.
 
-The header is three sections. The left is a fixed 10rem by 2.5rem box waiting
-for a logo — a dashed outline saying *Logo* until the image arrives, so the
-space is visibly reserved rather than silently empty. The middle takes
-whatever width the other two leave, and the right sits hard against the edge;
-both are empty for now and each holds its place, so filling one later moves
-neither of the others. It is rendered by the root layout rather than by
+The header is three sections. The left is the logo, 2.5rem tall and as wide
+as its own proportions make it — given a height and left to work the width
+out, so the shape stays exact whatever artwork is put there. In dark mode it
+sits on a white plate: the artwork draws the wordmark and four of its lines in
+solid black, which on the near-black header would be a logo with half of it
+missing. The middle takes whatever width the other two leave, and the right
+sits hard against the edge; both are empty for now and each holds its place,
+so filling one later moves neither of the others. It is rendered by the root layout rather than by
 `AppChrome`, which means it is on the entry screen and on the loading and
 storage-failure states too — screens that render none of the app's own
 chrome — and it needs no `"use client"`, so it is in the prerendered HTML
@@ -455,6 +457,16 @@ The ones that were argued out and would otherwise be re-litigated:
   guest at a table that has gone is unseated rather than stranded. It is what
   `createEvent` numbers its tables with too, so there is one rule and not
   two.
+- **The logo is imported, not linked, because of the base path.** A project
+  page on GitHub Pages is served out of a subdirectory, so every asset URL
+  needs that prefix. `next/image` adds it in its loader — but a static export
+  needs `images.unoptimized`, which switches the loader off, and
+  `src="/event_diary_logo-horizontal.svg"` then goes out unprefixed: perfect
+  in `next dev`, a 404 on the deployed site. Importing the file from
+  `public/` puts it through the build, which applies the prefix. Caught by
+  building with `NEXT_PUBLIC_BASE_PATH` set and reading the `src` back out of
+  `out/index.html`, which is the only way to see it — every local check
+  passes either way.
 - **Nothing to open means Manage events.** The entry screen is a signpost: to
   the first active event, or, when there is none, to the one screen that can
   create one.
@@ -483,7 +495,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | **Settings screen** | **Not built** — retention period, desktop save folder |
 | **Export All Data (Excel or JSON)** | **Not built** |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
-| App header with a logo slot | Slot reserved, awaiting the image — **not in the original spec**, added on request and the spec amended to match |
+| App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
 | Mobile | Done — narrow screens scroll their columns sideways rather than breaking |
 

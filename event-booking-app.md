@@ -36,8 +36,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ## Core features
 
 ### App header
-- A bar across the top of every page, in three sections: a logo on the left,
-  and a middle and a right kept open for whatever they are later given.
+- A bar across the top of every page, in three sections: the Event Diary logo
+  on the left, and a middle and a right kept open for whatever they are later
+  given.
 - Present on every screen, the entry and loading screens included, so it does
   not appear and disappear as a screen loads.
 
