@@ -10,7 +10,7 @@
  * Export writes one of three things. JSON is the backup and the only thing
  * import reads; CSV is three spreadsheets of everything, to open and look at;
  * the tables-and-guests list is what the door works from on the night, one
- * file per event, as Excel's own XML or as plain CSV.
+ * file per event, as Excel's own XML, as a web page, or as plain CSV.
  *
  * Where they are written is remembered between exports, and asked about
  * before every one, so a backup never quietly lands somewhere it was not
@@ -39,6 +39,14 @@ import type { Event } from "@/lib/types";
 type Scope = "current" | "all" | "choose";
 /** What the three radios offer. The door list then asks how it is written. */
 type Kind = "json" | "csv" | "door";
+/** How the door list is written. Each is the same rows in a different file. */
+type DoorAs = "xml" | "csv" | "html";
+
+const DOOR_FORMATS: readonly { as: DoorAs; label: string; note: string }[] = [
+  { as: "xml", label: "Excel (.xml)", note: "tick and type in Excel" },
+  { as: "html", label: "Web page (.html)", note: "tick and type in a browser" },
+  { as: "csv", label: "CSV", note: "plain, for anything else" },
+];
 
 const cardClass =
   "rounded-lg border border-zinc-200 p-3 dark:border-zinc-800";
@@ -104,10 +112,9 @@ export default function DataScreen() {
   const [scope, setScope] = useState<Scope>("current");
   const [kind, setKind] = useState<Kind>("json");
   /** Only asked about once the door list is the thing being exported. */
-  const [doorAs, setDoorAs] = useState<"xml" | "csv">("xml");
+  const [doorAs, setDoorAs] = useState<DoorAs>("xml");
 
-  const format: ExportFormat =
-    kind === "door" ? (doorAs === "xml" ? "door-xml" : "door-csv") : kind;
+  const format: ExportFormat = kind === "door" ? `door-${doorAs}` : kind;
   /** Which events are ticked while the scope is "choose". */
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());
   /**
@@ -427,29 +434,23 @@ export default function DataScreen() {
                 being written. Indented under the choice it belongs to rather
                 than sitting as a fourth thing of its own. */}
             {kind === "door" && (
-              <div className="mt-1.5 ml-6 flex flex-wrap gap-x-4 gap-y-1">
-                <label className={choiceClass}>
-                  <input
-                    type="radio"
-                    name="doorAs"
-                    checked={doorAs === "xml"}
-                    onChange={() => setDoorAs("xml")}
-                    data-door-format="xml"
-                    className="h-4 w-4"
-                  />
-                  Excel (.xml)
-                </label>
-                <label className={choiceClass}>
-                  <input
-                    type="radio"
-                    name="doorAs"
-                    checked={doorAs === "csv"}
-                    onChange={() => setDoorAs("csv")}
-                    data-door-format="csv"
-                    className="h-4 w-4"
-                  />
-                  CSV
-                </label>
+              <div className="mt-1.5 ml-6 flex flex-col gap-1">
+                {DOOR_FORMATS.map((option) => (
+                  <label key={option.as} className={choiceClass}>
+                    <input
+                      type="radio"
+                      name="doorAs"
+                      checked={doorAs === option.as}
+                      onChange={() => setDoorAs(option.as)}
+                      data-door-format={option.as}
+                      className="h-4 w-4"
+                    />
+                    {option.label}
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                      {option.note}
+                    </span>
+                  </label>
+                ))}
               </div>
             )}
           </fieldset>

@@ -20,7 +20,8 @@
  * the paid column left open where money is still to come. It is written as
  * SpreadsheetML — Excel's own XML, a single file with no archive around it,
  * which is what lets it be a real workbook without a library to build one —
- * or as plain CSV for anything that is not Excel.
+ * as a self-contained web page with real tick boxes that remembers what was
+ * ticked, or as plain CSV for anything that is neither.
  *
  * Nothing here touches the browser. Building the text and reading it back are
  * decisions about the data, and keeping them out of the file-writing code
@@ -291,6 +292,12 @@ export function expensesCsv(events: readonly Event[]): string {
  * list is a name the door will stand there looking for.
  */
 export interface DoorRow {
+  /**
+   * The guest's own id. Nothing prints it: it is there so the HTML page can
+   * key what it remembers to the guest rather than to a row number, which
+   * would move the moment somebody is seated.
+   */
+  id: string;
   /** The table, or blank for a guest not seated yet. */
   table: string;
   guest: string;
@@ -340,6 +347,7 @@ export function doorRows(event: Event): DoorRow[] {
         sortTable: attendee.assignedTableNumber ?? Number.MAX_SAFE_INTEGER,
         sortName: named.toLocaleLowerCase(),
         row: {
+          id: attendee.id,
           table:
             attendee.assignedTableNumber === null
               ? ""
@@ -486,6 +494,157 @@ ${body}
 `;
 }
 
+/* -------------------------------------------------------------- as a page */
+
+/** Text safe to sit inside an HTML attribute as well as between tags. */
+function htmlText(value: string): string {
+  return xmlText(value).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/**
+ * The door list as a page that can be worked on.
+ *
+ * The same rows as the workbook, but the tick is a real checkbox and the paid
+ * column is a real field, so the list can be worked from a phone or a laptop
+ * propped at the door instead of from paper. It is one self-contained file —
+ * the styling and the script are inside it — because it is opened off the
+ * disk, where nothing it asked for from elsewhere would arrive.
+ *
+ * What is typed and ticked is kept in the browser's local storage under the
+ * event's id, so a page reloaded or reopened comes back as it was left. Every
+ * touch of storage is wrapped: a page opened from a file has no origin worth
+ * the name in some browsers and storage there either does nothing or throws,
+ * and a door list that will not tick because saving failed would be worse
+ * than one that forgets.
+ *
+ * `color-scheme: light` is declared for the reason the app itself declares
+ * one: a browser that thinks a page has no dark theme will invert it, and an
+ * inverted list is not what anyone wants to hand to the door.
+ */
+export function doorListHtml(event: Event): string {
+  const rowsFor = doorRows(event);
+
+  const body = rowsFor
+    .map(
+      (row) => `      <tr>
+        <td class="tick"><input type="checkbox" data-tick="${htmlText(row.id)}" aria-label="${htmlText(row.guest)} has arrived"></td>
+        <td class="num">${htmlText(row.table)}</td>
+        <td>${htmlText(row.guest)}</td>
+        <td class="paid"><input type="text" data-paid="${htmlText(row.id)}" value="${htmlText(row.paid)}" aria-label="Paid, ${htmlText(row.guest)}"></td>
+      </tr>`,
+    )
+    .join("\n");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Door list — ${htmlText(event.name)} — ${htmlText(event.eventDate)}</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    margin: 0; padding: 1.5rem;
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    color: #111; background: #fff;
+  }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .when { margin: .25rem 0 0; color: #555; font-size: .875rem; }
+  .count { margin: .75rem 0 0; font-size: .875rem; font-weight: 600; }
+  table { margin-top: .75rem; border-collapse: collapse; width: 100%; max-width: 40rem; }
+  th, td { padding: .4rem .5rem; border-bottom: 1px solid #ddd; text-align: left; }
+  th { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #555; border-bottom: 2px solid #999; }
+  .tick { width: 2.5rem; text-align: center; }
+  .num { width: 3.5rem; text-align: center; }
+  .paid { width: 7rem; }
+  input[type=checkbox] { width: 1.25rem; height: 1.25rem; }
+  input[type=text] {
+    width: 100%; box-sizing: border-box; padding: .2rem .3rem;
+    font: inherit; font-size: .875rem; border: 1px solid #ccc; border-radius: 4px; background: #fff;
+  }
+  tr:has(input[type=checkbox]:checked) { color: #777; background: #f6f6f6; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  @media print {
+    body { padding: 0; }
+    .count { display: none; }
+    input[type=text] { border: none; padding: 0; }
+    input[type=checkbox] { appearance: none; width: 1rem; height: 1rem; border: 1px solid #333; }
+    tr:has(input[type=checkbox]:checked) { color: #111; background: none; }
+  }
+</style>
+</head>
+<body>
+<h1>${htmlText(event.name)}</h1>
+<p class="when">${htmlText(event.eventDate)} · ${rowsFor.length} guest${rowsFor.length === 1 ? "" : "s"} expected</p>
+<p class="count"><span id="arrived">0</span> of ${rowsFor.length} arrived</p>
+
+<table>
+  <thead>
+    <tr>
+      <th class="tick"><span class="sr">Arrived</span></th>
+      <th>Table</th>
+      <th>Guest</th>
+      <th>Paid</th>
+    </tr>
+  </thead>
+  <tbody>
+${body}
+  </tbody>
+</table>
+
+<script>
+(function () {
+  var KEY = "event-diary-door-" + ${JSON.stringify(event.id)};
+  var ticks = document.querySelectorAll("[data-tick]");
+  var paids = document.querySelectorAll("[data-paid]");
+
+  // Storage is a convenience, never a requirement: a page opened off the disk
+  // may have nowhere to keep anything, and the list still has to work.
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function save(state) {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  var state = load();
+  if (!state.ticks) state.ticks = {};
+  if (!state.paid) state.paid = {};
+
+  function count() {
+    var n = 0;
+    ticks.forEach(function (box) { if (box.checked) n++; });
+    document.getElementById("arrived").textContent = String(n);
+  }
+
+  ticks.forEach(function (box) {
+    var id = box.getAttribute("data-tick");
+    if (state.ticks[id]) box.checked = true;
+    box.addEventListener("change", function () {
+      if (box.checked) state.ticks[id] = true; else delete state.ticks[id];
+      save(state);
+      count();
+    });
+  });
+
+  paids.forEach(function (field) {
+    var id = field.getAttribute("data-paid");
+    if (typeof state.paid[id] === "string") field.value = state.paid[id];
+    field.addEventListener("input", function () {
+      state.paid[id] = field.value;
+      save(state);
+    });
+  });
+
+  count();
+})();
+</script>
+</body>
+</html>
+`;
+}
+
 /* ------------------------------------------------------------- file names */
 
 /** "2026-09-05", for stamping into a file name. */
@@ -518,7 +677,12 @@ function slug(text: string): string {
  * two `door-` formats the list the door works from: the same rows, as Excel's
  * own XML or as plain CSV.
  */
-export type ExportFormat = "json" | "csv" | "door-xml" | "door-csv";
+export type ExportFormat =
+  | "json"
+  | "csv"
+  | "door-xml"
+  | "door-csv"
+  | "door-html";
 
 /** One file to write, named and filled. */
 export interface OutputFile {
@@ -544,13 +708,31 @@ export function exportFiles(
 
   // A door list is one event's worth of paper, so one file per event rather
   // than one file with an event column nobody at the door needs.
-  if (format === "door-xml" || format === "door-csv") {
-    const xml = format === "door-xml";
+  if (
+    format === "door-xml" ||
+    format === "door-csv" ||
+    format === "door-html"
+  ) {
+    // The SpreadsheetML type is what tells Windows to open the workbook with
+    // Excel; the other two are what they look like.
+    const written = {
+      "door-xml": {
+        extension: "xml",
+        type: "application/vnd.ms-excel",
+        write: doorListXml,
+      },
+      "door-csv": { extension: "csv", type: "text/csv", write: doorListCsv },
+      "door-html": {
+        extension: "html",
+        type: "text/html",
+        write: doorListHtml,
+      },
+    }[format];
+
     return events.map((event) => ({
-      name: `door-list-${slug(event.name)}-${event.eventDate}.${xml ? "xml" : "csv"}`,
-      text: xml ? doorListXml(event) : doorListCsv(event),
-      // The SpreadsheetML type is what tells Windows to open it with Excel.
-      type: xml ? "application/vnd.ms-excel" : "text/csv",
+      name: `door-list-${slug(event.name)}-${event.eventDate}.${written.extension}`,
+      text: written.write(event),
+      type: written.type,
     }));
   }
 
