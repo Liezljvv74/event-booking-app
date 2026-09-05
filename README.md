@@ -226,11 +226,13 @@ what re-reads the times to start from, so they come from the event just saved.
 Nothing ever disables it: there is no ceiling on how many events may be
 scheduled.
 
-Manage events sits between Bookings and Expenses in the section nav, on
-request. Before that it was last, after the event's own three and ruled off
-from them, because those are this event and this is all of them; the rule went
-when it moved, since a divider mid-row would read as a break in the sections
-rather than as a note about one of them. Earlier still it was a button among
+Manage events is last in the section nav, after the event's own three, on
+request. It sat between Bookings and Expenses for a while, which split a run
+that reads better whole — Dashboard, Bookings, Expenses is an event as it is
+worked through, what it looks like, who is coming, what it costs. It carries
+no divider before it: a rule mid-row read as a break in the sections rather
+than as a note about one of them, and it went when the item first moved out
+of last place. Earlier still it was a button among
 the event tabs, where it read as a fifth event, and the screen it opened stood
 outside the app's chrome — reaching it felt like leaving. The event rail and
 the nav frame it like they frame every other screen, and it shares the loaded

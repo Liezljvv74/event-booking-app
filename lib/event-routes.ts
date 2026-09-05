@@ -38,18 +38,20 @@ export type NavItem =
 /**
  * The section nav, in the order it is read, left to right.
  *
- * Manage events sits between Bookings and Expenses rather than at the end,
- * on request. It is the odd one out of the four — the other three are screens
- * of one event and this is the screen of all of them — so it used to be
- * ruled off after them. Now it takes its place in the row, and the rule is
- * gone with it, because a divider mid-row would read as a break in the
- * sections rather than as a note about one of them.
+ * The event's own three screens run in the order an event is worked through
+ * — what it looks like, who is coming, what it costs — and Manage events
+ * comes after them, on request. It sat between Bookings and Expenses for a
+ * while, which split the three; the run reads better whole.
+ *
+ * Being last does not make it a footnote and it carries no divider: a rule
+ * mid-row read as a break in the sections rather than as a note about one of
+ * them, and it went when the item first moved.
  */
 export const SECTION_NAV: readonly NavItem[] = [
   { kind: "event", segment: "", label: "Dashboard" },
   { kind: "event", segment: "bookings", label: "Bookings" },
-  { kind: "manage", label: "Manage events", shortLabel: "Manage" },
   { kind: "event", segment: "expenses", label: "Expenses" },
+  { kind: "manage", label: "Manage events", shortLabel: "Manage" },
 ];
 
 /** The path of a section, with no event attached to it yet. */
