@@ -194,7 +194,7 @@ export function TicketPricesEditor({
       </div>
 
       {control.rows.length > 0 && (
-        <ul className="mt-1 grid gap-x-3 gap-y-1.5 sm:grid-cols-2 md:grid-cols-3">
+        <ul className="mt-1 grid gap-x-3 gap-y-1.5 @lg:grid-cols-2 @3xl:grid-cols-3">
           {control.rows.map((row, index) => (
             /* Price, what it includes, and the cross that deletes the pair,
                kept together as one group so three fit on a line. */

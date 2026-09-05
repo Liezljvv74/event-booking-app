@@ -134,8 +134,12 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
     >
       <form onSubmit={submit}>
         {/* Name, date, times and Save on one line, so a screenful of events
-            is a screenful rather than four of them. */}
-        <div className="grid gap-2 sm:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem_auto]">
+            is a screenful rather than four of them.
+
+            Measured against the column it is in rather than the window:
+            these rows share the screen with the New event form now, and half
+            of a wide window is not the same width as a whole narrow one. */}
+        <div className="grid gap-2 @2xl:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem_auto]">
           <label className="flex flex-col gap-1">
             <span className={labelClass}>Event name</span>
             <input

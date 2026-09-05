@@ -18,22 +18,40 @@ import { useSearchParams } from "next/navigation";
 
 const EVENT_ID_PARAM = "id";
 
-export const EVENT_SECTIONS = [
-  { segment: "", label: "Dashboard" },
-  { segment: "tables", label: "Tables" },
-  { segment: "bookings", label: "Bookings" },
-  { segment: "expenses", label: "Expenses" },
-] as const;
+const EVENT_SEGMENTS = ["", "tables", "bookings", "expenses"] as const;
 
-export type EventSection = (typeof EVENT_SECTIONS)[number]["segment"];
+export type EventSection = (typeof EVENT_SEGMENTS)[number];
 
 /**
  * Manage events, the one screen that is about the whole set of events rather
- * than one of them. It sits at the end of the section nav beside the four
- * above, but it carries no event id: it lists closed events too, and those
- * belong to no tab.
+ * than one of them. It carries no event id: it lists closed events too, and
+ * those belong to no tab.
  */
 export const MANAGE_EVENTS_PATH = "/events/manage";
+
+export type NavItem =
+  /** One screen of the event currently open. */
+  | { kind: "event"; segment: EventSection; label: string }
+  /** Manage events, which belongs to no event. */
+  | { kind: "manage"; label: string; shortLabel: string };
+
+/**
+ * The section nav, in the order it is read, left to right.
+ *
+ * Manage events sits between Bookings and Expenses rather than at the end,
+ * on request. It is the odd one out of the five — the other four are screens
+ * of one event and this is the screen of all of them — so it used to be
+ * ruled off after them. Now it takes its place in the row, and the rule is
+ * gone with it, because a divider mid-row would read as a break in the
+ * sections rather than as a note about one of them.
+ */
+export const SECTION_NAV: readonly NavItem[] = [
+  { kind: "event", segment: "", label: "Dashboard" },
+  { kind: "event", segment: "tables", label: "Tables" },
+  { kind: "event", segment: "bookings", label: "Bookings" },
+  { kind: "manage", label: "Manage events", shortLabel: "Manage" },
+  { kind: "event", segment: "expenses", label: "Expenses" },
+];
 
 /** The path of a section, with no event attached to it yet. */
 export function eventSectionPath(section: EventSection): string {

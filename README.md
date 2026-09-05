@@ -122,7 +122,7 @@ app/
   page.tsx                       the redirect into an event, or to Manage events
   events/manage/
     layout.tsx                   the same chrome, with no tab current
-    page.tsx                     create, rename, re-date, re-price, delete
+    page.tsx                     the events on the left, the new-event form on the right
   event/                         one event, chosen by ?id= in the URL
     layout.tsx                   the chrome, around one event's screens
     page.tsx                     dashboard
@@ -140,7 +140,7 @@ lib/
   money.ts                       integer cents in, decimal strings out
   ticket-prices.ts               the cheapest price, and how a price reads
   event-time.ts                  dates and clock times
-  event-routes.ts                the URL of every event screen, in one place
+  event-routes.ts                the URL of every event screen, and the order of the nav
 next.config.ts                   the static export and its base path
 .github/workflows/deploy.yml     build, then publish to GitHub Pages
 ```
@@ -176,20 +176,37 @@ saved rather than an optimistic guess that could drift from it.
 ## What each screen does
 
 **Manage events** (`/events/manage`) — the whole lifecycle of an event:
-create, rename, change date and times, edit its ticket prices, delete. Each
-event is one line — name, then date, start, end and Save to the right of it —
-with its ticket prices beneath, and the page is deliberately tight so that as
-many events as possible are on the screen at once. Closed events appear here
-in their own section and nowhere else in the app, so this is the only place
-one can be looked at or removed early. Deleting names what goes with it.
+create, rename, change date and times, edit its ticket prices, delete. The
+screen is in two columns: **Scheduled Events** on the left, **Schedule a new
+event** on the right.
 
-It is the last item in the section nav, after the event's own four, ruled off
-from them because those are this event and this is all of them. It used to be
-a button among the event tabs, where it read as a fifth event, and the screen
-it opened stood outside the app's chrome — reaching it felt like leaving. Now
-the tabs and the nav sit above it like they do above every other screen, and
-it shares the loaded events with them, so an event created or deleted here
-appears or disappears in the tabs at once.
+On the left, each event is one line — name, then date, start, end and Save to
+the right of it — with its ticket prices beneath, and the list is deliberately
+tight so that as many events as possible are on the screen at once. Closed
+events follow underneath in their own section, and appear nowhere else in the
+app, so this is the only place one can be looked at or removed early. Deleting
+names what goes with it.
+
+On the right, the New event form, permanently. It used to be behind a
+`+ New event` button that swapped itself for the form; with the form given a
+column of its own the button had nothing left to open, so it is gone, and so
+is the Cancel beside Create event, which had nothing left to close. Creating
+an event clears the form for the next one — by remounting it, which is also
+what re-reads the times to start from, so they come from the event just saved.
+When four events are already active the form greys out in place with the
+reason above it, rather than being replaced by the message: the column keeps
+its shape as the count crosses the limit.
+
+Manage events sits between Bookings and Expenses in the section nav, on
+request. Before that it was last, after the event's own four and ruled off
+from them, because those are this event and this is all of them; the rule went
+when it moved, since a divider mid-row would read as a break in the sections
+rather than as a note about one of them. Earlier still it was a button among
+the event tabs, where it read as a fifth event, and the screen it opened stood
+outside the app's chrome — reaching it felt like leaving. The tabs and the nav
+sit above it like they do above every other screen, and it shares the loaded
+events with them, so an event created or deleted here appears or disappears in
+the tabs at once.
 
 **Dashboard** — the event's ticket prices are read off the heading, after
 the name, along with its date and times. An event running past midnight is not
@@ -283,6 +300,14 @@ The ones that were argued out and would otherwise be re-litigated:
   one library entry the moment either was cleared.
 - **A new event starts from the last event saved** — its times and its expense
   lines both, by the same "most recently saved" rule.
+- **The two columns measure themselves, not the window.** An event's row is
+  name, date, start, end and Save across, and half of a wide window is not the
+  same width as a whole narrow one — so the rows inside each column are laid
+  out with container queries (`@2xl:`, `@xl:`, `@lg:`) against the column
+  rather than with `sm:`/`md:` against the viewport. Without that the rows
+  would keep claiming a full-width layout inside a half-width column and
+  overflow it. The split itself waits for `xl`, and below that the two columns
+  stack, so a phone gets the screen it always had.
 - **One page owns an event's own details.** Name, date, times and ticket
   prices are created and changed on Manage events and nowhere else. The
   dashboard used to edit the date and times inline and the entry screen used
@@ -338,6 +363,13 @@ spec asks for a minimal dependency list, so adding them was not assumed. If
 they should live here, that is a decision to take deliberately — it means one
 dev dependency and a `scripts/` folder.
 
+The most recent scripts need no dependency at all: Node 24 has a `WebSocket`
+built in, which is enough to speak the Chrome DevTools Protocol to a headless
+Chrome directly, and a static file server for `out/` is thirty lines of
+`node:http`. So checking them in would now cost a `scripts/` folder and
+nothing else. Still not assumed, but the dependency argument against it has
+gone.
+
 Ticket prices were checked the same way, over the built export: creating an
 event with two prices, picking one for a booking and confirming the guest
 lines took it, typing an amount off the list, editing and removing prices on
@@ -371,6 +403,21 @@ were served from a subdirectory, mimicking a project page, and the app driven
 through it in headless Chrome — creating an event, walking Dashboard, Tables,
 Bookings and Expenses, and reloading a section URL directly. Every screen
 rendered from IndexedDB with a clean console.
+
+Splitting Manage events in two was checked over the built export the same
+way, 34 assertions in one pass: both headings present; the form's four fields
+and its ticket-price line on screen with nothing clicked; no `+ New event`
+button and no Cancel left anywhere; an event created from the right-hand
+column arriving in the left-hand list with its name, date, times and price
+intact; the form clearing itself afterwards and carrying the times forward
+from the event just saved; the nav reading Dashboard, Tables, Bookings,
+Manage events, Expenses in that order, on Manage events and on an event's own
+screens, marking the right one as current in each case; the columns side by
+side at 1600px with an event's row and the form's fields each still on one
+line and nothing overflowing sideways, stacked at 800px, and Manage events
+still reachable at 390px; the form greying out in place at four active events
+with the limit stated and coming back when one is deleted; and three events
+read back from IndexedDB after a reload. The console stayed clean throughout.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 

@@ -17,24 +17,37 @@ interface Props {
    */
   lastTimes: EventTimes;
   onCreate: (input: NewEventInput) => Promise<unknown>;
-  onCancel: () => void;
+  /**
+   * Greyed out with nothing to be done about it here — the four-event limit
+   * is reached, and the room has to be made by deleting one. The form keeps
+   * its place on the page rather than disappearing, so the column does not
+   * change shape as the count crosses the limit. The caller says why.
+   */
+  disabled?: boolean;
 }
 
 const fieldClass =
   "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
 
-export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
+export function NewEventForm({
+  lastTimes,
+  onCreate,
+  disabled = false,
+}: Props) {
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState(todayIso());
-  // Read once, at mount: the form is unmounted between uses, so there is no
-  // stale copy to keep in step, and typing over a default must stick.
+  // Read once, at mount. The form sits on the screen permanently now, so
+  // what remounts it is the caller giving it a new key after each event is
+  // created — which both clears the fields and re-reads these times from the
+  // event just saved.
   const [startTime, setStartTime] = useState(lastTimes.startTime ?? "");
   const [endTime, setEndTime] = useState(lastTimes.endTime ?? "");
   // A new event has no prices to load, and opens with one blank line ready.
   const prices = useTicketPriceRows([], { startWithBlank: true });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const frozen = saving || disabled;
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
@@ -75,10 +88,7 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
       onSubmit={submit}
       className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
     >
-      <h2 className="text-base font-semibold text-black dark:text-zinc-50">
-        New event
-      </h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
         The times and the expenses both start from your most recent event, so a
         run of functions keeping the same hours needs them entered once. Change
         or clear either as you like; times are optional.
@@ -86,17 +96,16 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
 
       {/* Name, then the date and times to the right of it, the same shape
           an event has on Manage events. */}
-      <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem]">
+      <div className="mt-3 grid gap-2 @xl:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem]">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>Event name</span>
           <input
             type="text"
             name="name"
             value={name}
-            disabled={saving}
+            disabled={frozen}
             onChange={(changed) => setName(changed.target.value)}
             className={fieldClass}
-            autoFocus
             placeholder="Spring Gala"
           />
         </label>
@@ -107,7 +116,7 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
             type="date"
             name="eventDate"
             value={eventDate}
-            disabled={saving}
+            disabled={frozen}
             onChange={(changed) => setEventDate(changed.target.value)}
             className={fieldClass}
           />
@@ -119,7 +128,7 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
             type="time"
             name="startTime"
             value={startTime}
-            disabled={saving}
+            disabled={frozen}
             onChange={(changed) => setStartTime(changed.target.value)}
             className={fieldClass}
           />
@@ -131,7 +140,7 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
             type="time"
             name="endTime"
             value={endTime}
-            disabled={saving}
+            disabled={frozen}
             onChange={(changed) => setEndTime(changed.target.value)}
             className={fieldClass}
           />
@@ -140,7 +149,7 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
 
       {/* Below the row, because the date now sits where they used to. */}
       <div className="mt-1.5">
-        <TicketPricesEditor control={prices} disabled={saving} />
+        <TicketPricesEditor control={prices} disabled={frozen} />
       </div>
 
       {error !== "" && (
@@ -149,23 +158,16 @@ export function NewEventForm({ lastTimes, onCreate, onCancel }: Props) {
         </p>
       )}
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <button
-          type="submit"
-          disabled={saving}
-          className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
-        >
-          {saving ? "Creating…" : "Create event"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          className="h-11 rounded-md border border-zinc-300 px-4 text-base font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
-        >
-          Cancel
-        </button>
-      </div>
+      {/* No Cancel beside it: there is nothing to cancel back to now that
+          the form is always on the screen. */}
+      <button
+        type="submit"
+        disabled={frozen}
+        data-create-event
+        className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+      >
+        {saving ? "Creating…" : "Create event"}
+      </button>
     </form>
   );
 }
