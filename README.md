@@ -99,12 +99,13 @@ what the `Suspense` boundary in `app/event/layout.tsx` is for.
 From the spec, and worth keeping in view because several of them are the
 reason things are built the way they are:
 
-- **No deployment.** No hosting config, no CI/CD, no deploy scripts.
-  **Superseded on request:** the app is now published to GitHub Pages, which
-  cost `output: "export"` and `basePath` in `next.config.ts`, one workflow
-  file, and the routing change described below. Every other item on this list
-  still holds, and the export is static, so there is still no server process,
-  no account and no network call.
+- **Published as static files.** `npm run build` writes the whole site to
+  `out/`, and one workflow puts it on GitHub Pages. This replaced the spec's
+  original "no deployment, no public URL" rule, on request, and the spec was
+  amended to match; it cost `output: "export"` and `basePath` in
+  `next.config.ts`, that workflow file, and the routing change described
+  below. Nothing else on this list moved — the export is static, so there is
+  still no server process, no account and no network call.
 - **No backend, no accounts.** No server process, no auth, no login.
 - **Everything in the browser.** All data lives in IndexedDB. Nothing may be
   lost on refresh, close or reopen.
@@ -352,6 +353,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Spec area | State |
 |---|---|
 | Local, no backend, IndexedDB | Done |
+| Published as a static export to GitHub Pages | Built and verified; **Pages not switched on yet** — see *Publishing it* |
 | Any number of active events, tabs | Done — the spec's cap of 4 was removed on request, and the spec amended to match |
 | Every event managed in one place | Done — **not in the spec**, added on request |
 | Expenses copied forward to a new event | Done |
@@ -369,9 +371,9 @@ The ones that were argued out and would otherwise be re-litigated:
 | Mobile | Done — narrow screens scroll their columns sideways rather than breaking |
 
 Out of scope by the spec and not built: visual floor plan, multi-user, any
-network call. Deployment tooling was also on that list until the app was
-asked to run from GitHub Pages; see **Publishing it** above for what that
-added.
+network call. Deployment tooling was on that list too until the app was asked
+to run from GitHub Pages, and the spec no longer excludes it; see
+**Publishing it** above for what that added.
 
 ## How it has been checked
 

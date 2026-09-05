@@ -10,8 +10,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
 
 ## Non-negotiable rules
 1. The app runs locally via `npm run dev` and is checked at `localhost:3002`.
-2. There is **no deployment step** and **no public URL**. Do not add hosting
-   config, CI/CD, or deployment scripts of any kind.
+2. The app is published as a **static export** to GitHub Pages: `npm run
+   build` writes plain HTML, CSS and JavaScript to `out/`, and one GitHub
+   Actions workflow puts it online. Nothing runs on a server — the site is
+   files, and every event still lives in the browser that opened it.
 3. There is **no backend** and **no user accounts** — no server process, no
    auth, no login screens.
 4. All data persists in the browser via IndexedDB. Nothing may be lost on
@@ -92,4 +94,3 @@ Show all six of the following, always in this order:
 - Visual/drag-and-drop floor plan (tables are a numbered list only)
 - Multi-user support, roles, or permissions
 - Any network calls, telemetry, or analytics
-- Any deployment/build-for-production tooling beyond local dev
