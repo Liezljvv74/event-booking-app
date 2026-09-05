@@ -36,7 +36,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ## Core features
 
 ### Events
-- Any number of active events at a time, switchable via tabs
+- Any number of active events at a time, listed down the left-hand side of
+  the page and switched by picking one. Each shows its name and its date
+  only; an event's times are read off the dashboard heading.
 - Each event has its own tables, bookings and expenses
 - "New Event" duplicates the previous event's expense list as a starting
   point (still editable/removable)

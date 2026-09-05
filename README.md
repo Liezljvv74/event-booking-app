@@ -130,7 +130,7 @@ app/
     bookings/page.tsx            parties, guests, seating
     expenses/page.tsx            expense lines and the saved-line library
 components/                      the pieces those screens are built from
-  app-chrome.tsx                 event tabs + section nav, shared by both layouts
+  app-chrome.tsx                 the event rail + section nav, shared by both layouts
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
   tables-editor.tsx              an event's tables, and the rows behind them
 lib/
@@ -177,6 +177,17 @@ saved rather than an optimistic guess that could drift from it.
 
 ## What each screen does
 
+Every screen sits in the same shell: the active events down the left-hand
+side, the section nav across the top of what is left, and the screen itself
+beneath it. The events were a strip of tabs along the top until they were
+asked to the left, which suits them — a list of events is read down rather
+than across, a long name has the column's width rather than a tab's, and
+switching event is a fixed place to look however many are open. Each carries
+its name and its date, and nothing else; the times used to follow the date and
+were asked off, the dashboard heading being where an event's hours are read.
+Below `sm` the rail goes back to being that strip, because a column beside a
+390px screen leaves too little of it for the screen.
+
 **Manage events** (`/events/manage`) — the whole lifecycle of an event:
 create, rename, change date and times, edit its ticket prices, delete. The
 screen is in two columns: **Scheduled Events** on the left, **Schedule a new
@@ -221,10 +232,10 @@ from them, because those are this event and this is all of them; the rule went
 when it moved, since a divider mid-row would read as a break in the sections
 rather than as a note about one of them. Earlier still it was a button among
 the event tabs, where it read as a fifth event, and the screen it opened stood
-outside the app's chrome — reaching it felt like leaving. The tabs and the nav
-sit above it like they do above every other screen, and it shares the loaded
+outside the app's chrome — reaching it felt like leaving. The event rail and
+the nav frame it like they frame every other screen, and it shares the loaded
 events with them, so an event created or deleted here appears or disappears in
-the tabs at once.
+the rail at once.
 
 **Dashboard** — the event's ticket prices are read off the heading, after
 the name, along with its date and times. An event running past midnight is not
@@ -376,8 +387,9 @@ The ones that were argued out and would otherwise be re-litigated:
   check in `createEvent`, the `TooManyActiveEventsError` it threw, the
   `atEventLimit` flag the hook published, and the greyed-out form and amber
   note on the screen — the count beside **Scheduled Events** now just counts.
-  The tab strip already scrolled and its tabs already refused to shrink, so it
-  holds twelve events as readably as it held four.
+  The strip of tabs already scrolled and already refused to shrink its tabs,
+  so it held twelve events as readably as four; down the left-hand side, where
+  the events are now, twelve are a list rather than a scroll.
 - **Explanation belongs in a walkthrough, not on the screen.** The New event
   form used to carry a paragraph saying that times and expenses both start
   from the most recent event and that times are optional. It was true and not
@@ -444,7 +456,7 @@ The ones that were argued out and would otherwise be re-litigated:
 |---|---|
 | Local, no backend, IndexedDB | Done |
 | Published as a static export to GitHub Pages | Built and verified; **Pages not switched on yet** — see *Publishing it* |
-| Any number of active events, tabs | Done — the spec's cap of 4 was removed on request, and the spec amended to match |
+| Any number of active events, switchable | Done — the spec's cap of 4 was removed on request, and the tabs moved to a rail down the left, both amended in the spec |
 | Every event managed in one place | Done — **not in the spec**, added on request |
 | Expenses copied forward to a new event | Done |
 | Tables: numbered list, seats per table | Done — laid out on Manage events, listed on the dashboard; the Tables screen was cut down and then removed on request, and the spec amended to match |

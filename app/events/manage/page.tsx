@@ -5,7 +5,7 @@
  * delete. Every function that is about an event as a whole lives here, so
  * none of the event's own screens has to carry a second way of doing it.
  *
- * A section of the nav rather than one of the event's own four. It is about
+ * A section of the nav rather than one of the event's own three. It is about
  * all of the events, closed ones included, and those appear in no tab.
  *
  * The screen is split in two: the events that exist on the left, the form

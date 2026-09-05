@@ -17,7 +17,7 @@ const restingClass =
 
 interface Props {
   /**
-   * The event the four event sections link to, or null when there is none to
+   * The event the three event sections link to, or null when there is none to
    * link to — on Manage events with nothing active, which is also the only
    * screen that can give you an event back.
    */
@@ -54,8 +54,8 @@ export function SectionNav({ eventId }: Props) {
                 className={`${itemClass} ${managing ? activeClass : restingClass}`}
               >
                 {/* The full name wherever it fits. On a phone the row is
-                    five items, and the shorter label is what keeps them from
-                    crowding each other. */}
+                    four items under a strip of events, and the shorter label
+                    is what keeps them from crowding each other. */}
                 <span className="sm:hidden" aria-hidden="true">
                   {item.shortLabel}
                 </span>
