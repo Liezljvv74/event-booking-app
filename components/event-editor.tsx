@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { EventDetailsPatch } from "@/lib/repository";
+import { tableOccupancy, type EventDetailsPatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import { eventHref } from "@/lib/event-routes";
 import { formatEventDate } from "@/lib/event-time";
@@ -11,6 +11,11 @@ import {
   signatureOfPrices,
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
+import {
+  TablesEditor,
+  signatureOfTables,
+  useTableRows,
+} from "@/components/tables-editor";
 
 interface Props {
   event: Event;
@@ -74,6 +79,10 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
   const [startTime, setStartTime] = useState(event.startTime ?? "");
   const [endTime, setEndTime] = useState(event.endTime ?? "");
   const prices = useTicketPriceRows(event.ticketPrices);
+  // Tables are edited here too, and saved with the rest of the row: this is
+  // the only screen that lays an event out, so the event's own screens have
+  // no second way of doing it.
+  const tables = useTableRows(event.tables);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -94,6 +103,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
     setStartTime(event.startTime ?? "");
     setEndTime(event.endTime ?? "");
     prices.reset(event.ticketPrices);
+    tables.reset(event.tables);
     setError("");
     setConfirming(false);
   }
@@ -111,9 +121,15 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
     eventDate !== event.eventDate ||
     startTime !== (event.startTime ?? "") ||
     endTime !== (event.endTime ?? "") ||
-    prices.signature !== signatureOfPrices(event.ticketPrices);
+    prices.signature !== signatureOfPrices(event.ticketPrices) ||
+    tables.signature !== signatureOfTables(event.tables);
 
   const held = contents(event);
+
+  /** Guests at each table, so a cross can say what removing it would cost. */
+  const seated = new Map(
+    tableOccupancy(event).map((entry) => [entry.tableNumber, entry.taken]),
+  );
 
   function close() {
     revert();
@@ -136,6 +152,11 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
       setError(priced.error);
       return;
     }
+    const laid = tables.toInputs();
+    if ("error" in laid) {
+      setError(laid.error);
+      return;
+    }
 
     setBusy(true);
     setError("");
@@ -146,6 +167,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
         startTime: startTime === "" ? null : startTime,
         endTime: endTime === "" ? null : endTime,
         ticketPrices: priced.prices,
+        tables: laid.tables,
       });
       // Saved is done: the row closes back to the line it opened from. A
       // refusal is not done, and leaves it open with the reason showing.
@@ -276,6 +298,19 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
             <TicketPricesEditor
               control={prices}
               disabled={busy}
+              scope={event.id}
+              ofWhat={event.name}
+            />
+          </div>
+
+          {/* Last of the fields, as on the New event form. Removing a table
+              unseats whoever is at it, so the crosses say how many that
+              would be, and nothing is written until Save. */}
+          <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+            <TablesEditor
+              control={tables}
+              disabled={busy}
+              seated={seated}
               scope={event.id}
               ofWhat={event.name}
             />

@@ -8,7 +8,11 @@ import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
 import { tableOccupancy, type SeatingShare } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
-import { eventHref, useEventId } from "@/lib/event-routes";
+import {
+  MANAGE_EVENTS_PATH,
+  eventHref,
+  useEventId,
+} from "@/lib/event-routes";
 
 /** How many tables to name before the line gets too long to scan. */
 const MAX_TABLES_LISTED = 8;
@@ -188,10 +192,10 @@ export default function BookingsScreen() {
         <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
           This event has no tables yet, so guests cannot be seated.{" "}
           <Link
-            href={eventHref(event.id, "tables")}
+            href={MANAGE_EVENTS_PATH}
             className="underline dark:text-zinc-300"
           >
-            Add tables
+            Add tables on Manage events
           </Link>{" "}
           when you are ready.
         </p>

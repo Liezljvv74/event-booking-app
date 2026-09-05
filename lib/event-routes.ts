@@ -7,7 +7,7 @@
  * is a static export: every page has to exist as an HTML file written at
  * build time, and event ids are minted in the browser, so a
  * `/events/[eventId]` route could never have a file to serve. A single
- * prerendered `/event/tables` that reads the id on the client covers every
+ * prerendered `/event/bookings` that reads the id on the client covers every
  * event, which keeps deep links and reloads working on a plain file host
  * such as GitHub Pages.
  *
@@ -18,7 +18,7 @@ import { useSearchParams } from "next/navigation";
 
 const EVENT_ID_PARAM = "id";
 
-const EVENT_SEGMENTS = ["", "tables", "bookings", "expenses"] as const;
+const EVENT_SEGMENTS = ["", "bookings", "expenses"] as const;
 
 export type EventSection = (typeof EVENT_SEGMENTS)[number];
 
@@ -39,7 +39,7 @@ export type NavItem =
  * The section nav, in the order it is read, left to right.
  *
  * Manage events sits between Bookings and Expenses rather than at the end,
- * on request. It is the odd one out of the five — the other four are screens
+ * on request. It is the odd one out of the four — the other three are screens
  * of one event and this is the screen of all of them — so it used to be
  * ruled off after them. Now it takes its place in the row, and the rule is
  * gone with it, because a divider mid-row would read as a break in the
@@ -47,7 +47,6 @@ export type NavItem =
  */
 export const SECTION_NAV: readonly NavItem[] = [
   { kind: "event", segment: "", label: "Dashboard" },
-  { kind: "event", segment: "tables", label: "Tables" },
   { kind: "event", segment: "bookings", label: "Bookings" },
   { kind: "manage", label: "Manage events", shortLabel: "Manage" },
   { kind: "event", segment: "expenses", label: "Expenses" },

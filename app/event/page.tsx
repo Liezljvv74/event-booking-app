@@ -10,7 +10,11 @@ import {
   type Event,
   type TicketPrice,
 } from "@/lib/types";
-import { eventHref, useEventId } from "@/lib/event-routes";
+import {
+  MANAGE_EVENTS_PATH,
+  eventHref,
+  useEventId,
+} from "@/lib/event-routes";
 
 /**
  * The figures the spec asks the dashboard to show.
@@ -275,10 +279,10 @@ export default function EventDashboard() {
           <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
             No tables yet, so no one can be seated.{" "}
             <Link
-              href={eventHref(event.id, "tables")}
+              href={MANAGE_EVENTS_PATH}
               className="underline dark:text-zinc-300"
             >
-              Add tables
+              Add tables on Manage events
             </Link>{" "}
             when you are ready.
           </p>

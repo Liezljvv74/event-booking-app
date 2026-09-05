@@ -138,21 +138,14 @@ function normaliseTicketPrices(
  * it to renumber the rest.
  */
 export interface TableInput {
+  /**
+   * The stored table this line stands for, or null for one being added.
+   * `createEvent` has nothing to match against and ignores it; editing an
+   * event uses it to tell a table whose seats changed from a table that has
+   * gone and a new one put in its place.
+   */
+  id?: string | null;
   seatCount: number;
-}
-
-/** Number the supplied tables from 1, rejecting what cannot be a table. */
-function normaliseTables(inputs: readonly TableInput[]): Table[] {
-  return inputs.map((input, index) => {
-    if (!Number.isInteger(input.seatCount) || input.seatCount < 1) {
-      throw new Error("A table needs at least one seat.");
-    }
-    return {
-      id: newId(),
-      tableNumber: index + 1,
-      seatCount: input.seatCount,
-    };
-  });
 }
 
 /**
@@ -192,15 +185,19 @@ export function createEvent(input: {
       endTime: input.endTime ?? null,
       status: "active",
       ticketPrices: normaliseTicketPrices(input.ticketPrices ?? []),
-      tables: normaliseTables(input.tables ?? []),
+      tables: [],
       bookings: [],
       expenses: copyExpenses(source?.expenses ?? []),
       createdAt: Date.now(),
       closedAt: null,
     };
 
-    await put(transaction, STORE_EVENTS, event);
-    return event;
+    // Laid out by the same rule that lays out an edited event, so tables
+    // are numbered from 1 here and there is one place that numbers them.
+    const laid = applyTables(event, input.tables ?? []);
+
+    await put(transaction, STORE_EVENTS, laid);
+    return laid;
   });
 }
 
@@ -270,10 +267,18 @@ export interface EventDetailsPatch {
    * about the event.
    */
   ticketPrices?: readonly TicketPriceInput[];
+  /**
+   * The event's tables in full, the same way the prices are given: a table
+   * left out of the list is a table removed. Unlike the prices these have
+   * identity — a guest is seated by table number — so each line says which
+   * stored table it is, and a line with no id is a table being added.
+   * Omitting the field leaves the stored tables alone.
+   */
+  tables?: readonly TableInput[];
 }
 
 /**
- * Edit an event's own details, leaving its tables, bookings and expenses be.
+ * Edit an event's own details, and the tables it is laid out with.
  *
  * Times may be set to null, which is why the patch is applied by spread
  * rather than by checking each field for truthiness: clearing a start time is
@@ -294,13 +299,19 @@ export function updateEventDetails(
         patch.ticketPrices === undefined
           ? event.ticketPrices
           : normaliseTicketPrices(patch.ticketPrices),
+      // Put back for now; the tables are applied below, against the event as
+      // it stands, because working out who has to be unseated needs the
+      // seating as it was rather than the list that is replacing it.
+      tables: event.tables,
     };
     const name = updated.name.trim();
 
     if (name === "") throw new Error("Give the event a name.");
     if (updated.eventDate === "") throw new Error("Pick an event date.");
 
-    return { ...updated, name };
+    return patch.tables === undefined
+      ? { ...updated, name }
+      : applyTables({ ...updated, name }, patch.tables);
   });
 }
 
@@ -366,74 +377,100 @@ export function occupiedSeats(event: Event, tableNumber: number): number {
 }
 
 export class SeatsBelowOccupancyError extends Error {
-  constructor(occupied: number) {
+  constructor(tableNumber: number, occupied: number) {
     super(
-      `That table already seats ${occupied} guest${occupied === 1 ? "" : "s"}. ` +
-        `Move them before reducing the seat count.`,
+      `Table ${tableNumber} already seats ${occupied} guest${occupied === 1 ? "" : "s"}. ` +
+        `Move them before reducing its seats.`,
     );
     this.name = "SeatsBelowOccupancyError";
   }
 }
 
 /**
- * Change one table's seat count.
+ * Lay the event out with the tables given: keep the ones still listed, at
+ * whatever seat counts they now carry, drop the ones that are not, and number
+ * the new ones from one past the highest in use.
  *
- * Refuses to drop below the guests already seated there, which would leave
- * the event over-seated and the dashboard's available-seat count negative.
+ * The whole list arrives at once because that is how the form works — an
+ * event's tables are edited on Manage events, in the row that edits its name
+ * and its prices, and saved together with them. Which makes this the one
+ * place three rules have to hold at the same time:
+ *
+ * *A table keeps its number.* Numbers are how a guest is seated, so a table
+ * that survives the edit is the same table: only its seats can change. It is
+ * matched by id rather than by position, so removing the first of four does
+ * not renumber the other three underneath the guests sitting at them.
+ *
+ * *A new number is never a reused one.* Numbering from the highest in use
+ * rather than from the count means removing table 2 of three leaves 1 and 3,
+ * and the next table added is 4. A gap is better than a second table 2 while
+ * anyone is still recorded as sitting at the first.
+ *
+ * *Nobody is left pointing at a table that has gone.* Attendees seated at a
+ * removed table are unseated rather than stranded: a guest holding a number
+ * no table has counts against no table and shows up in no tally. Unseated,
+ * they return to the pool the dashboard calls out, to be seated again.
  */
-export function setTableSeatCount(
-  eventId: string,
-  tableId: string,
-  seatCount: number,
-): Promise<Event> {
-  if (!Number.isInteger(seatCount) || seatCount < 1) {
-    throw new Error("A table needs at least one seat.");
+function applyTables(event: Event, inputs: readonly TableInput[]): Event {
+  const kept = new Set<string>();
+  const tables: Table[] = [];
+  let highest = event.tables.reduce(
+    (max, table) => Math.max(max, table.tableNumber),
+    0,
+  );
+
+  for (const input of inputs) {
+    if (!Number.isInteger(input.seatCount) || input.seatCount < 1) {
+      throw new Error("A table needs at least one seat.");
+    }
+
+    const existing =
+      input.id === undefined || input.id === null
+        ? undefined
+        : event.tables.find((candidate) => candidate.id === input.id);
+
+    if (existing === undefined) {
+      highest += 1;
+      tables.push({
+        id: newId(),
+        tableNumber: highest,
+        seatCount: input.seatCount,
+      });
+      continue;
+    }
+
+    // Counted against the event as it stands, since nothing has moved.
+    const occupied = occupiedSeats(event, existing.tableNumber);
+    if (input.seatCount < occupied) {
+      throw new SeatsBelowOccupancyError(existing.tableNumber, occupied);
+    }
+
+    kept.add(existing.id);
+    tables.push({ ...existing, seatCount: input.seatCount });
   }
 
-  return mutateEvent(eventId, (event) => {
-    const table = event.tables.find((candidate) => candidate.id === tableId);
-    if (!table) throw new Error("That table no longer exists.");
+  const gone = new Set(
+    event.tables
+      .filter((table) => !kept.has(table.id))
+      .map((table) => table.tableNumber),
+  );
 
-    const occupied = occupiedSeats(event, table.tableNumber);
-    if (seatCount < occupied) throw new SeatsBelowOccupancyError(occupied);
-
-    return {
-      ...event,
-      tables: event.tables.map((candidate) =>
-        candidate.id === tableId ? { ...candidate, seatCount } : candidate,
-      ),
-    };
-  });
-}
-
-/**
- * Remove a table and unassign anyone seated at it.
- *
- * Leaving attendees pointing at a table that no longer exists would strand
- * them: they would count against no table and never appear in the dashboard's
- * per-table list. Unassigning puts them back in the pool to be re-seated.
- */
-export function removeTable(
-  eventId: string,
-  tableId: string,
-): Promise<Event> {
-  return mutateEvent(eventId, (event) => {
-    const table = event.tables.find((candidate) => candidate.id === tableId);
-    if (!table) return event;
-
-    return {
-      ...event,
-      tables: event.tables.filter((candidate) => candidate.id !== tableId),
-      bookings: event.bookings.map((booking) => ({
-        ...booking,
-        attendees: booking.attendees.map((attendee) =>
-          attendee.assignedTableNumber === table.tableNumber
-            ? { ...attendee, assignedTableNumber: null }
-            : attendee,
-        ),
-      })),
-    };
-  });
+  return {
+    ...event,
+    tables: tables.sort((a, b) => a.tableNumber - b.tableNumber),
+    bookings:
+      gone.size === 0
+        ? event.bookings
+        : event.bookings.map((booking) => ({
+            ...booking,
+            attendees: booking.attendees.map((attendee) =>
+              attendee.assignedTableNumber !== null &&
+              gone.has(attendee.assignedTableNumber)
+                ? { ...attendee, assignedTableNumber: null }
+                : attendee,
+            ),
+          })),
+  };
 }
 
 

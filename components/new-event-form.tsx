@@ -35,9 +35,9 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   const [endTime, setEndTime] = useState(lastTimes.endTime ?? "");
   // A new event has no prices to load, and opens with one blank line ready.
   const prices = useTicketPriceRows([], { startWithBlank: true });
-  // The event's tables, set up here because this is the only place they are
-  // set: the Tables tab lists them and lets one go, but makes none.
-  const tables = useTableRows();
+  // A new event opens with one table at the default, so the room is visibly
+  // somewhere to be laid out rather than something to remember later.
+  const tables = useTableRows([], { startWithOne: true });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -145,7 +145,9 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       </div>
 
       {/* Last thing before the button: the tables are the event's furniture
-          rather than its identity, and they are the longest list here. */}
+          rather than its identity, and they are the longest list here. The
+          same block appears in the event's row on Manage events, which is
+          where they are changed afterwards. */}
       <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
         <TablesEditor control={tables} disabled={saving} />
       </div>

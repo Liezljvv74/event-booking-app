@@ -27,9 +27,7 @@ import {
   listExpenseTemplates,
   moveAttendees,
   removeExpense,
-  removeTable,
   runRetentionSweep,
-  setTableSeatCount,
   updateAttendee,
   updateBookingDetails,
   updateExpense,
@@ -63,8 +61,9 @@ export interface NewEventInput {
   /** What the event is sold at. Empty when prices are not settled yet. */
   ticketPrices: readonly TicketPriceInput[];
   /**
-   * The event's tables, numbered in the order given. An event's tables are
-   * settled when it is scheduled, so this is the only place they are set.
+   * The tables the event is laid out with, numbered in the order given. They
+   * are changed afterwards through `editEventDetails`, which takes the same
+   * list; both sit on Manage events and nowhere else.
    */
   tables: readonly TableInput[];
 }
@@ -91,16 +90,10 @@ export interface UseEventsResult {
    */
   lastTimes: EventTimes;
   addEvent: (input: NewEventInput) => Promise<Event>;
-  /** Edit an event's name, date, times or ticket prices. */
+  /** Edit an event's name, date, times, ticket prices or tables. */
   editEventDetails: (id: string, patch: EventDetailsPatch) => Promise<Event>;
   /** Delete an event and everything recorded against it. Cannot be undone. */
   removeEvent: (id: string) => Promise<void>;
-  setSeatCount: (
-    eventId: string,
-    tableId: string,
-    seatCount: number,
-  ) => Promise<Event>;
-  removeEventTable: (eventId: string, tableId: string) => Promise<Event>;
   addBooking: (
     eventId: string,
     input: NewBookingInput,
@@ -253,18 +246,6 @@ export function useEvents(): UseEventsResult {
     [refreshEvents],
   );
 
-  const setSeatCount = useCallback(
-    (eventId: string, tableId: string, seatCount: number) =>
-      applyChange(() => setTableSeatCount(eventId, tableId, seatCount)),
-    [applyChange],
-  );
-
-  const removeEventTable = useCallback(
-    (eventId: string, tableId: string) =>
-      applyChange(() => removeTable(eventId, tableId)),
-    [applyChange],
-  );
-
   // Returns more than the event: the caller needs the new booking's id to
   // open it, and which table the party landed at to say so.
   const addBooking = useCallback(
@@ -366,8 +347,6 @@ export function useEvents(): UseEventsResult {
     addEvent,
     editEventDetails,
     removeEvent,
-    setSeatCount,
-    removeEventTable,
     addBooking,
     editBookingDetails,
     editAttendee,
