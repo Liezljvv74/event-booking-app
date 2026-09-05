@@ -264,13 +264,17 @@ event's own details are set when it is created and changed on Manage events,
 which is one page owning the lot rather than three screens each owning a
 piece of it. Then six figures on one line (guests confirmed and cancelled,
 seats available, amount due at the venue, expenses, expected income, expected
-profit). Each is a small card read by its heading: the heading is bold and
-the number a size below it, on request, rather than the number being twice
-the heading's size and the card twice as tall as it needed to be. The row is
-scanned across for the label you want, not for the biggest number on the
-screen, and the two sizes it lost are two sizes of page the rest of the
-screen moves up by. Then the seating list: each table with its seat count,
-what is free and who is sitting there. Guests with no name yet are counted rather than
+profit). Each is a small card read by its heading: the heading is bold at
+13px and the number 14px beside it, where the heading was 12px and the number
+20px. Both were asked for twice, in that direction — the row is scanned across
+for the label you want, not for the biggest number on the screen, and the
+height the figures gave up is height the rest of the page moves up by. The
+heading stopped at 13px rather than 14 on purpose: at 14 a label like *Amount
+due at the venue* takes a third line in a sixth-width card, and the two lines'
+room reserved below it stops being the two lines it is there for. Then the
+seating list: each table with its seat count, what is free and who is sitting
+there, the names a size below the table's own line since a full table is ten
+of them on one line. Guests with no name yet are counted rather than
 listed. Unseated guests are called out below, because a guest holding no seat
 appears in no table's tally.
 

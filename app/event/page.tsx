@@ -95,7 +95,12 @@ function Stat({
           Two lines' worth of room whether or not the label needs it, so the
           figures line up across the row instead of stepping down wherever a
           longer label wraps. */}
-      <div className="min-h-[2rem] text-xs leading-4 font-semibold text-zinc-700 dark:text-zinc-300">
+      {/* 13px rather than the next step up to 14: a point is as much as
+          "slightly bigger" wants, and it leaves the wrapping where it was.
+          At 14 a label like "Amount due at the venue" takes a third line in
+          a sixth-width card, and the two lines' room below stops being the
+          two lines it is there to reserve. */}
+      <div className="min-h-[2rem] text-[0.8125rem] leading-4 font-semibold text-zinc-700 dark:text-zinc-300">
         {label}
       </div>
 
@@ -111,11 +116,11 @@ function Stat({
             className="flex items-baseline gap-x-1.5"
           >
             <span
-              /* A size smaller than the heading above it rather than two
-                 sizes larger, which is what takes the height out of the
-                 cards: the labels are what the row is read by, and six
-                 figures in a row do not each need to shout. */
-              className={`text-base font-semibold ${
+              /* Barely above the heading rather than two sizes above it,
+                 which is what takes the height out of the cards: the labels
+                 are what the row is read by, and six figures in a row do not
+                 each need to shout. */
+              className={`text-sm font-semibold ${
                 negative
                   ? "text-red-600 dark:text-red-400"
                   : "text-black dark:text-zinc-50"
@@ -184,14 +189,17 @@ function TicketPrices({ prices }: { prices: readonly TicketPrice[] }) {
 function Seated({ table }: { table: TableOccupancy }) {
   if (table.taken === 0) {
     return (
-      <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-500">
+      <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">
         No one seated yet
       </p>
     );
   }
 
   return (
-    <p className="mt-0.5 text-sm text-zinc-700 dark:text-zinc-300">
+    /* Smaller than the table's own line above it, on request. A full table
+       is ten names on one line, and they are a list to be found in rather
+       than a heading to be read. */
+    <p className="mt-0.5 text-xs text-zinc-700 dark:text-zinc-300">
       {table.guestNames.join(", ")}
       {table.unnamed > 0 && (
         <span className="text-zinc-500 dark:text-zinc-500">
