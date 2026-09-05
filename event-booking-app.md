@@ -35,6 +35,12 @@ event manager for now. (The app may evolve into a bigger app, with more function
 
 ## Core features
 
+### App header
+- A bar across the top of every page, in three sections: a logo on the left,
+  and a middle and a right kept open for whatever they are later given.
+- Present on every screen, the entry and loading screens included, so it does
+  not appear and disappear as a screen loads.
+
 ### Events
 - Any number of active events at a time, listed down the left-hand side of
   the page and switched by picking one. Each shows its name and its date

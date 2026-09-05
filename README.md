@@ -130,6 +130,7 @@ app/
     bookings/page.tsx            parties, guests, seating
     expenses/page.tsx            expense lines and the saved-line library
 components/                      the pieces those screens are built from
+  app-header.tsx                 the bar across the top: logo slot, and two open
   app-chrome.tsx                 the event rail + section nav, shared by both layouts
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
   tables-editor.tsx              an event's tables, and the rows behind them
@@ -177,9 +178,20 @@ saved rather than an optimistic guess that could drift from it.
 
 ## What each screen does
 
-Every screen sits in the same shell: the active events down the left-hand
-side, the section nav across the top of what is left, and the screen itself
-beneath it. The events were a strip of tabs along the top until they were
+Every screen sits in the same shell: the app header across the top, the
+active events down the left-hand side beneath it, the section nav across the
+top of what is left, and the screen itself under that.
+
+The header is three sections. The left is a fixed 10rem by 2.5rem box waiting
+for a logo — a dashed outline saying *Logo* until the image arrives, so the
+space is visibly reserved rather than silently empty. The middle takes
+whatever width the other two leave, and the right sits hard against the edge;
+both are empty for now and each holds its place, so filling one later moves
+neither of the others. It is rendered by the root layout rather than by
+`AppChrome`, which means it is on the entry screen and on the loading and
+storage-failure states too — screens that render none of the app's own
+chrome — and it needs no `"use client"`, so it is in the prerendered HTML
+before any JavaScript arrives. The events were a strip of tabs along the top until they were
 asked to the left, which suits them — a list of events is read down rather
 than across, a long name has the column's width rather than a tab's, and
 switching event is a fixed place to look however many are open. Each carries
@@ -471,6 +483,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | **Settings screen** | **Not built** — retention period, desktop save folder |
 | **Export All Data (Excel or JSON)** | **Not built** |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
+| App header with a logo slot | Slot reserved, awaiting the image — **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
 | Mobile | Done — narrow screens scroll their columns sideways rather than breaking |
 

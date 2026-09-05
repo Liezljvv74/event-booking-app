@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AppHeader } from "@/components/app-header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,7 +29,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* The header is outside `children` so it is the same bar on every
+          screen, including the entry screen and the loading and storage-
+          failure states, none of which render the app's own chrome. */}
+      <body className="min-h-full flex flex-col">
+        <AppHeader />
+        {children}
+      </body>
     </html>
   );
 }
