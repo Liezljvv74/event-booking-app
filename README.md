@@ -82,7 +82,7 @@ are UUIDs minted in the browser, so `/events/[eventId]` could never have had
 files to serve, and `next build` refuses the route outright without a
 `generateStaticParams()` — for which no list of ids exists, or could.
 
-So the four event screens moved from `/events/<id>/...` to
+So the event's screens moved from `/events/<id>/...` to
 `/event/...?id=<id>`: one prerendered page per section, each reading the id
 off the query string once it is running in the browser. The URLs are less
 tidy; in exchange, deep links, reloads and the back and forward buttons all
@@ -134,12 +134,13 @@ app/
     expenses/page.tsx            expense lines and the saved-line library
 components/                      the pieces those screens are built from
   app-header.tsx                 the bar across the top: logo slot, and two open
-  app-chrome.tsx                 the event rail + section nav, shared by both layouts
+  app-chrome.tsx                 the event rail + section nav, under all three layouts
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
   tables-editor.tsx              an event's tables, and the rows behind them
+  form-styles.ts                 one definition of what a form field looks like
 lib/
   db.ts                          IndexedDB plumbing: stores, transactions
-  data-transfer.ts               the backup format and the CSV reports, no DOM
+  data-transfer.ts               the file formats — backup, reports, door list — no DOM
   file-access.ts                 the folder picker, the remembered handle, the download
   types.ts                       the domain: Event, Table, Booking, Attendee…
   repository.ts                  every read and write, and the rules
@@ -147,12 +148,16 @@ lib/
   money.ts                       integer cents in, decimal strings out
   ticket-prices.ts               the cheapest price, and how a price reads
   event-time.ts                  dates and clock times
-  event-routes.ts                the URL of every event screen, and the order of the nav
+  event-routes.ts                the URL of every screen, and the order of the nav
+  errors.ts                      what to show when something throws
+public/
+  event_diary_logo-horizontal.svg       the logo, dark on light
+  event_diary_logo-horizontal-dark.svg  the same drawing, light on dark
 next.config.ts                   the static export and its base path
 .github/workflows/deploy.yml     build, then publish to GitHub Pages
 ```
 
-Roughly 5,600 lines, 2,000 of them in `lib/`.
+Roughly 8,500 lines, 3,600 of them in `lib/`.
 
 ### Four things the code leans on
 
@@ -248,15 +253,17 @@ what re-reads the times to start from, so they come from the event just saved.
 Nothing ever disables it: there is no ceiling on how many events may be
 scheduled.
 
-Manage events is last in the section nav, after the event's own three, on
-request. It sat between Bookings and Expenses for a while, which split a run
-that reads better whole — Dashboard, Bookings, Expenses is an event as it is
-worked through, what it looks like, who is coming, what it costs. It carries
-no divider before it: a rule mid-row read as a break in the sections rather
-than as a note about one of them, and it went when the item first moved out
-of last place. Earlier still it was a button among
-the event tabs, where it read as a fifth event, and the screen it opened stood
-outside the app's chrome — reaching it felt like leaving. The event rail and
+Manage events comes after the event's own three in the section nav, on
+request — Dashboard, Bookings, Expenses, Manage events, and Export/Import
+after that. It sat between Bookings and Expenses for a while, which split a
+run that reads better whole: those first three are one event as it is worked
+through, what it looks like, who is coming, what it costs, and the two after
+them are about all of the events rather than any one. It carries no divider
+before it either: a rule mid-row read as a break in the sections rather than
+as a note about one of them, and it went when the item first moved. Earlier
+still it was a button among the event tabs, where it read as a fifth event,
+and the screen it opened stood outside the app's chrome — reaching it felt
+like leaving. The event rail and
 the nav frame it like they frame every other screen, and it shares the loaded
 events with them, so an event created or deleted here appears or disappears in
 the rail at once.
@@ -284,6 +291,72 @@ there, the names a size below the table's own line since a full table is ten
 of them on one line. Guests with no name yet are counted rather than
 listed. Unseated guests are called out below, because a guest holding no seat
 appears in no table's tally.
+
+There was a **Tables** screen between the Dashboard and Bookings. It was cut
+down first, on request, to a plain table of two columns — Table Number and
+Seats — with a cross on each row, its per-table free-seat line and its party
+chips dropped; then removed outright, because at that width it listed what the
+dashboard's seating list already gives with the guests' names on it, and
+laying an event out had moved to Manage events. Losing it took the nav from
+five items to four, where it stayed until Export/Import made five of them
+again.
+
+**Bookings** — a party is a name, a telephone number and a guest count, which
+generates that many guest lines. Parties collapse to one line each, and the
+list runs two abreast on a wide screen so two of them can be read side by
+side. A **+** at the bottom right of each party adds a guest to it. Every
+cancellation on the event is gathered under **Cancelled guests** below the
+bookings, each one a name with its party in brackets. Guests are
+edited individually: name, table, payment status, ticket price. The price a
+party is taken at is chosen from the event's own ticket prices, each shown
+with what it includes, with **Another amount** for anything off the list; the
+cheapest starts selected, so a new guest is priced without anything being
+picked. Each guest's own price is the same dropdown, so a guest is moved from
+dance-only to dinner by choosing the other price rather than by knowing what
+it costs. A party is auto-seated at the table with the least room to spare
+that still fits it, so part-filled tables fill before new ones open; a party
+too large for any one table is split across the closest run of tables that
+can take it, and the screen says where everyone went.
+
+### Ticket prices
+
+An event is sold at a list of prices rather than one, because the same
+function is commonly sold two or three ways — dinner and dance against dance
+only. Each line is an amount and free text saying what it includes, and the
+text is there to be read off when someone asks what they are paying for:
+nothing derives from it, and it may be left blank.
+
+The list is entered below the fields on both screens that set an event's
+details. The New event form and an event's row on Manage events have the same
+shape: the name, then the date, start and end to the right of it, which is
+what puts the prices underneath rather than in the middle. Three prices fit
+across a line, each an amount, what it includes, and a cross that deletes the
+pair; the fields carry no labels of their own, since an amount beside a
+description reads as what it is, and three labelled columns would not fit.
+Saving replaces the list, so removing a price is expressed by leaving it out.
+A line nobody touched is not a price and not a mistake — the create form
+opens with one empty — but a line describing something with no amount against
+it is refused rather than dropped.
+
+A booking copies an amount out of the list; it does not point at it. So
+correcting a price later never rewrites a booking already taken, and a guest's
+price stays editable per guest as it always was. Because a guest records an
+amount rather than which price it came from, the dropdown that offers the
+prices finds the guest's own by matching the amount — and when it matches
+none, because it was typed or because the event's prices have since changed,
+that amount is offered as an extra line so the field still states what the
+guest is being charged.
+
+New guests default to the cheapest price rather than to whichever was entered
+first. The cheapest is what a party is quoted unless they ask for the fuller
+ticket, so it is the answer that needs no thought in the common case, and a
+default nobody looked at then undercharges rather than billing someone for
+something they never agreed to.
+
+**Expenses** — a six-column table (description, provider, amount, paid, notes)
+edited in place. Only description and amount are required. Clearing a line
+saves it to a library that every Description dropdown then offers, minus
+whatever is already in the list.
 
 **Export/Import your data** (`/data`) — two columns, the same shape Manage
 events has: what goes out on the left, what comes in on the right.
@@ -344,71 +417,6 @@ does. The whole import is one transaction, so a file that fails halfway
 leaves the store as it was. Reusable expense lines are merged either way,
 even by a restore: they belong to the app rather than to any event, and one
 the file does not know about is one this browser learned since.
-
-There was a **Tables** screen between the Dashboard and Bookings. It was cut
-down first, on request, to a plain table of two columns — Table Number and
-Seats — with a cross on each row, its per-table free-seat line and its party
-chips dropped; then removed outright, because at that width it listed what the
-dashboard's seating list already gives with the guests' names on it, and
-laying an event out had moved to Manage events. The nav is four items now
-rather than five.
-
-**Bookings** — a party is a name, a telephone number and a guest count, which
-generates that many guest lines. Parties collapse to one line each, and the
-list runs two abreast on a wide screen so two of them can be read side by
-side. A **+** at the bottom right of each party adds a guest to it. Every
-cancellation on the event is gathered under **Cancelled guests** below the
-bookings, each one a name with its party in brackets. Guests are
-edited individually: name, table, payment status, ticket price. The price a
-party is taken at is chosen from the event's own ticket prices, each shown
-with what it includes, with **Another amount** for anything off the list; the
-cheapest starts selected, so a new guest is priced without anything being
-picked. Each guest's own price is the same dropdown, so a guest is moved from
-dance-only to dinner by choosing the other price rather than by knowing what
-it costs. A party is auto-seated at the table with the least room to spare
-that still fits it, so part-filled tables fill before new ones open; a party
-too large for any one table is split across the closest run of tables that
-can take it, and the screen says where everyone went.
-
-### Ticket prices
-
-An event is sold at a list of prices rather than one, because the same
-function is commonly sold two or three ways — dinner and dance against dance
-only. Each line is an amount and free text saying what it includes, and the
-text is there to be read off when someone asks what they are paying for:
-nothing derives from it, and it may be left blank.
-
-The list is entered below the fields on both screens that set an event's
-details. The New event form and an event's row on Manage events have the same
-shape: the name, then the date, start and end to the right of it, which is
-what puts the prices underneath rather than in the middle. Three prices fit
-across a line, each an amount, what it includes, and a cross that deletes the
-pair; the fields carry no labels of their own, since an amount beside a
-description reads as what it is, and three labelled columns would not fit.
-Saving replaces the list, so removing a price is expressed by leaving it out.
-A line nobody touched is not a price and not a mistake — the create form
-opens with one empty — but a line describing something with no amount against
-it is refused rather than dropped.
-
-A booking copies an amount out of the list; it does not point at it. So
-correcting a price later never rewrites a booking already taken, and a guest's
-price stays editable per guest as it always was. Because a guest records an
-amount rather than which price it came from, the dropdown that offers the
-prices finds the guest's own by matching the amount — and when it matches
-none, because it was typed or because the event's prices have since changed,
-that amount is offered as an extra line so the field still states what the
-guest is being charged.
-
-New guests default to the cheapest price rather than to whichever was entered
-first. The cheapest is what a party is quoted unless they ask for the fuller
-ticket, so it is the answer that needs no thought in the common case, and a
-default nobody looked at then undercharges rather than billing someone for
-something they never agreed to.
-
-**Expenses** — a six-column table (description, provider, amount, paid, notes)
-edited in place. Only description and amount are required. Clearing a line
-saves it to a library that every Description dropdown then offers, minus
-whatever is already in the list.
 
 ## Decisions worth remembering
 
@@ -622,12 +630,41 @@ to run from GitHub Pages, and the spec no longer excludes it; see
 
 ## How it has been checked
 
-There is no test suite in the repository. Every change has been verified by
-driving the running app in a headless browser — creating events, tables and
-bookings, reading the figures back, and checking the console stayed clean.
-The most recent pass was 187 assertions across nine scripted scenarios
+There is no test suite in the repository, and two different things have
+stood in for one.
+
+**Everything is typechecked, linted and built.** `npx tsc --noEmit`, `npx
+eslint .` and `npm run build` are run against every change, and the build is a
+real static export of all nine routes rather than a compile.
+
+**The file formats are checked by assertion, against the compiled module.**
+`lib/data-transfer.ts` deliberately touches no DOM, so it can be compiled on
+its own and driven from Node. 75 assertions in three passes: the backup's
+round trip and the five ways a file that is not a backup is refused; the CSV
+quoting of commas, quotes and newlines, and a leading `=` neutralised so a
+spreadsheet cannot read a party name as a formula; the door list's row order,
+its exclusions and the three states of its paid column; the workbook checked
+for well-formedness and then parsed again by a real XML parser; and the door
+page's own script lifted out of the generated HTML and run in a sandbox
+against stub checkboxes, where the count follows the ticks, what is ticked
+and typed reaches storage, and a `localStorage` that throws on every call
+still leaves the ticking working.
+
+**The screens were checked by driving them in a headless browser** — creating
+events, tables and bookings, reading the figures back, and watching the
+console. The last such pass was 187 assertions across nine scripted scenarios
 (cancellations, guest moves, shared tables, the dashboard figures, expenses,
 the saved-line library, carried-over times, event management).
+
+That browser work stopped part-way through. Everything from the tables moving
+onto Manage events onwards — the event rail down the left, the app header and
+its logo, the whole Export/Import screen, and the three door lists — has been
+typechecked, linted, built and, where it is file-format code, asserted over;
+none of it has been driven in a browser. So the folder picker, the permission
+prompt a remembered folder asks for on a new session, and whether Excel is
+happy with the workbook are all unverified here. The log below records the
+passes that were done, as they were done: some of them describe screens and a
+nav order that have since changed.
 
 Those scripts are **not** checked in. They need `playwright-core`, and the
 spec asks for a minimal dependency list, so adding them was not assumed. If
