@@ -16,6 +16,7 @@ import { isBrowser } from "./db";
 import {
   addExpense,
   addTable,
+  addAttendee,
   cancelAttendee,
   cancelBooking,
   clearExpenses,
@@ -122,6 +123,8 @@ export interface UseEventsResult {
     bookingId: string,
     attendeeId: string,
   ) => Promise<Event>;
+  /** One more guest on a party already booked, at the party's own price. */
+  addGuest: (eventId: string, bookingId: string) => Promise<Event>;
   addExpenseLine: (eventId: string, input: ExpenseInput) => Promise<Event>;
   editExpense: (
     eventId: string,
@@ -308,6 +311,12 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  const addGuest = useCallback(
+    (eventId: string, bookingId: string) =>
+      applyChange(() => addAttendee(eventId, bookingId)),
+    [applyChange],
+  );
+
   const addExpenseLine = useCallback(
     (eventId: string, input: ExpenseInput) =>
       applyChange(() => addExpense(eventId, input)),
@@ -366,6 +375,7 @@ export function useEvents(): UseEventsResult {
     editAttendee,
     moveGuests,
     cancelOneAttendee,
+    addGuest,
     cancelWholeBooking,
     addExpenseLine,
     editExpense,

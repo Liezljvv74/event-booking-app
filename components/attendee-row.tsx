@@ -15,8 +15,9 @@ const STATUS_LABELS: Record<AttendeeStatus, string> = {
 
 /**
  * The statuses this dropdown offers. Cancelling is not among them: it is the
- * Cancel button's job, because cancelling also opens a replacement line, and
- * a status change here would take the party's seat away instead.
+ * Cancel button's job, because cancelling takes the guest out of the party
+ * and there is no un-cancelling, which is too much to hang on picking a line
+ * in a dropdown.
  */
 const LIVE_STATUSES: readonly AttendeeStatus[] = [
   "paid",

@@ -1055,6 +1055,70 @@ export function moveAttendees(
  * party keeps its shape. Cancelling the whole booking does not do this: the
  * booking is off, and six blank lines are not what is wanted.
  */
+/**
+ * Add one guest to a party already booked.
+ *
+ * They take the party's own ticket price, the same one its guests were
+ * created with, and a seat at a table the party is already sitting at when
+ * one of those has room. Failing that they arrive unseated rather than being
+ * sent to whichever table happens to be emptiest: a guest joining a party is
+ * joining the people, and putting them across the room without being asked
+ * would be a stranger decision than leaving the table for the manager.
+ */
+export function addAttendee(
+  eventId: string,
+  bookingId: string,
+): Promise<Event> {
+  return mutateEvent(eventId, (event) => {
+    const booking = event.bookings.find(
+      (candidate) => candidate.id === bookingId,
+    );
+    if (!booking) throw new Error("That booking no longer exists.");
+    if (booking.attendees.length >= MAX_GUESTS_PER_BOOKING) {
+      throw new Error(
+        `That is more than ${MAX_GUESTS_PER_BOOKING} guests. Split it across bookings.`,
+      );
+    }
+
+    // Where the party already sits, tightest first, so a guest joining fills
+    // the table with least room to spare rather than opening a gap elsewhere.
+    const partyTables = [
+      ...new Set(
+        booking.attendees
+          .filter(
+            (attendee) =>
+              SEAT_OCCUPYING_STATUSES.includes(attendee.status) &&
+              attendee.assignedTableNumber !== null,
+          )
+          .map((attendee) => attendee.assignedTableNumber as number),
+      ),
+    ]
+      .map((tableNumber) => ({
+        tableNumber,
+        free: freeSeatsAtTable(event, tableNumber),
+      }))
+      .filter((table) => table.free >= 1)
+      .sort((a, b) => a.free - b.free || a.tableNumber - b.tableNumber);
+
+    const added: Attendee = {
+      id: newId(),
+      name: "",
+      assignedTableNumber: partyTables[0]?.tableNumber ?? null,
+      status: "pay_at_venue",
+      ticketPriceCents: booking.ticketPriceCents,
+    };
+
+    return {
+      ...event,
+      bookings: event.bookings.map((candidate) =>
+        candidate.id === bookingId
+          ? { ...candidate, attendees: [...candidate.attendees, added] }
+          : candidate,
+      ),
+    };
+  });
+}
+
 export function cancelAttendee(
   eventId: string,
   bookingId: string,
@@ -1064,36 +1128,26 @@ export function cancelAttendee(
     const cancelled = findAttendee(event, bookingId, attendeeId);
     if (cancelled.status === "cancelled") return event;
 
-    // Built before the cancellation is written, so the replacement inherits
-    // the price the cancelled guest was on rather than the zero it is about
-    // to be put on.
-    const replacement: Attendee = {
-      id: newId(),
-      name: "",
-      assignedTableNumber: cancelled.assignedTableNumber,
-      status: "pay_at_venue",
-      ticketPriceCents: cancelled.ticketPriceCents,
-    };
-
+    // No replacement is opened. The party shrinks by one, the seat is freed
+    // for anyone, and a substitute is added back with the party's own +
+    // button when there is one. It used to open a blank line automatically,
+    // which kept the party's size and its expected income steady but left a
+    // nameless row behind after every cancellation.
     return {
       ...event,
       bookings: event.bookings.map((booking) =>
         booking.id === bookingId
           ? {
               ...booking,
-              attendees: booking.attendees.flatMap((attendee) =>
+              attendees: booking.attendees.map((attendee) =>
                 attendee.id === attendeeId
-                  ? [
-                      // Nobody is charged for a seat they gave up: the money
-                      // owed is the replacement's now.
-                      {
-                        ...attendee,
-                        status: "cancelled" as AttendeeStatus,
-                        ticketPriceCents: 0,
-                      },
-                      replacement,
-                    ]
-                  : [attendee],
+                  ? {
+                      ...attendee,
+                      status: "cancelled" as AttendeeStatus,
+                      // Nobody is charged for a seat they gave up.
+                      ticketPriceCents: 0,
+                    }
+                  : attendee,
               ),
             }
           : booking,

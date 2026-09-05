@@ -22,6 +22,8 @@ interface Props {
     tableNumber: number | null,
   ) => Promise<unknown>;
   onCancelAttendee: (attendeeId: string) => Promise<unknown>;
+  /** One more guest on this party, at the party's own price. */
+  onAddGuest: () => Promise<unknown>;
   onCancelBooking: () => Promise<unknown>;
   onSaveDetails: (details: {
     partyName: string;
@@ -46,6 +48,7 @@ export function BookingCard({
   onPatchAttendee,
   onMoveGuests,
   onCancelAttendee,
+  onAddGuest,
   onCancelBooking,
   onSaveDetails,
 }: Props) {
@@ -65,6 +68,18 @@ export function BookingCard({
     setDraftPhone(booking.telephone);
     setError("");
     setEditing(true);
+  }
+
+  async function addGuest() {
+    setBusy(true);
+    setError("");
+    try {
+      await onAddGuest();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveDetails(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -413,6 +428,26 @@ export function BookingCard({
 
           </div>
         </div>
+        )}
+
+        {/* Bottom right of the party, below its guests: the place a list is
+            added to. Left off a wholly cancelled party — that booking is
+            off, and a live guest on it would be an un-cancellation by the
+            side door, which this app does not have. */}
+        {!allCancelled && (
+          <div className="mt-1.5 flex justify-end">
+            <button
+              type="button"
+              onClick={addGuest}
+              disabled={busy}
+              data-add-guest={booking.id}
+              aria-label={`Add a guest to ${booking.partyName}`}
+              title="Add a guest to this party"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
         )}
       </div>
     </li>
