@@ -161,11 +161,11 @@ Tables screen, the seating dropdowns, the bookings screen's free-seat line and
 the dashboard all read it, so they cannot disagree. Anything that needs a
 scalar goes through `freeSeatsAtTable()`, which counts the same way.
 
-**The repository holds the rules, not the screens.** Seat capacity, the
-four-event ceiling, what may be edited, what a cancellation does — all of it
-is enforced in `lib/repository.ts` and surfaced as typed errors
-(`TableFullError`, `SeatsBelowOccupancyError`, `CancelledGuestError`,
-`NotEnoughFreeSeatsError`, `TooManyActiveEventsError`). The screens disable
+**The repository holds the rules, not the screens.** Seat capacity, what may
+be edited, what a cancellation does — all of it is enforced in
+`lib/repository.ts` and surfaced as typed errors (`TableFullError`,
+`SeatsBelowOccupancyError`, `CancelledGuestError`,
+`NotEnoughFreeSeatsError`). The screens disable
 what they can and display the error when they cannot, but the rule has one
 home.
 
@@ -197,9 +197,8 @@ column of its own the button had nothing left to open, so it is gone, and so
 is the Cancel beside Create event, which had nothing left to close. Creating
 an event clears the form for the next one — by remounting it, which is also
 what re-reads the times to start from, so they come from the event just saved.
-When four events are already active the form greys out in place with the
-reason above it, rather than being replaced by the message: the column keeps
-its shape as the count crosses the limit.
+Nothing ever disables it: there is no ceiling on how many events may be
+scheduled.
 
 Manage events sits between Bookings and Expenses in the section nav, on
 request. Before that it was last, after the event's own four and ruled off
@@ -304,6 +303,14 @@ The ones that were argued out and would otherwise be re-litigated:
   one library entry the moment either was cleared.
 - **A new event starts from the last event saved** — its times and its expense
   lines both, by the same "most recently saved" rule.
+- **There is no ceiling on how many events may be scheduled.** The spec caps
+  active events at four; that cap was removed on request. It was enforced in
+  one place, so removing it took the constant, the check in `createEvent`, the
+  `TooManyActiveEventsError` it threw, the `atEventLimit` flag the hook
+  published and the greyed-out form and amber note on the screen — the count
+  beside **Scheduled Events** now just counts. The tab strip already scrolled
+  and its tabs already refused to shrink, so it holds twelve events as
+  readably as it held four.
 - **An event in the list is a line, not a form.** Every event used to have
   every one of its fields on show at all times, whether or not any of them
   were being changed, and four events filled the screen. The list is read far
@@ -344,7 +351,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Spec area | State |
 |---|---|
 | Local, no backend, IndexedDB | Done |
-| Up to 4 active events, tabs | Done |
+| Up to 4 active events, tabs | Tabs done; **the cap of 4 was removed on request** |
 | Every event managed in one place | Done — **not in the spec**, added on request |
 | Expenses copied forward to a new event | Done |
 | Tables: numbered list, seats per table | Done |
@@ -450,6 +457,16 @@ detail and still naming what it would delete; three events occupying under
 1600px the columns sit side by side with an opened row's fields on one line,
 at 800px they stack, and at 390px the pen is still a 32px target and an opened
 row stacks its fields rather than overflowing. The console stayed clean.
+
+Removing the four-event cap was checked in the same pass, which grew to 69
+assertions: twelve events created one after another with no refusal, the
+fifth — the one the cap used to stop — among them; nothing anywhere on the
+page reading *limit*, *already active* or *make room*; the New event form and
+every pen still enabled at twelve; the count beside the heading reading
+"12 events"; a tab for each of the twelve, with the strip scrolling sideways
+rather than pushing the page wide; an event well past the old ceiling opening,
+saving an edit and keeping it; and all twelve read back from IndexedDB after a
+reload, still collapsed.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 

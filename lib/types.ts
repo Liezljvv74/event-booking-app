@@ -145,9 +145,6 @@ export const DEFAULT_SETTINGS: Settings = {
   exportDirectory: null,
 };
 
-/** Spec limit: at most this many events may be active at once. */
-export const MAX_ACTIVE_EVENTS = 4;
-
 /** Spec default seat count for a newly added table. */
 export const DEFAULT_SEAT_COUNT = 10;
 

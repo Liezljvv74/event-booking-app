@@ -19,14 +19,14 @@ import { useEventContext } from "@/components/event-provider";
 import { EventEditor } from "@/components/event-editor";
 import { NewEventForm } from "@/components/new-event-form";
 import { formatEventDate } from "@/lib/event-time";
-import { MAX_ACTIVE_EVENTS, type Event } from "@/lib/types";
+import { type Event } from "@/lib/types";
 
 function byDateThenName(a: Event, b: Event): number {
   return a.eventDate.localeCompare(b.eventDate) || a.name.localeCompare(b.name);
 }
 
 export default function ManageEventsScreen() {
-  const { allEvents, atEventLimit, lastTimes, addEvent, editEventDetails, removeEvent } =
+  const { allEvents, lastTimes, addEvent, editEventDetails, removeEvent } =
     useEventContext();
   /**
    * Bumped after every event created. It is the form's key, so a new one
@@ -62,7 +62,7 @@ export default function ManageEventsScreen() {
             data-active-count
             className="text-xs text-zinc-600 dark:text-zinc-400"
           >
-            {active.length} of {MAX_ACTIVE_EVENTS} in use
+            {active.length} event{active.length === 1 ? "" : "s"}
           </p>
         </div>
 
@@ -121,21 +121,10 @@ export default function ManageEventsScreen() {
           Schedule a new event
         </h2>
 
-        {/* Above the form rather than in place of it: the fields grey out and
-            stay where they are, so the column keeps its shape as the count
-            crosses the limit. */}
-        {atEventLimit && (
-          <p className="mt-2 max-w-prose text-sm text-amber-700 dark:text-amber-500">
-            {MAX_ACTIVE_EVENTS} events are already active, which is the limit.
-            Delete one to make room for another.
-          </p>
-        )}
-
         <div className="mt-3">
           <NewEventForm
             key={created}
             lastTimes={lastTimes}
-            disabled={atEventLimit}
             onCreate={async (input) => {
               const event = await addEvent(input);
               // Staying put: the new event appears in the list beside this

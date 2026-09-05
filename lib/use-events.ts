@@ -14,7 +14,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isBrowser } from "./db";
 import {
-  TooManyActiveEventsError,
   addExpense,
   addTable,
   cancelAttendee,
@@ -44,11 +43,7 @@ import {
   type MoveTarget,
   type TicketPriceInput,
 } from "./repository";
-import {
-  MAX_ACTIVE_EVENTS,
-  type Event,
-  type ExpenseTemplate,
-} from "./types";
+import { type Event, type ExpenseTemplate } from "./types";
 
 export interface NewBookingInput {
   partyName: string;
@@ -78,7 +73,6 @@ export interface UseEventsResult {
    * ones, so this is what the management screen reads to reach the rest.
    */
   allEvents: Event[];
-  atEventLimit: boolean;
   /**
    * Cleared expense lines, newest use first. Kept here rather than in the
    * screen because clearing a line is what creates one, and that happens
@@ -143,7 +137,6 @@ export interface UseEventsResult {
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof TooManyActiveEventsError) return error.message;
   if (error instanceof Error) return error.message;
   return String(error);
 }
@@ -360,7 +353,6 @@ export function useEvents(): UseEventsResult {
     error,
     activeEvents,
     allEvents,
-    atEventLimit: activeEvents.length >= MAX_ACTIVE_EVENTS,
     expenseTemplates,
     lastTimes,
     addEvent,

@@ -11,7 +11,6 @@ import {
   AUTO_CLOSE_AFTER_HOURS,
   DEFAULT_SEAT_COUNT,
   DEFAULT_SETTINGS,
-  MAX_ACTIVE_EVENTS,
   SEAT_OCCUPYING_STATUSES,
   type Attendee,
   type AttendeeStatus,
@@ -98,13 +97,6 @@ export function deleteEvent(id: string): Promise<void> {
   );
 }
 
-export class TooManyActiveEventsError extends Error {
-  constructor() {
-    super(`At most ${MAX_ACTIVE_EVENTS} events may be active at once.`);
-    this.name = "TooManyActiveEventsError";
-  }
-}
-
 /**
  * A ticket price as a screen supplies it: an amount already in cents, and
  * whatever the manager wrote about what it includes. Ids belong to the store,
@@ -155,14 +147,8 @@ export function createEvent(input: {
   seedExpensesFromEventId?: string;
 }): Promise<Event> {
   return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
+    // However many are already active: an event may always be scheduled.
     const existing = await getAll<Event>(transaction, STORE_EVENTS);
-    const activeCount = existing.filter(
-      (event) => event.status === "active",
-    ).length;
-
-    if (activeCount >= MAX_ACTIVE_EVENTS) {
-      throw new TooManyActiveEventsError();
-    }
 
     const source =
       input.seedExpensesFromEventId === undefined

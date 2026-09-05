@@ -17,24 +17,13 @@ interface Props {
    */
   lastTimes: EventTimes;
   onCreate: (input: NewEventInput) => Promise<unknown>;
-  /**
-   * Greyed out with nothing to be done about it here — the four-event limit
-   * is reached, and the room has to be made by deleting one. The form keeps
-   * its place on the page rather than disappearing, so the column does not
-   * change shape as the count crosses the limit. The caller says why.
-   */
-  disabled?: boolean;
 }
 
 const fieldClass =
   "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
 
-export function NewEventForm({
-  lastTimes,
-  onCreate,
-  disabled = false,
-}: Props) {
+export function NewEventForm({ lastTimes, onCreate }: Props) {
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState(todayIso());
   // Read once, at mount. The form sits on the screen permanently now, so
@@ -47,7 +36,6 @@ export function NewEventForm({
   const prices = useTicketPriceRows([], { startWithBlank: true });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const frozen = saving || disabled;
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
@@ -103,7 +91,7 @@ export function NewEventForm({
             type="text"
             name="name"
             value={name}
-            disabled={frozen}
+            disabled={saving}
             onChange={(changed) => setName(changed.target.value)}
             className={fieldClass}
             placeholder="Spring Gala"
@@ -116,7 +104,7 @@ export function NewEventForm({
             type="date"
             name="eventDate"
             value={eventDate}
-            disabled={frozen}
+            disabled={saving}
             onChange={(changed) => setEventDate(changed.target.value)}
             className={fieldClass}
           />
@@ -128,7 +116,7 @@ export function NewEventForm({
             type="time"
             name="startTime"
             value={startTime}
-            disabled={frozen}
+            disabled={saving}
             onChange={(changed) => setStartTime(changed.target.value)}
             className={fieldClass}
           />
@@ -140,7 +128,7 @@ export function NewEventForm({
             type="time"
             name="endTime"
             value={endTime}
-            disabled={frozen}
+            disabled={saving}
             onChange={(changed) => setEndTime(changed.target.value)}
             className={fieldClass}
           />
@@ -149,7 +137,7 @@ export function NewEventForm({
 
       {/* Below the row, because the date now sits where they used to. */}
       <div className="mt-1.5">
-        <TicketPricesEditor control={prices} disabled={frozen} />
+        <TicketPricesEditor control={prices} disabled={saving} />
       </div>
 
       {error !== "" && (
@@ -162,7 +150,7 @@ export function NewEventForm({
           the form is always on the screen. */}
       <button
         type="submit"
-        disabled={frozen}
+        disabled={saving}
         data-create-event
         className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
       >
