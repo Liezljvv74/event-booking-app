@@ -30,11 +30,19 @@ import Image from "next/image";
  * prefix — verified by building with a base path set and reading the src out
  * of `out/index.html`.
  *
- * The file stays in `public/`, so replacing the logo is still a matter of
- * dropping a new one over it. Its own width and height come with the import,
- * so nothing here has to restate them.
+ * The files stay in `public/`, so replacing the logo is still a matter of
+ * dropping a new one over it. Their own width and height come with the
+ * import, so nothing here has to restate them.
+ *
+ * Two of them: the same artwork with the black drawn white, for the dark
+ * theme. The wordmark and the four ruled lines are the only solid black in
+ * it, and on the near-black header they were a logo with half of it missing.
+ * A white plate behind the light one would have fixed that in a line, and
+ * did for a while; a logo drawn for the background it is on looks like it
+ * belongs there, and a white slab in the corner of a dark page does not.
  */
 import logo from "../public/event_diary_logo-horizontal.svg";
+import logoDark from "../public/event_diary_logo-horizontal-dark.svg";
 
 export function AppHeader() {
   return (
@@ -42,20 +50,27 @@ export function AppHeader() {
       {/* Left. The logo names the app — there is no wordmark beside it — so
           its alt text is the app's name rather than empty.
 
-          The white plate is for dark mode. The artwork draws "EventDiary"
-          and the four lines of the page it sits on in #000000, which on the
-          near-black header would be a logo with half of it missing; the plate
-          gives it the light ground it was drawn for. It costs nothing in
-          light mode, where the header is already white. */}
-      <div
-        data-header-logo
-        className="shrink-0 dark:rounded-md dark:bg-white dark:px-2 dark:py-1"
-      >
+          Both versions are in the markup and the theme picks one, the way
+          every other light and dark pair in this app is chosen: `hidden`
+          takes the other out of the layout and out of the accessibility
+          tree with it, so only one is ever announced, and the alt text sits
+          on whichever that is. Both are tiny — under 2 KB each — so the one
+          that is never shown costs less than a font would. */}
+      <div data-header-logo className="shrink-0">
         <Image
           src={logo}
           alt="Event Diary"
           priority
-          className="h-9 w-auto sm:h-10"
+          /* `block` on both, so neither picks up the sliver of space an
+             inline image leaves under its baseline and the bar does not
+             shift by a pixel between themes. */
+          className="block h-9 w-auto sm:h-10 dark:hidden"
+        />
+        <Image
+          src={logoDark}
+          alt="Event Diary"
+          priority
+          className="hidden h-9 w-auto sm:h-10 dark:block"
         />
       </div>
 

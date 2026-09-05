@@ -184,10 +184,13 @@ top of what is left, and the screen itself under that.
 
 The header is three sections. The left is the logo, 2.5rem tall and as wide
 as its own proportions make it — given a height and left to work the width
-out, so the shape stays exact whatever artwork is put there. In dark mode it
-sits on a white plate: the artwork draws the wordmark and four of its lines in
-solid black, which on the near-black header would be a logo with half of it
-missing. The middle takes whatever width the other two leave, and the right
+out, so the shape stays exact whatever artwork is put there. There are two of
+them, the same drawing with the black drawn white, and the theme picks one:
+the wordmark and the four ruled lines are the only solid black in the artwork,
+and on the near-black header they were a logo with half of it missing. A white
+plate behind the light version fixed that in a line and did for a while, but a
+logo drawn for the background it is on looks like it belongs there and a white
+slab in the corner of a dark page does not. The middle takes whatever width the other two leave, and the right
 sits hard against the edge; both are empty for now and each holds its place,
 so filling one later moves neither of the others. It is rendered by the root layout rather than by
 `AppChrome`, which means it is on the entry screen and on the loading and
@@ -463,7 +466,8 @@ The ones that were argued out and would otherwise be re-litigated:
   needs `images.unoptimized`, which switches the loader off, and
   `src="/event_diary_logo-horizontal.svg"` then goes out unprefixed: perfect
   in `next dev`, a 404 on the deployed site. Importing the file from
-  `public/` puts it through the build, which applies the prefix. Caught by
+  `public/` puts it through the build, which applies the prefix — for both
+  the light and the dark drawing. Caught by
   building with `NEXT_PUBLIC_BASE_PATH` set and reading the `src` back out of
   `out/index.html`, which is the only way to see it — every local check
   passes either way.
