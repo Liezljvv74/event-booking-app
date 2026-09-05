@@ -44,7 +44,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ### Tables
 - Simple numbered list, no visual floor plan yet.  
 - Default 10 seats per table; editable per table, per event
-- Add/remove tables freely
+- An event's tables are set up as it is scheduled, at the foot of the New
+  event form on Manage events. That is the only place a table is made.
+- The event's Tables tab is the list itself: table number and seats, and a
+  cross to remove one. Nothing else, and no add button.
 
 ### Bookings & attendees
 - Creating a booking = party name + guest count → generates that many

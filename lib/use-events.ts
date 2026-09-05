@@ -15,7 +15,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isBrowser } from "./db";
 import {
   addExpense,
-  addTable,
   addAttendee,
   cancelAttendee,
   cancelBooking,
@@ -42,6 +41,7 @@ import {
   type ExpenseInput,
   type ExpensePatch,
   type MoveTarget,
+  type TableInput,
   type TicketPriceInput,
 } from "./repository";
 import { type Event, type ExpenseTemplate } from "./types";
@@ -62,6 +62,11 @@ export interface NewEventInput {
   endTime: string | null;
   /** What the event is sold at. Empty when prices are not settled yet. */
   ticketPrices: readonly TicketPriceInput[];
+  /**
+   * The event's tables, numbered in the order given. An event's tables are
+   * settled when it is scheduled, so this is the only place they are set.
+   */
+  tables: readonly TableInput[];
 }
 
 export interface UseEventsResult {
@@ -90,7 +95,6 @@ export interface UseEventsResult {
   editEventDetails: (id: string, patch: EventDetailsPatch) => Promise<Event>;
   /** Delete an event and everything recorded against it. Cannot be undone. */
   removeEvent: (id: string) => Promise<void>;
-  addEventTable: (eventId: string) => Promise<Event>;
   setSeatCount: (
     eventId: string,
     tableId: string,
@@ -249,11 +253,6 @@ export function useEvents(): UseEventsResult {
     [refreshEvents],
   );
 
-  const addEventTable = useCallback(
-    (eventId: string) => applyChange(() => addTable(eventId)),
-    [applyChange],
-  );
-
   const setSeatCount = useCallback(
     (eventId: string, tableId: string, seatCount: number) =>
       applyChange(() => setTableSeatCount(eventId, tableId, seatCount)),
@@ -367,7 +366,6 @@ export function useEvents(): UseEventsResult {
     addEvent,
     editEventDetails,
     removeEvent,
-    addEventTable,
     setSeatCount,
     removeEventTable,
     addBooking,

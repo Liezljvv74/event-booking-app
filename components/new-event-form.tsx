@@ -8,6 +8,7 @@ import {
   TicketPricesEditor,
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
+import { TablesEditor, useTableRows } from "@/components/tables-editor";
 
 interface Props {
   /**
@@ -34,6 +35,9 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   const [endTime, setEndTime] = useState(lastTimes.endTime ?? "");
   // A new event has no prices to load, and opens with one blank line ready.
   const prices = useTicketPriceRows([], { startWithBlank: true });
+  // The event's tables, set up here because this is the only place they are
+  // set: the Tables tab lists them and lets one go, but makes none.
+  const tables = useTableRows();
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -54,6 +58,11 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       setError(priced.error);
       return;
     }
+    const seated = tables.toInputs();
+    if ("error" in seated) {
+      setError(seated.error);
+      return;
+    }
 
     setSaving(true);
     setError("");
@@ -64,6 +73,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
         startTime: startTime === "" ? null : startTime,
         endTime: endTime === "" ? null : endTime,
         ticketPrices: priced.prices,
+        tables: seated.tables,
       });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
@@ -132,6 +142,12 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       {/* Below the row, because the date now sits where they used to. */}
       <div className="mt-1.5">
         <TicketPricesEditor control={prices} disabled={saving} />
+      </div>
+
+      {/* Last thing before the button: the tables are the event's furniture
+          rather than its identity, and they are the longest list here. */}
+      <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+        <TablesEditor control={tables} disabled={saving} />
       </div>
 
       {error !== "" && (

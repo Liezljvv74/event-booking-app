@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * One line of the Tables tab: the table's number, its seats, and a cross to
+ * be rid of it. A row of a real table rather than a card, so the numbers sit
+ * in a column and can be read down.
+ */
+
 import { useState } from "react";
 import type { TableOccupancy } from "@/lib/repository";
 import type { Table } from "@/lib/types";
@@ -11,6 +17,8 @@ interface Props {
   onSetSeats: (seatCount: number) => Promise<unknown>;
   onRemove: () => Promise<unknown>;
 }
+
+const cellClass = "border-b border-zinc-200 px-2 py-1 dark:border-zinc-800";
 
 export function TableRow({ table, occupancy, onSetSeats, onRemove }: Props) {
   const [seats, setSeats] = useState(String(table.seatCount));
@@ -28,7 +36,7 @@ export function TableRow({ table, occupancy, onSetSeats, onRemove }: Props) {
     setSeats(String(table.seatCount));
   }
 
-  const { taken: occupied, free, parties } = occupancy;
+  const occupied = occupancy.taken;
 
   async function commit() {
     const parsed = Number(seats);
@@ -66,20 +74,30 @@ export function TableRow({ table, occupancy, onSetSeats, onRemove }: Props) {
     }
   }
 
-  return (
-    <li
-      data-table={table.tableNumber}
-      className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
-    >
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-base font-semibold text-black dark:text-zinc-50">
-          Table {table.tableNumber}
-        </span>
+  /**
+   * An empty table goes on the first press. One with guests at it asks
+   * first, because removing it unseats them and there is no undo — but the
+   * asking is a second press of the same cross rather than a pair of
+   * buttons, so the column stays one cross wide.
+   */
+  function pressRemove() {
+    if (occupied === 0 || confirming) {
+      void remove();
+      return;
+    }
+    setConfirming(true);
+  }
 
-        <label className="flex items-center gap-2">
-          <span className="text-sm text-zinc-600 dark:text-zinc-400">
-            Seats
-          </span>
+  return (
+    <>
+      <tr data-table={table.tableNumber}>
+        <td
+          className={`${cellClass} font-medium text-black dark:text-zinc-50`}
+        >
+          {table.tableNumber}
+        </td>
+
+        <td className={cellClass}>
           <input
             type="number"
             min={1}
@@ -96,90 +114,54 @@ export function TableRow({ table, occupancy, onSetSeats, onRemove }: Props) {
                 void commit();
               }
             }}
-            className="h-11 w-20 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+            className="h-9 w-16 rounded-md border border-zinc-300 bg-white px-1.5 text-sm text-black disabled:opacity-50 sm:h-8 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
           />
-        </label>
+        </td>
 
-        <span
-          data-table-free={table.tableNumber}
-          className={`text-sm ${
-            free === 0
-              ? "text-zinc-500 dark:text-zinc-500"
-              : "font-medium text-emerald-700 dark:text-emerald-500"
-          }`}
-        >
-          {free === 0 ? "full" : `${free} free`}
-          {occupied > 0 && (
-            <span className="font-normal text-zinc-600 dark:text-zinc-400">
-              {` · ${occupied} seated`}
-            </span>
-          )}
-        </span>
+        <td className={`${cellClass} text-right`}>
+          <button
+            type="button"
+            onClick={pressRemove}
+            onBlur={() => setConfirming(false)}
+            disabled={busy}
+            aria-label={
+              confirming
+                ? `Confirm removing table ${table.tableNumber}, unseating ${occupied} guest${occupied === 1 ? "" : "s"}`
+                : `Remove table ${table.tableNumber}`
+            }
+            title={confirming ? "Press again to remove" : "Remove this table"}
+            data-remove={table.tableNumber}
+            className={`h-9 w-9 rounded-md border text-base leading-none disabled:opacity-50 sm:h-8 sm:w-8 ${
+              confirming
+                ? "border-red-500 bg-red-600 text-white"
+                : "border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </td>
+      </tr>
 
-        <div className="ml-auto flex items-center gap-2">
-          {confirming ? (
-            <>
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                {occupied > 0
-                  ? `Unseat ${occupied} guest${occupied === 1 ? "" : "s"}?`
-                  : "Remove?"}
+      {(confirming || error !== "") && (
+        <tr>
+          <td colSpan={3} className={`${cellClass} pt-0`}>
+            {confirming && error === "" ? (
+              <span className="text-xs text-red-600 dark:text-red-400">
+                {`Table ${table.tableNumber} seats ${occupied} guest${
+                  occupied === 1 ? "" : "s"
+                } — press × again to unseat ${occupied === 1 ? "them" : "them all"} and remove it.`}
               </span>
-              <button
-                type="button"
-                onClick={remove}
-                disabled={busy}
-                data-confirm-remove={table.tableNumber}
-                className="h-11 rounded-md bg-red-600 px-3 text-sm font-medium text-white disabled:opacity-50"
+            ) : (
+              <span
+                role="alert"
+                className="text-xs text-red-600 dark:text-red-400"
               >
-                Remove
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirming(false)}
-                disabled={busy}
-                className="h-11 rounded-md border border-zinc-300 px-3 text-sm font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
-              >
-                Keep
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              disabled={busy}
-              data-remove={table.tableNumber}
-              className="h-11 rounded-md border border-zinc-300 px-3 text-sm font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
-            >
-              Remove
-            </button>
-          )}
-        </div>
-      </div>
-
-      {parties.length > 0 && (
-        <ul
-          data-table-parties={table.tableNumber}
-          className="mt-2 flex flex-wrap gap-1.5"
-        >
-          {parties.map((party) => (
-            <li
-              key={party.bookingId}
-              className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
-            >
-              {party.partyName}
-              <span className="text-zinc-500 dark:text-zinc-500">
-                {` ${party.guestCount}`}
+                {error}
               </span>
-            </li>
-          ))}
-        </ul>
+            )}
+          </td>
+        </tr>
       )}
-
-      {error !== "" && (
-        <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
-      )}
-    </li>
+    </>
   );
 }

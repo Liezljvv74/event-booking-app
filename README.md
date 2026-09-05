@@ -133,6 +133,7 @@ app/
 components/                      the pieces those screens are built from
   app-chrome.tsx                 event tabs + section nav, shared by both layouts
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
+  tables-editor.tsx              the tables a new event is scheduled with
 lib/
   db.ts                          IndexedDB plumbing: stores, transactions
   types.ts                       the domain: Event, Table, Booking, Attendee…
@@ -192,7 +193,16 @@ underneath in their own section, collapsed the same way, and appear nowhere
 else in the app, so this is the only place one can be looked at or removed
 early. Deleting names what goes with it.
 
-On the right, the New event form, permanently. It used to be behind a
+On the right, the New event form, permanently. Its last block, ruled off
+below the ticket prices, is the event's tables: a line each, numbered down the
+list, with the seat count and a cross. The form opens with one table of ten,
+and a new line copies the seat count of the one above it, because a room is
+usually laid out in tables of one size. The numbers are the positions in the
+list rather than fields — delete the second of four and the ones below move
+up, which is what the form has been showing all along. This is the only place
+a table is made; an event's tables are settled when it is scheduled.
+
+It used to be behind a
 `+ New event` button that swapped itself for the form; with the form given a
 column of its own the button had nothing left to open, so it is gone, and so
 is the Cancel beside Create event, which had nothing left to close. Creating
@@ -225,10 +235,16 @@ and who is sitting there. Guests with no name yet are counted rather than
 listed. Unseated guests are called out below, because a guest holding no seat
 appears in no table's tally.
 
-**Tables** — add and remove tables, and set seats per table. Tables are
-shared: several parties sit at one table until its seats run out, so each row
-shows what is free and which parties are on it. Cutting a table's seats below
-the guests already seated there is refused.
+**Tables** — the list, as a table: Table Number, Seats, and a cross. Nothing
+else. What is free at each table and which parties are on it were columns here
+once; they cost three lines a table and both are read better on the Dashboard,
+which lists every table with its seats, its free seats and its guests. Seats
+stay editable in place — cutting them below the guests already seated there is
+refused — and the fields are the small ones now, so a room of twenty tables is
+one screen rather than four. There is no add button: tables are made on Manage
+events, as the event is scheduled. The cross removes a table outright when
+nobody is at it; a table with guests seated asks first, by turning red and
+saying how many would be unseated, and takes a second press.
 
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
@@ -403,7 +419,10 @@ The ones that were argued out and would otherwise be re-litigated:
   dashboard used to edit the date and times inline and the entry screen used
   to carry a second New event form; both are gone, so there is one form to
   keep correct rather than three, and the dashboard is what it says it is —
-  figures, read.
+  figures, read. Tables now follow the same rule: they are made as the event
+  is scheduled, so `addTable()` went with the `+ Add table` button — the one
+  cost being that an event already scheduled cannot gain a table, only lose
+  one.
 - **Nothing to open means Manage events.** The entry screen is a signpost: to
   the first active event, or, when there is none, to the one screen that can
   create one.
@@ -422,7 +441,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Any number of active events, tabs | Done — the spec's cap of 4 was removed on request, and the spec amended to match |
 | Every event managed in one place | Done — **not in the spec**, added on request |
 | Expenses copied forward to a new event | Done |
-| Tables: numbered list, seats per table | Done |
+| Tables: numbered list, seats per table | Done — tables are set up when the event is scheduled and the Tables tab lists and removes them, both on request, and the spec amended to match |
 | Bookings, attendees, per-guest editing | Done |
 | Cancel a whole party, or one guest | Done |
 | Expenses: line items, reuse, permanent delete | Done, minus one thing below |

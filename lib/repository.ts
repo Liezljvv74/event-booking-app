@@ -9,7 +9,6 @@
 
 import {
   AUTO_CLOSE_AFTER_HOURS,
-  DEFAULT_SEAT_COUNT,
   DEFAULT_SETTINGS,
   SEAT_OCCUPYING_STATUSES,
   type Attendee,
@@ -131,6 +130,32 @@ function normaliseTicketPrices(
 }
 
 /**
+ * A table as the New event form supplies it: a seat count and nothing else.
+ *
+ * Table numbers are not given here. They run 1, 2, 3 down the form in the
+ * order the lines were entered, so the form would only be repeating what its
+ * own ordering already says, and a line deleted halfway through would leave
+ * it to renumber the rest.
+ */
+export interface TableInput {
+  seatCount: number;
+}
+
+/** Number the supplied tables from 1, rejecting what cannot be a table. */
+function normaliseTables(inputs: readonly TableInput[]): Table[] {
+  return inputs.map((input, index) => {
+    if (!Number.isInteger(input.seatCount) || input.seatCount < 1) {
+      throw new Error("A table needs at least one seat.");
+    }
+    return {
+      id: newId(),
+      tableNumber: index + 1,
+      seatCount: input.seatCount,
+    };
+  });
+}
+
+/**
  * Create an event, seeding its expenses from the most recent existing event
  * so the manager starts from the previous event's costs rather than a blank
  * list.
@@ -144,6 +169,8 @@ export function createEvent(input: {
   startTime?: string | null;
   endTime?: string | null;
   ticketPrices?: readonly TicketPriceInput[];
+  /** The event's tables, set up as it is scheduled. */
+  tables?: readonly TableInput[];
   seedExpensesFromEventId?: string;
 }): Promise<Event> {
   return runTransaction(STORE_EVENTS, "readwrite", async (transaction) => {
@@ -165,7 +192,7 @@ export function createEvent(input: {
       endTime: input.endTime ?? null,
       status: "active",
       ticketPrices: normaliseTicketPrices(input.ticketPrices ?? []),
-      tables: [],
+      tables: normaliseTables(input.tables ?? []),
       bookings: [],
       expenses: copyExpenses(source?.expenses ?? []),
       createdAt: Date.now(),
@@ -336,28 +363,6 @@ function countSeatedAt(
 /** How many seats at this table are held by attendees who have not cancelled. */
 export function occupiedSeats(event: Event, tableNumber: number): number {
   return countSeatedAt(event, tableNumber);
-}
-
-/**
- * Add a table numbered one past the highest in use.
- *
- * Numbering from the maximum rather than the count means removing table 2 of
- * three leaves 1 and 3, and the next table is 4. A gap is better than reusing
- * number 2 while attendees are still recorded as sitting at it.
- */
-export function addTable(eventId: string): Promise<Event> {
-  return mutateEvent(eventId, (event) => {
-    const highest = event.tables.reduce(
-      (max, table) => Math.max(max, table.tableNumber),
-      0,
-    );
-    const table: Table = {
-      id: newId(),
-      tableNumber: highest + 1,
-      seatCount: DEFAULT_SEAT_COUNT,
-    };
-    return { ...event, tables: [...event.tables, table] };
-  });
 }
 
 export class SeatsBelowOccupancyError extends Error {
