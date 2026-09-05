@@ -39,6 +39,12 @@ export default function ExpensesScreen() {
   } = useEventContext();
   const eventId = useEventId();
   const [confirmingClearAll, setConfirmingClearAll] = useState(false);
+  /**
+   * Whether the blank line is on screen. It used to be there always, an empty
+   * row on every visit whether or not anything was being added; now Add puts
+   * it there and saving or cancelling takes it away.
+   */
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -81,9 +87,9 @@ export default function ExpensesScreen() {
             : ""}
         </p>
 
-        {event.expenses.length > 0 && (
-          <div className="ml-auto flex items-center gap-2">
-            {confirmingClearAll ? (
+        <div className="ml-auto flex items-center gap-2">
+          {event.expenses.length > 0 &&
+            (confirmingClearAll ? (
               <>
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">
                   Clear all {event.expenses.length} lines?
@@ -115,9 +121,22 @@ export default function ExpensesScreen() {
               >
                 Clear all lines
               </button>
-            )}
-          </div>
-        )}
+            ))}
+
+          {/* Furthest right, where the thing you came to do lives. Disabled
+              rather than hidden while a blank line is already open: two of
+              them would be two half-written expenses and no way to tell which
+              Save belonged to which. */}
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            disabled={adding}
+            data-add-line
+            className="h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
+          >
+            Add
+          </button>
+        </div>
       </div>
 
       <p className="mt-1.5 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
@@ -137,17 +156,22 @@ export default function ExpensesScreen() {
           rather than wrapping each line onto several rows. */}
       <div className="mt-3 overflow-x-auto">
         <div className={EXPENSE_MIN_WIDTH}>
-          <div
-            className={`${EXPENSE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
-            aria-hidden="true"
-          >
-            <span>Description</span>
-            <span>Provider</span>
-            <span className="text-right">Amount</span>
-            <span className="text-center">Paid</span>
-            <span>Notes</span>
-            <span />
-          </div>
+          {/* Only where there is something under them to label. With no
+              lines and nothing being added they were six words above an
+              empty space. */}
+          {(event.expenses.length > 0 || adding) && (
+            <div
+              className={`${EXPENSE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
+              aria-hidden="true"
+            >
+              <span>Description</span>
+              <span>Provider</span>
+              <span className="text-right">Amount</span>
+              <span className="text-center">Paid</span>
+              <span>Notes</span>
+              <span />
+            </div>
+          )}
 
           {event.expenses.length > 0 && (
             <ul className="flex flex-col gap-0.5">
@@ -192,12 +216,16 @@ export default function ExpensesScreen() {
             </div>
           )}
 
-          <div className="mt-3">
-            <NewExpenseRow
-              templates={available}
-              onAdd={(input) => addExpenseLine(event.id, input)}
-            />
-          </div>
+          {adding && (
+            <div className="mt-3">
+              <NewExpenseRow
+                templates={available}
+                onAdd={(input) => addExpenseLine(event.id, input)}
+                onDone={() => setAdding(false)}
+                onCancel={() => setAdding(false)}
+              />
+            </div>
+          )}
         </div>
       </div>
 

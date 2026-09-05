@@ -358,6 +358,17 @@ edited in place. Only description and amount are required. Clearing a line
 saves it to a library that every Description dropdown then offers, minus
 whatever is already in the list.
 
+A blank line is written where it will end up, in the table's own columns,
+rather than in a form above or below it — but only while one is being
+written. The row used to sit at the foot of the list permanently, an empty
+line on every visit whether or not anything was being added; **Add**, at the
+top right where the thing you came to do belongs, brings it now, and saving
+or discarding it with the cross takes it away again. Add is disabled while a
+blank line is open, because two of them would be two half-written expenses
+with no way to tell which Save belonged to which. The column headings come
+and go with the table, having been six words above an empty space on an event
+with no expenses yet.
+
 **Export/Import your data** (`/data`) — two columns, the same shape Manage
 events has: what goes out on the left, what comes in on the right.
 

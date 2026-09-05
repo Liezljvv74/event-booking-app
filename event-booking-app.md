@@ -74,7 +74,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
   without touching the rest
 
 ### Expenses
-- Add line items (description + amount) per event
+- Add line items (description + amount) per event. The blank line to type
+  into appears when Add, at the top right of the screen, is pressed, and goes
+  again once the line is saved or discarded.
 - Auto-copied forward whenever a new event is created
 - When a line item is removed, keep it in memory to be selected from a dropdown for a next event
 - Option to permanently delete line items that will not be used again in the future
