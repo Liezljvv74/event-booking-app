@@ -680,7 +680,7 @@ function slug(text: string): string {
 export type ExportFormat =
   | "json"
   | "csv"
-  | "door-xml"
+  | "door-excel"
   | "door-csv"
   | "door-html";
 
@@ -709,15 +709,28 @@ export function exportFiles(
   // A door list is one event's worth of paper, so one file per event rather
   // than one file with an event column nobody at the door needs.
   if (
-    format === "door-xml" ||
+    format === "door-excel" ||
     format === "door-csv" ||
     format === "door-html"
   ) {
-    // The SpreadsheetML type is what tells Windows to open the workbook with
-    // Excel; the other two are what they look like.
     const written = {
-      "door-xml": {
-        extension: "xml",
+      /**
+       * SpreadsheetML content under an `.xls` extension, which looks like a
+       * contradiction and is the right way round.
+       *
+       * `.xml` is what Microsoft's own "XML Spreadsheet 2003" writes, and it
+       * was what this wrote first. On Windows `.xml` belongs to the browser:
+       * double-clicking the workbook opened a page full of angle brackets
+       * rather than Excel, which is not what anybody asking for Excel wants.
+       * `.xls` is registered to Excel, so it opens where it should.
+       *
+       * The cost is one dialog. Excel notices that the contents are not the
+       * old binary `.xls` they claim to be and asks whether to open it
+       * anyway; saying yes opens the workbook with everything intact. One
+       * click, against a file that otherwise never reaches Excel at all.
+       */
+      "door-excel": {
+        extension: "xls",
         type: "application/vnd.ms-excel",
         write: doorListXml,
       },

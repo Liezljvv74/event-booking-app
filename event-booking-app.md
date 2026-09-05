@@ -118,9 +118,9 @@ Show all six of the following, always in this order:
     and paid. Paid reads "yes" where the money is in and is left blank where
     the guest pays at the venue, so it can be written into as they arrive; a
     guest who is not paying at all reads "no charge". Cancelled guests are
-    left off. Written three ways, all of them the same rows: Excel's own XML,
-    a real workbook that opens on a double-click and can be ticked and typed
-    into; a self-contained web page with real tick boxes and real fields,
+    left off. Written three ways, all of them the same rows: an Excel
+    workbook, `.xls`, that opens on a double-click and can be ticked and
+    typed into; a self-contained web page with real tick boxes and fields,
     which remembers what is ticked and typed in the browser it is opened in
     and prints as a clean list; or plain CSV.
   - Excel `.xlsx` was in the earlier wording and is not what is written. A

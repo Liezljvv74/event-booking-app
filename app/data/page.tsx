@@ -10,7 +10,7 @@
  * Export writes one of three things. JSON is the backup and the only thing
  * import reads; CSV is three spreadsheets of everything, to open and look at;
  * the tables-and-guests list is what the door works from on the night, one
- * file per event, as Excel's own XML, as a web page, or as plain CSV.
+ * file per event, as an Excel workbook, as a web page, or as plain CSV.
  *
  * Where they are written is remembered between exports, and asked about
  * before every one, so a backup never quietly lands somewhere it was not
@@ -40,10 +40,10 @@ type Scope = "current" | "all" | "choose";
 /** What the three radios offer. The door list then asks how it is written. */
 type Kind = "json" | "csv" | "door";
 /** How the door list is written. Each is the same rows in a different file. */
-type DoorAs = "xml" | "csv" | "html";
+type DoorAs = "excel" | "csv" | "html";
 
 const DOOR_FORMATS: readonly { as: DoorAs; label: string; note: string }[] = [
-  { as: "xml", label: "Excel (.xml)", note: "tick and type in Excel" },
+  { as: "excel", label: "Excel (.xls)", note: "tick and type in Excel" },
   { as: "html", label: "Web page (.html)", note: "tick and type in a browser" },
   { as: "csv", label: "CSV", note: "plain, for anything else" },
 ];
@@ -112,7 +112,7 @@ export default function DataScreen() {
   const [scope, setScope] = useState<Scope>("current");
   const [kind, setKind] = useState<Kind>("json");
   /** Only asked about once the door list is the thing being exported. */
-  const [doorAs, setDoorAs] = useState<DoorAs>("xml");
+  const [doorAs, setDoorAs] = useState<DoorAs>("excel");
 
   const format: ExportFormat = kind === "door" ? `door-${doorAs}` : kind;
   /** Which events are ticked while the scope is "choose". */

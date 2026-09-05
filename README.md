@@ -306,8 +306,9 @@ Cancelled guests are off it, unnamed guests are found under their party's
 name, and anyone not seated yet is at the end rather than scattered through
 the tables.
 
-It writes three ways, the same rows each time. As Excel's own XML, a real
-workbook that opens on a double-click. As a **web page**, self-contained —
+It writes three ways, the same rows each time. As an **Excel workbook** —
+SpreadsheetML content under an `.xls` name, which looks like a contradiction
+and is the right way round. As a **web page**, self-contained —
 the styling and the script are inside the one file, because it is opened off
 the disk where nothing fetched from elsewhere would arrive — with real tick
 boxes and real fields, a running *n of m arrived* count, and a print
@@ -558,6 +559,18 @@ The ones that were argued out and would otherwise be re-litigated:
   top. The web-page version of the same list is one file for the same reason
   in a different key: opened off the disk, a stylesheet or a script it asked
   for from anywhere else would simply never arrive.
+- **The workbook is named `.xls` even though it holds XML, and that is the
+  right way round.** `.xml` is what Microsoft's own *XML Spreadsheet 2003*
+  writes, so `.xml` is what this wrote first — and on Windows `.xml` is
+  registered to the browser. Double-clicking the workbook opened a page full
+  of angle brackets instead of Excel, which is the opposite of what choosing
+  "Excel" is asking for. `.xls` is registered to Excel and opens there. The
+  cost is one dialog: Excel notices the contents are not the old binary
+  format the name claims and asks whether to open anyway, and saying yes
+  opens the workbook with everything intact. One click, against a file that
+  otherwise never reaches Excel at all. A true `.xlsx` would avoid the dialog
+  and needs a zip writer — about two hundred lines of one, or the library the
+  spec forbids.
 - **The logo is imported, not linked, because of the base path.** A project
   page on GitHub Pages is served out of a subdirectory, so every asset URL
   needs that prefix. `next/image` adds it in its loader — but a static export
@@ -596,7 +609,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Retention window, then silent delete | Logic done; not changeable without Settings |
 | Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
 | **Settings screen** | **Not built** — the retention period is still fixed at 14 days |
-| Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as Excel's own XML, a web page, or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
+| Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as an Excel workbook, a web page, or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
