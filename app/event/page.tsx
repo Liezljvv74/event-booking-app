@@ -5,11 +5,7 @@ import { useEventContext } from "@/components/event-provider";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import { formatAmount, sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
-import {
-  SEAT_OCCUPYING_STATUSES,
-  type Event,
-  type TicketPrice,
-} from "@/lib/types";
+import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import {
   MANAGE_EVENTS_PATH,
   eventHref,
@@ -159,32 +155,6 @@ function Schedule({ event }: { event: Event }) {
   );
 }
 
-/**
- * What the event is sold at, read off rather than edited: the prices are set
- * when the event is created and changed on Manage events, so this is here to
- * be answered from when someone asks what a ticket buys.
- */
-function TicketPrices({ prices }: { prices: readonly TicketPrice[] }) {
-  if (prices.length === 0) return null;
-
-  return (
-    <p
-      data-ticket-price-summary
-      className="text-xs text-zinc-600 dark:text-zinc-400"
-    >
-      {prices.map((price, index) => (
-        <span key={price.id}>
-          {index > 0 && <span aria-hidden="true"> · </span>}
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
-            {formatAmount(price.amountCents)}
-          </span>
-          {price.includes !== "" && ` ${price.includes}`}
-        </span>
-      ))}
-    </p>
-  );
-}
-
 /** Who is at a table: the names, with unnamed guests counted rather than listed. */
 function Seated({ table }: { table: TableOccupancy }) {
   if (table.taken === 0) {
@@ -224,15 +194,19 @@ export default function EventDashboard() {
 
   return (
     <section>
-      {/* Name, prices, date and times on one line, the schedule set in the
-          heading's own size and weight. Wraps rather than shrinking. Nothing
-          here is editable: an event's own details are edited on Manage
-          events, which is a section along the nav above. */}
+      {/* Name, then date and times, the schedule set in the heading's own
+          size and weight. Wraps rather than shrinking.
+
+          The ticket prices used to sit between the two and were asked off:
+          they are what the event is sold at rather than anything about the
+          night, they are on every guest's line on Bookings where they are
+          actually used, and Manage events is where they are set. Nothing
+          here is editable either — an event's own details are edited on
+          Manage events, which is a section along the nav above. */}
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
           {event.name}
         </h1>
-        <TicketPrices prices={event.ticketPrices} />
         <Schedule event={event} />
       </div>
 
