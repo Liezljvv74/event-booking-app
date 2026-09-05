@@ -208,7 +208,6 @@ function mostRecentEvent(events: readonly Event[]): Event | null {
   );
 }
 
-/** Fresh ids, so editing the new event's expenses never touches the source. */
 /** Clock times an event runs between, either of which may be unset. */
 export interface EventTimes {
   startTime: string | null;
@@ -235,6 +234,13 @@ export async function lastSavedTimes(): Promise<EventTimes> {
   };
 }
 
+/**
+ * The previous event's expense lines, ready to be the next event's starting
+ * point: the spec's rule that a new event opens with last event's costs
+ * rather than a blank list, still editable and still removable.
+ *
+ * Fresh ids, so editing the new event's expenses never touches the source.
+ */
 function copyExpenses(expenses: readonly Expense[]): Expense[] {
   return expenses.map((expense) => ({
     id: newId(),
