@@ -303,14 +303,15 @@ The ones that were argued out and would otherwise be re-litigated:
   one library entry the moment either was cleared.
 - **A new event starts from the last event saved** — its times and its expense
   lines both, by the same "most recently saved" rule.
-- **There is no ceiling on how many events may be scheduled.** The spec caps
-  active events at four; that cap was removed on request. It was enforced in
-  one place, so removing it took the constant, the check in `createEvent`, the
-  `TooManyActiveEventsError` it threw, the `atEventLimit` flag the hook
-  published and the greyed-out form and amber note on the screen — the count
-  beside **Scheduled Events** now just counts. The tab strip already scrolled
-  and its tabs already refused to shrink, so it holds twelve events as
-  readably as it held four.
+- **There is no ceiling on how many events may be scheduled.** The spec used
+  to cap active events at four; the cap was removed on request and the spec
+  amended to match, so `event-booking-app.md` now reads *any number of active
+  events*. It was enforced in one place, so removing it took the constant, the
+  check in `createEvent`, the `TooManyActiveEventsError` it threw, the
+  `atEventLimit` flag the hook published, and the greyed-out form and amber
+  note on the screen — the count beside **Scheduled Events** now just counts.
+  The tab strip already scrolled and its tabs already refused to shrink, so it
+  holds twelve events as readably as it held four.
 - **An event in the list is a line, not a form.** Every event used to have
   every one of its fields on show at all times, whether or not any of them
   were being changed, and four events filled the screen. The list is read far
@@ -351,7 +352,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Spec area | State |
 |---|---|
 | Local, no backend, IndexedDB | Done |
-| Up to 4 active events, tabs | Tabs done; **the cap of 4 was removed on request** |
+| Any number of active events, tabs | Done — the spec's cap of 4 was removed on request, and the spec amended to match |
 | Every event managed in one place | Done — **not in the spec**, added on request |
 | Expenses copied forward to a new event | Done |
 | Tables: numbered list, seats per table | Done |

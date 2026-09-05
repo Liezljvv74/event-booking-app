@@ -34,7 +34,7 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ## Core features
 
 ### Events
-- Up to 4 active events at a time, switchable via tabs
+- Any number of active events at a time, switchable via tabs
 - Each event has its own tables, bookings and expenses
 - "New Event" duplicates the previous event's expense list as a starting
   point (still editable/removable)
