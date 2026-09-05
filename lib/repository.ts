@@ -357,8 +357,8 @@ function asIdSet(ignore?: Ignored): ReadonlySet<string> {
 /**
  * Guests holding a seat at this table, optionally ignoring some of them.
  *
- * The single place that decides what "occupied" means, so the seat count on
- * the Tables screen, the options offered in a guest's table dropdown and the
+ * The single place that decides what "occupied" means, so the seating list on
+ * the dashboard, the options offered in a guest's table dropdown and the
  * check that refuses an over-full table can never disagree.
  */
 function countSeatedAt(

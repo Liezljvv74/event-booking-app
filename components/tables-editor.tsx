@@ -19,6 +19,7 @@
 import { useState } from "react";
 import type { TableInput } from "@/lib/repository";
 import { DEFAULT_SEAT_COUNT, type Table } from "@/lib/types";
+import { DENSE_FIELD_CLASS } from "@/components/form-styles";
 
 /** One table as typed, before it is a seat count. */
 export interface TableRowDraft {
@@ -34,11 +35,10 @@ export interface NumberedTableRow extends TableRowDraft {
   tableNumber: number;
 }
 
-const fieldClass =
-  "h-11 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 sm:h-9 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+const fieldClass = DENSE_FIELD_CLASS;
 
 /** What the rows hold, in a form two of them can be compared by. */
-export function rowsSignature(rows: readonly TableRowDraft[]): string {
+function rowsSignature(rows: readonly TableRowDraft[]): string {
   return JSON.stringify(rows.map((row) => [row.id, row.seats.trim()]));
 }
 

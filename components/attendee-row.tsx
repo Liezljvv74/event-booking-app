@@ -5,6 +5,7 @@ import { formatCents, parseCents } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { describeTicketPrice } from "@/lib/ticket-prices";
 import type { Attendee, AttendeeStatus, Event } from "@/lib/types";
+import { describeError } from "@/lib/errors";
 
 const STATUS_LABELS: Record<AttendeeStatus, string> = {
   paid: "Paid",
@@ -111,7 +112,7 @@ export function AttendeeRow({
     try {
       await onPatch(patch);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
       revert?.();
     } finally {
       setBusy(false);

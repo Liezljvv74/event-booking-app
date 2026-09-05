@@ -12,7 +12,7 @@
  * events, so reaching it is no longer leaving the app.
  */
 
-import { useEventContext } from "@/components/event-provider";
+import { EventProvider, useEventContext } from "@/components/event-provider";
 import { EventTabs } from "@/components/event-tabs";
 import { SectionNav } from "@/components/section-nav";
 
@@ -24,8 +24,15 @@ export function ChromeLoading() {
   );
 }
 
-/** IndexedDB is the whole store, so failing to open it fails everything. */
-function StorageFailure({ error }: { error: string }) {
+/**
+ * IndexedDB is the whole store, so failing to open it fails everything.
+ *
+ * Exported because the entry screen shows it too. That screen loads the
+ * events itself rather than through the provider, so it reaches this failure
+ * without ever rendering the chrome — and for a while it carried its own
+ * word-for-word copy of this, which is two places to keep one sentence right.
+ */
+export function StorageFailure({ error }: { error: string }) {
   return (
     <div className="p-6">
       <h1 className="text-lg font-semibold text-red-600 dark:text-red-400">
@@ -41,11 +48,27 @@ function StorageFailure({ error }: { error: string }) {
 
 interface Props {
   /**
-   * The event whose tab is current, or null on Manage events, which is about
-   * all of them and so belongs to no tab.
+   * The event whose tab is current, or null on the screens that are about
+   * all of them and so belong to no tab.
    */
   selectedId: string | null;
   children: React.ReactNode;
+}
+
+/**
+ * The whole wrapper for a screen that belongs to no event — Manage events and
+ * Export/Import — which is the provider and this chrome with no tab current.
+ *
+ * Next.js wants a `layout.tsx` per route segment, so those two screens cannot
+ * share one file; they can share what is in it, and did not, which left the
+ * same four lines written twice with nothing to keep them in step.
+ */
+export function AppScreen({ children }: { children: React.ReactNode }) {
+  return (
+    <EventProvider>
+      <AppChrome selectedId={null}>{children}</AppChrome>
+    </EventProvider>
+  );
 }
 
 export function AppChrome({ selectedId, children }: Props) {

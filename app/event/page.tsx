@@ -45,7 +45,7 @@ function summarise(event: Event, seating: readonly TableOccupancy[]) {
     guestsCancelled: attendees.length - confirmed.length,
     seatsTotal: event.tables.reduce((total, table) => total + table.seatCount, 0),
     // Summed from the tables themselves, so this is the same "free seat" the
-    // Tables screen and the seating dropdowns count.
+    // seating dropdowns and the bookings screen count.
     seatsFree: seating.reduce((total, table) => total + table.free, 0),
     unseated: confirmed.filter(
       (attendee) => attendee.assignedTableNumber === null,

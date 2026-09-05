@@ -12,6 +12,7 @@ import { formatAmount, sumCents } from "@/lib/money";
 import { unusedExpenseTemplates } from "@/lib/repository";
 import type { Expense } from "@/lib/types";
 import { useEventId } from "@/lib/event-routes";
+import { describeError } from "@/lib/errors";
 
 /** The three figures the paid tick makes worth having on this screen. */
 function totals(expenses: readonly Expense[]) {
@@ -56,7 +57,7 @@ export default function ExpensesScreen() {
       await clearAllExpenses(event!.id);
       setConfirmingClearAll(false);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }

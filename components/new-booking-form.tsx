@@ -8,6 +8,7 @@ import {
 } from "@/lib/ticket-prices";
 import type { NewBookingInput } from "@/lib/use-events";
 import type { TicketPrice } from "@/lib/types";
+import { describeError } from "@/lib/errors";
 
 interface Props {
   /**
@@ -85,7 +86,7 @@ export function NewBookingForm({
         ticketPriceCents: cents,
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
       setSaving(false);
     }
   }

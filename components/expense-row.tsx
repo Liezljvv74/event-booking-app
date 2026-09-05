@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { formatAmount, formatCents, parseCents } from "@/lib/money";
 import type { ExpensePatch } from "@/lib/repository";
 import type { Expense, ExpenseTemplate } from "@/lib/types";
+import { describeError } from "@/lib/errors";
 
 /**
  * One grid template shared by the header, every line and the add row, so the
@@ -61,7 +62,7 @@ export function ExpenseRow({ expense, templates, onPatch, onClear }: Props) {
     try {
       await onPatch(patch);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
       revert();
     } finally {
       setBusy(false);

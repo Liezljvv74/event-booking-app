@@ -35,6 +35,7 @@ import {
 import { formatEventDate } from "@/lib/event-time";
 import type { ImportMode } from "@/lib/repository";
 import type { Event } from "@/lib/types";
+import { describeError } from "@/lib/errors";
 
 type Scope = "current" | "all" | "choose";
 /** What the three radios offer. The door list then asks how it is written. */
@@ -177,7 +178,7 @@ export default function DataScreen() {
         );
       }
     } catch (caught) {
-      setExportError(caught instanceof Error ? caught.message : String(caught));
+      setExportError(describeError(caught));
     } finally {
       setExporting(false);
       setAskingFolder(false);
@@ -215,7 +216,7 @@ export default function DataScreen() {
       await saveExportFolder(picked);
       await write(picked);
     } catch (caught) {
-      setExportError(caught instanceof Error ? caught.message : String(caught));
+      setExportError(describeError(caught));
       setAskingFolder(false);
     }
   }
@@ -307,7 +308,7 @@ export default function DataScreen() {
       setImported(`${said.join(" · ")}.`);
       forgetFile();
     } catch (caught) {
-      setImportError(caught instanceof Error ? caught.message : String(caught));
+      setImportError(describeError(caught));
     } finally {
       setImporting(false);
     }

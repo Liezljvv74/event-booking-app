@@ -1,24 +1,18 @@
 "use client";
 
 /**
- * Manage events inside the same chrome as every other screen: the event tabs
- * above it, and the section nav with Manage events marked as where you are.
+ * Manage events inside the same chrome as every other screen: the events down
+ * the left, and the section nav with Manage events marked as where you are.
  *
  * It reads the events through the same provider as the event screens, so the
- * screen that creates and deletes them shares one loaded copy with the tabs
- * that list them.
+ * screen that creates and deletes them shares one loaded copy with the rail
+ * that lists them.
  */
 
-import { AppChrome } from "@/components/app-chrome";
-import { EventProvider } from "@/components/event-provider";
+import { AppScreen } from "@/components/app-chrome";
 
 export default function ManageEventsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <EventProvider>
-      {/* No tab is current here: this screen is about all of the events. */}
-      <AppChrome selectedId={null}>{children}</AppChrome>
-    </EventProvider>
-  );
+  return <AppScreen>{children}</AppScreen>;
 }

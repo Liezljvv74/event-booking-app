@@ -6,6 +6,7 @@ import { tableOccupancy, type EventDetailsPatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import { eventHref } from "@/lib/event-routes";
 import { formatEventDate } from "@/lib/event-time";
+import { describeError } from "@/lib/errors";
 import {
   TicketPricesEditor,
   signatureOfPrices,
@@ -16,6 +17,7 @@ import {
   signatureOfTables,
   useTableRows,
 } from "@/components/tables-editor";
+import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";
 
 interface Props {
   event: Event;
@@ -23,9 +25,8 @@ interface Props {
   onRemove: () => Promise<unknown>;
 }
 
-const fieldClass =
-  "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
-const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
+const fieldClass = FIELD_CLASS;
+const labelClass = FIELD_LABEL_CLASS;
 
 /** A pen, drawn rather than fetched: the dependency list stays as it is. */
 function PenIcon() {
@@ -173,7 +174,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
       // refusal is not done, and leaves it open with the reason showing.
       setOpen(false);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }
@@ -185,7 +186,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
     try {
       await onRemove();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
       setBusy(false);
       setConfirming(false);
     }

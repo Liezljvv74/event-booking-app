@@ -12,6 +12,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { StorageFailure } from "@/components/app-chrome";
 import { useEvents } from "@/lib/use-events";
 import { eventHref, MANAGE_EVENTS_PATH } from "@/lib/event-routes";
 
@@ -30,19 +31,7 @@ export default function Home() {
     );
   }, [state, firstEventId, router]);
 
-  if (state === "error") {
-    return (
-      <div className="p-6">
-        <h1 className="text-lg font-semibold text-red-600 dark:text-red-400">
-          Could not open local storage
-        </h1>
-        <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
-          {error} This app keeps everything in the browser, so it needs
-          IndexedDB. Private browsing windows often block it.
-        </p>
-      </div>
-    );
-  }
+  if (state === "error") return <StorageFailure error={error} />;
 
   return (
     <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">

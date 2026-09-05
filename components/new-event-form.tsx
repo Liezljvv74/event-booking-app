@@ -9,6 +9,8 @@ import {
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
 import { TablesEditor, useTableRows } from "@/components/tables-editor";
+import { describeError } from "@/lib/errors";
+import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";
 
 interface Props {
   /**
@@ -20,9 +22,8 @@ interface Props {
   onCreate: (input: NewEventInput) => Promise<unknown>;
 }
 
-const fieldClass =
-  "h-11 w-full min-w-0 rounded-md sm:h-9 border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
-const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
+const fieldClass = FIELD_CLASS;
+const labelClass = FIELD_LABEL_CLASS;
 
 export function NewEventForm({ lastTimes, onCreate }: Props) {
   const [name, setName] = useState("");
@@ -76,7 +77,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
         tables: seated.tables,
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
       setSaving(false);
     }
   }

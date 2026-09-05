@@ -8,6 +8,7 @@ import {
 import { formatAmount, formatCents, parseCents } from "@/lib/money";
 import type { ExpenseInput } from "@/lib/repository";
 import type { ExpenseTemplate } from "@/lib/types";
+import { describeError } from "@/lib/errors";
 
 interface Props {
   /** Saved lines not already held by a line on this event. */
@@ -82,7 +83,7 @@ export function NewExpenseRow({ templates, onAdd }: Props) {
       setPaid(false);
       setNotes("");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setSaving(false);
     }

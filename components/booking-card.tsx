@@ -9,6 +9,7 @@ import {
 import { formatAmount } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
+import { describeError } from "@/lib/errors";
 
 interface Props {
   event: Event;
@@ -76,7 +77,7 @@ export function BookingCard({
     try {
       await onAddGuest();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }
@@ -93,7 +94,7 @@ export function BookingCard({
       });
       setEditing(false);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }
@@ -158,7 +159,7 @@ export function BookingCard({
       );
       setSelected(new Set());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }
@@ -171,7 +172,7 @@ export function BookingCard({
       await onCancelBooking();
       setConfirming(false);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }

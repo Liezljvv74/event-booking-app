@@ -9,16 +9,10 @@
  * with the rail that lists them — an import appears there as it lands.
  */
 
-import { AppChrome } from "@/components/app-chrome";
-import { EventProvider } from "@/components/event-provider";
+import { AppScreen } from "@/components/app-chrome";
 
 export default function DataLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <EventProvider>
-      {/* No event's tab is current: this screen is about all of them. */}
-      <AppChrome selectedId={null}>{children}</AppChrome>
-    </EventProvider>
-  );
+  return <AppScreen>{children}</AppScreen>;
 }

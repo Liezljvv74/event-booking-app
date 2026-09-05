@@ -14,6 +14,7 @@ import { useState } from "react";
 import { formatCents, parseCents } from "@/lib/money";
 import type { TicketPriceInput } from "@/lib/repository";
 import type { TicketPrice } from "@/lib/types";
+import { DENSE_FIELD_CLASS } from "@/components/form-styles";
 
 /** One line as typed, before it is money. */
 export interface PriceRow {
@@ -26,11 +27,10 @@ export interface PriceRow {
   includes: string;
 }
 
-const fieldClass =
-  "h-11 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 sm:h-9 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+const fieldClass = DENSE_FIELD_CLASS;
 
 /** What the rows hold, in a form two of them can be compared by. */
-export function rowsSignature(rows: readonly PriceRow[]): string {
+function rowsSignature(rows: readonly PriceRow[]): string {
   return JSON.stringify(
     rows.map((row) => [row.amount.trim(), row.includes.trim()]),
   );

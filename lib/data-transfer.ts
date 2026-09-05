@@ -28,6 +28,7 @@
  * means they can be reasoned about — and one day tested — without a DOM.
  */
 
+import { todayIso } from "./event-time";
 import { formatCents } from "./money";
 import type { Event, ExpenseTemplate } from "./types";
 
@@ -647,14 +648,6 @@ ${body}
 
 /* ------------------------------------------------------------- file names */
 
-/** "2026-09-05", for stamping into a file name. */
-function today(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
-
 /**
  * Part of a file name made from something a person typed.
  *
@@ -704,7 +697,7 @@ export function exportFiles(
   events: readonly Event[],
   expenseTemplates: readonly ExpenseTemplate[],
 ): OutputFile[] {
-  const stamp = today();
+  const stamp = todayIso();
 
   // A door list is one event's worth of paper, so one file per event rather
   // than one file with an event column nobody at the door needs.

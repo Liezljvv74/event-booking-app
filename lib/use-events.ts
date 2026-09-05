@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isBrowser } from "./db";
+import { describeError } from "./errors";
 import {
   addExpense,
   addAttendee,
@@ -165,11 +166,6 @@ export interface UseEventsResult {
   clearAllExpenses: (eventId: string) => Promise<Event>;
   cancelWholeBooking: (eventId: string, bookingId: string) => Promise<Event>;
   reload: () => Promise<void>;
-}
-
-function describeError(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return String(error);
 }
 
 /** Earliest event date first, so the next event to happen leads the tabs. */
