@@ -208,6 +208,7 @@ export function NewBookingForm({
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <button
           type="submit"
+          data-create-booking
           disabled={saving}
           className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
         >

@@ -89,6 +89,7 @@ export default function TablesScreen() {
         type="button"
         onClick={add}
         disabled={adding}
+        data-add-table
         className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
       >
         {adding ? "Adding…" : "+ Add table"}

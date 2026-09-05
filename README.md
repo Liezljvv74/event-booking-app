@@ -239,7 +239,9 @@ cheapest starts selected, so a new guest is priced without anything being
 picked. Each guest's own price is the same dropdown, so a guest is moved from
 dance-only to dinner by choosing the other price rather than by knowing what
 it costs. A party is auto-seated at the table with the least room to spare
-that still fits it, so part-filled tables fill before new ones open.
+that still fits it, so part-filled tables fill before new ones open; a party
+too large for any one table is split across the closest run of tables that
+can take it, and the screen says where everyone went.
 
 ### Ticket prices
 
@@ -295,10 +297,31 @@ The ones that were argued out and would otherwise be re-litigated:
   status without opening a replacement and quietly took the party's seat away.
 - **Un-cancelling is not possible.** It only ever worked as a side effect of
   that dropdown. There is no restore feature.
-- **A party is never split across tables automatically.** If no single table
-  fits it, it stays unseated and the screen says where the room is. Guests are
-  then moved individually or in a batch, which is atomic — three guests sent to
-  a table with two free seats move nobody.
+- **A party too big for one table is split across the closest run of tables.**
+  It used to stay unseated for the manager to place by hand; splitting it
+  automatically was asked for instead. Three rules decide the arrangement, in
+  order. *Closest wins:* tables are a numbered list with no floor plan, so
+  nearness is the distance between table numbers, and an arrangement spanning
+  tables 4 to 5 beats one spanning 2 to 9 even though the second uses fewer
+  tables — only a tie on distance is settled by using fewer. *Nobody sits
+  alone:* every table used takes at least two of the party, which is what
+  turns a party of five at tables of four and four into three and two rather
+  than four and one, and which makes a table with a single free seat no use
+  to a split party at all. *Each table takes what it can hold:* working up the
+  table numbers, each is filled to its free seats before the next is started,
+  short of leaving a later one below two.
+- **A split party is seated whole or not at all.** Where no arrangement takes
+  everyone under those rules — a party of five against tables of four and one
+  — nobody is seated and the screen says why. Seating four of them and
+  stranding the fifth would leave the manager working out who was missing,
+  which is worse than an unseated party the screen can describe.
+- **Where a split party went is stated once, in words.** The point of
+  splitting automatically is not having to work it out, so the arrangement is
+  named table by table after the booking is taken rather than left to be read
+  off twelve guest rows. A party that landed at one table is not announced:
+  that is where it would have gone anyway, and its rows say so.
+- **Guests are moved individually or in a batch**, which is atomic — three
+  guests sent to a table with two free seats move nobody.
 - **A saved expense line is offered to at most one line.** Two lines both
   called "Venue hire" would be indistinguishable and would collapse back into
   one library entry the moment either was cleared.
@@ -487,6 +510,22 @@ width to the pixel at 1600px and again at 1280px, where the split begins and
 each half is at its narrowest; an opened event and the New event form both
 still fitting four fields across at that width, with nothing overflowing
 sideways; and no trace of the removed paragraph anywhere in the page's text.
+
+Splitting a party across tables has its own pass of 23 assertions, each
+scenario built from an empty store: an event, tables given exact seat counts,
+then a booking, with every guest's table read back off their own row. It
+covers a party that still fits one table going to the tightest one with
+nothing said; a party of nine across tables of six and five landing six then
+three, in that order down the rows; a party of five across tables of four and
+four splitting three and two rather than four and one; a party of five against
+tables of four and one staying wholly unseated, with the message naming the
+roomiest table; a party of three refusing to split two and one; twelve guests
+choosing three neighbouring tables over a closer-packed pair further apart;
+fourteen guests filling five, five and four rather than spreading evenly; and
+a party splitting around one already seated, taking the three seats left at
+its table and seven next door. The messages were checked word for word, and
+the split message was confirmed to read in the ordinary text colour while the
+unseated one is amber.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 

@@ -552,9 +552,8 @@ export class TableFullError extends Error {
  * empty and packs the part-filled tables before opening a fresh one. Ties
  * break on the lower table number so the choice is predictable.
  *
- * Returns null when no single table can hold them all, in which case they
- * stay unseated rather than being split across tables behind the manager's
- * back — the screen then says where the free seats are.
+ * Returns null when no single table can hold them all, in which case
+ * `planSplitSeating` looks for a run of neighbouring tables instead.
  */
 export function pickTableForParty(
   event: Event,
@@ -573,11 +572,168 @@ export function pickTableForParty(
   return candidates[0]?.tableNumber ?? null;
 }
 
+/**
+ * Nobody is left sitting on their own. A table taking part of a split party
+ * takes at least this many of them, so a party of five never becomes four
+ * and a stray.
+ */
+export const MIN_GUESTS_PER_SHARED_TABLE = 2;
+
+/** One table's share of a party seated across several. */
+export interface SeatingShare {
+  tableNumber: number;
+  guestCount: number;
+}
+
+/**
+ * Which tables to use for a party too large for any single one, and how many
+ * of them sit at each.
+ *
+ * Three rules, in this order:
+ *
+ * 1. **The tables are as close together as possible.** Tables are a numbered
+ *    list and there is no floor plan, so nearness is the distance between
+ *    table numbers: the arrangement spanning tables 4 to 5 beats the one
+ *    spanning 2 to 9, even if the second uses fewer tables. Only where two
+ *    arrangements span the same distance does the one using fewer tables
+ *    win, and then the lower-numbered one.
+ * 2. **Nobody sits alone.** Every table used takes at least
+ *    `MIN_GUESTS_PER_SHARED_TABLE` of the party, which is what rules out
+ *    seating four of a party of five and stranding the fifth. A table with a
+ *    single free seat is therefore no use to a split party at all, though it
+ *    still counts towards the distance between the tables that are used.
+ * 3. **Each table takes as many as it can hold.** Working up the table
+ *    numbers, every table is filled to its free seats before the next is
+ *    started, short of leaving a later one below the minimum.
+ *
+ * Returns null when no arrangement seats the *whole* party under those
+ * rules. Seating goes all together or not at all: a part-seated party leaves
+ * the manager to work out who is missing, which is worse than an unseated
+ * one the screen can describe.
+ */
+export function planSplitSeating(
+  event: Event,
+  guestCount: number,
+): SeatingShare[] | null {
+  const byNumber = event.tables
+    .map((table) => ({
+      tableNumber: table.tableNumber,
+      free: freeSeatsAtTable(event, table.tableNumber),
+    }))
+    .sort((a, b) => a.tableNumber - b.tableNumber);
+
+  // A table that cannot take two is no use here, but the tables it sits
+  // between are still as far apart as their numbers say.
+  const usable = byNumber.filter(
+    (table) => table.free >= MIN_GUESTS_PER_SHARED_TABLE,
+  );
+
+  let best: { span: number; tables: number; shares: SeatingShare[] } | null =
+    null;
+
+  // Every arrangement has a lowest and a highest table, and those two are
+  // what its span is measured across — so trying each pair of ends, and
+  // filling in from between them, covers all of them.
+  for (let first = 0; first < usable.length; first += 1) {
+    for (let last = first + 1; last < usable.length; last += 1) {
+      const span = usable[last].tableNumber - usable[first].tableNumber;
+      // The span only grows as the far end moves out, so once it is wider
+      // than the best already found, so is everything after it.
+      if (best !== null && span > best.span) break;
+
+      const chosen = fillBetween(usable, first, last, guestCount);
+      if (chosen === null) continue;
+
+      if (
+        best === null ||
+        span < best.span ||
+        (span === best.span && chosen.length < best.tables)
+      ) {
+        best = {
+          span,
+          tables: chosen.length,
+          shares: shareOut(chosen, guestCount),
+        };
+      }
+    }
+  }
+
+  return best?.shares ?? null;
+}
+
+/**
+ * The tables to use between two chosen ends, or null if the party cannot be
+ * seated across them.
+ *
+ * Both ends are used by definition — they are what the span was measured
+ * across. Tables from between them are added roomiest first, so the party is
+ * held by as few of them as possible, and only until they hold it. Adding a
+ * table also raises the number of guests the arrangement must find, since
+ * every table used needs its minimum, which is what stops a party of five
+ * being spread over three tables.
+ */
+function fillBetween(
+  usable: readonly { tableNumber: number; free: number }[],
+  first: number,
+  last: number,
+  guestCount: number,
+): { tableNumber: number; free: number }[] | null {
+  const chosen = [usable[first], usable[last]];
+  let capacity = chosen[0].free + chosen[1].free;
+  if (chosen.length * MIN_GUESTS_PER_SHARED_TABLE > guestCount) return null;
+  if (capacity >= guestCount) return chosen;
+
+  const between = usable
+    .slice(first + 1, last)
+    .sort((a, b) => b.free - a.free || a.tableNumber - b.tableNumber);
+
+  for (const table of between) {
+    if ((chosen.length + 1) * MIN_GUESTS_PER_SHARED_TABLE > guestCount) {
+      return null;
+    }
+    chosen.push(table);
+    capacity += table.free;
+    if (capacity >= guestCount) return chosen;
+  }
+
+  return null;
+}
+
+/**
+ * Hand the party out across the tables chosen for it, lowest number first,
+ * each taking all it can hold short of leaving a later table below the
+ * minimum. The caller has already established that the tables hold the party
+ * and that there are enough guests to give each of them its minimum.
+ */
+function shareOut(
+  chosen: readonly { tableNumber: number; free: number }[],
+  guestCount: number,
+): SeatingShare[] {
+  const ordered = [...chosen].sort((a, b) => a.tableNumber - b.tableNumber);
+  const shares: SeatingShare[] = [];
+  let left = guestCount;
+
+  ordered.forEach((table, index) => {
+    const laterTables = ordered.length - index - 1;
+    const take = Math.min(
+      table.free,
+      left - laterTables * MIN_GUESTS_PER_SHARED_TABLE,
+    );
+    shares.push({ tableNumber: table.tableNumber, guestCount: take });
+    left -= take;
+  });
+
+  return shares;
+}
+
 export interface CreatedBooking {
   event: Event;
   bookingId: string;
-  /** The table the whole party was seated at, or null if none could hold it. */
-  seatedAtTable: number | null;
+  /**
+   * Where the party landed: one entry when a single table held it, several
+   * when it was split across a run of them, and none when it is unseated.
+   */
+  seating: SeatingShare[];
 }
 
 /**
@@ -587,8 +743,9 @@ export interface CreatedBooking {
  * so making them type it again is busywork. The rest start unnamed.
  *
  * The whole party is seated together at one table when one can hold them,
- * and each guest inherits the booking's ticket price. Both stay editable per
- * guest afterwards.
+ * and across the closest run of tables that can when none can. Each guest
+ * inherits the booking's ticket price. Both stay editable per guest
+ * afterwards.
  */
 export async function createBooking(
   eventId: string,
@@ -619,18 +776,30 @@ export async function createBooking(
   }
 
   let bookingId = "";
-  let seatedAtTable: number | null = null;
+  let seating: SeatingShare[] = [];
 
   const event = await mutateEvent(eventId, (current) => {
-    const table = pickTableForParty(current, input.guestCount);
-    seatedAtTable = table;
+    // One table if one will hold them, and only then the split, so a party
+    // that fits somewhere still lands at the tightest table that fits it.
+    const together = pickTableForParty(current, input.guestCount);
+    seating =
+      together !== null
+        ? [{ tableNumber: together, guestCount: input.guestCount }]
+        : (planSplitSeating(current, input.guestCount) ?? []);
+
+    // The shares flattened into one seat per guest, so the guests are handed
+    // out in order and a party split three ways still reads down the list as
+    // table 4, table 4, table 5. Empty when the party could not be seated.
+    const seats = seating.flatMap((share) =>
+      Array.from({ length: share.guestCount }, () => share.tableNumber),
+    );
 
     const attendees: Attendee[] = Array.from(
       { length: input.guestCount },
       (_unused, index) => ({
         id: newId(),
         name: index === 0 ? partyName : "",
-        assignedTableNumber: table,
+        assignedTableNumber: seats[index] ?? null,
         status: "pay_at_venue" as AttendeeStatus,
         ticketPriceCents: input.ticketPriceCents,
       }),
@@ -649,7 +818,7 @@ export async function createBooking(
     return { ...current, bookings: [...current.bookings, booking] };
   });
 
-  return { event, bookingId, seatedAtTable };
+  return { event, bookingId, seating };
 }
 
 /**

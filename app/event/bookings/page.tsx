@@ -5,19 +5,51 @@ import Link from "next/link";
 import { BookingCard } from "@/components/booking-card";
 import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
-import { tableOccupancy } from "@/lib/repository";
+import { tableOccupancy, type SeatingShare } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import { eventHref, useEventId } from "@/lib/event-routes";
 
 /** How many tables to name before the line gets too long to scan. */
 const MAX_TABLES_LISTED = 8;
 
+/** "table 4", "tables 4 and 5", "tables 4, 5 and 7". */
+function listTables(shares: readonly SeatingShare[]): string {
+  const numbers = shares.map((share) => share.tableNumber);
+  const word = numbers.length === 1 ? "table" : "tables";
+  if (numbers.length < 3) return `${word} ${numbers.join(" and ")}`;
+  return `${word} ${numbers.slice(0, -1).join(", ")} and ${numbers.at(-1)}`;
+}
+
 /**
- * Why a party could not be seated together, and where the room actually is.
+ * Where a party too big for one table ended up.
  *
- * A party is never split across tables on its own, so this is the manager's
- * cue to place the guests by hand — pointing at the roomiest table rather
- * than leaving them to hunt for it.
+ * Named table by table rather than left to be read off the guest rows: the
+ * point of splitting a party automatically is that the manager does not have
+ * to work out where everyone went, so the arrangement is stated once, here.
+ */
+function describeSplit(shares: readonly SeatingShare[], guestCount: number) {
+  const places = shares.map(
+    (share) => `${share.guestCount} at table ${share.tableNumber}`,
+  );
+  const listed =
+    places.length < 3
+      ? places.join(" and ")
+      : `${places.slice(0, -1).join(", ")} and ${places.at(-1)}`;
+
+  return (
+    `No single table had room for ${guestCount} guests, so this party is ` +
+    `seated across ${listTables(shares)}: ${listed}. ` +
+    `Move guests between tables to change it.`
+  );
+}
+
+/**
+ * Why a party could not be seated at all, and where the room actually is.
+ *
+ * Reached only when neither one table nor any run of them can take the whole
+ * party without leaving somebody sitting alone. That is the manager's cue to
+ * place the guests by hand, so it points at the roomiest table rather than
+ * leaving them to hunt for it.
  */
 function describeUnseated(event: Event, guestCount: number): string {
   const room = tableOccupancy(event)
@@ -33,7 +65,8 @@ function describeUnseated(event: Event, guestCount: number): string {
 
   const roomiest = room[0];
   return (
-    `No single table has ${guestCount} free seats, so this party is unseated. ` +
+    `No arrangement of tables seats all ${guestCount} guests without ` +
+    `leaving one of them on their own, so this party is unseated. ` +
     `Table ${roomiest.tableNumber} has the most room, with ${roomiest.free}. ` +
     `Seat the guests individually, or add seats.`
   );
@@ -54,7 +87,15 @@ export default function BookingsScreen() {
   // Parties start collapsed so the screen is a readable list of party names.
   // Several can be open at once, since comparing two parties is common.
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
-  const [notice, setNotice] = useState("");
+  /**
+   * What became of the party just booked. A split is news and reads in the
+   * ordinary text colour; only an unseated party is a problem to solve, and
+   * only that is amber.
+   */
+  const [notice, setNotice] = useState<{
+    text: string;
+    tone: "news" | "problem";
+  } | null>(null);
 
   function toggle(bookingId: string) {
     setExpanded((current) => {
@@ -164,12 +205,17 @@ export default function BookingsScreen() {
         </p>
       )}
 
-      {notice !== "" && (
+      {notice !== null && (
         <p
           data-booking-notice
-          className="mt-3 max-w-prose text-sm text-amber-700 dark:text-amber-500"
+          data-notice-tone={notice.tone}
+          className={`mt-3 max-w-prose text-sm ${
+            notice.tone === "problem"
+              ? "text-amber-700 dark:text-amber-500"
+              : "text-zinc-700 dark:text-zinc-300"
+          }`}
         >
-          {notice}
+          {notice.text}
         </p>
       )}
 
@@ -182,10 +228,23 @@ export default function BookingsScreen() {
               setCreating(false);
               // Open the party just captured: its guests still need names.
               setExpanded((current) => new Set(current).add(created.bookingId));
+              // Nothing to say when one table took them: the party's own
+              // rows show the table, and it is where it would have gone.
               setNotice(
-                created.seatedAtTable === null
-                  ? describeUnseated(created.event, input.guestCount)
-                  : "",
+                created.seating.length === 0
+                  ? {
+                      text: describeUnseated(created.event, input.guestCount),
+                      tone: "problem",
+                    }
+                  : created.seating.length === 1
+                    ? null
+                    : {
+                        text: describeSplit(
+                          created.seating,
+                          input.guestCount,
+                        ),
+                        tone: "news",
+                      },
               );
               return created;
             }}
@@ -197,9 +256,7 @@ export default function BookingsScreen() {
       {event.bookings.length === 0 ? (
         <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
           No bookings yet. A booking is a party name, a telephone number and a
-          guest count. Each party is seated at the table with the least room to
-          spare that still fits them, so tables fill up before new ones are
-          opened.
+          guest count.
         </p>
       ) : (
         <ul className="mt-3 flex flex-col gap-3">
