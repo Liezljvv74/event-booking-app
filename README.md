@@ -180,12 +180,16 @@ create, rename, change date and times, edit its ticket prices, delete. The
 screen is in two columns: **Scheduled Events** on the left, **Schedule a new
 event** on the right.
 
-On the left, each event is one line — name, then date, start, end and Save to
-the right of it — with its ticket prices beneath, and the list is deliberately
-tight so that as many events as possible are on the screen at once. Closed
-events follow underneath in their own section, and appear nowhere else in the
-app, so this is the only place one can be looked at or removed early. Deleting
-names what goes with it.
+On the left, each event is a single closed line: its name, its date, and a pen
+to the right of them. No labels — a name beside a date needs none — and no
+fields until they are asked for. The pen opens the event's detail below the
+line it was on: name, date, start and end across, ticket prices beneath, and
+then Remove event, Cancel and Save. Saving closes the row again, and so does
+Cancel and so does the pen, both of which put back what was stored; only a
+refused save keeps it open, with the reason showing. Closed events follow
+underneath in their own section, collapsed the same way, and appear nowhere
+else in the app, so this is the only place one can be looked at or removed
+early. Deleting names what goes with it.
 
 On the right, the New event form, permanently. It used to be behind a
 `+ New event` button that swapped itself for the form; with the form given a
@@ -300,6 +304,18 @@ The ones that were argued out and would otherwise be re-litigated:
   one library entry the moment either was cleared.
 - **A new event starts from the last event saved** — its times and its expense
   lines both, by the same "most recently saved" rule.
+- **An event in the list is a line, not a form.** Every event used to have
+  every one of its fields on show at all times, whether or not any of them
+  were being changed, and four events filled the screen. The list is read far
+  more often than it is edited, so a row is now its name and date until the
+  pen is clicked. Everything that acts on the event — Remove event included —
+  lives inside the opened detail, so nothing on a closed row can be set off by
+  a stray click while reading down the list, and deleting an event takes two
+  deliberate steps before the confirmation is even offered.
+- **The row's heading keeps the stored name, not the typed one.** While a
+  name is being edited the line above still reads what is saved. It is the
+  row's identity in the list rather than a preview of the edit, and it is what
+  Cancel puts back.
 - **The two columns measure themselves, not the window.** An event's row is
   name, date, start, end and Save across, and half of a wide window is not the
   same width as a whole narrow one — so the rows inside each column are laid
@@ -418,6 +434,22 @@ line and nothing overflowing sideways, stacked at 800px, and Manage events
 still reachable at 390px; the form greying out in place at four active events
 with the limit stated and coming back when one is deleted; and three events
 read back from IndexedDB after a reload. The console stayed clean throughout.
+
+Collapsing the list was checked the same way, 63 assertions in one pass over
+the built export, on top of the split above: a new event arriving collapsed as
+its name and date with no fields, no headings and no Save, Cancel, Remove or
+Open on the line; the pen sitting to the right of the date, drawn rather than
+spelled out, naming the event it edits and reporting whether it is open; the
+detail opening with the stored values in it and Save asleep until something
+changes; a saved edit closing the row and showing the new name and date on the
+line; Cancel and the pen both closing the row and putting back what was stored,
+including a ticket price; a refused save staying open with the reason; opening
+one row leaving the others closed; Remove event reached only from inside the
+detail and still naming what it would delete; three events occupying under
+160px between them; and four events surviving a reload still collapsed. At
+1600px the columns sit side by side with an opened row's fields on one line,
+at 800px they stack, and at 390px the pen is still a 32px target and an opened
+row stacks its fields rather than overflowing. The console stayed clean.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 
