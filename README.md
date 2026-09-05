@@ -460,6 +460,16 @@ The ones that were argued out and would otherwise be re-litigated:
   guest at a table that has gone is unseated rather than stranded. It is what
   `createEvent` numbers its tables with too, so there is one rule and not
   two.
+- **The page says which colour schemes it handles, so the browser stops
+  guessing.** `:root { color-scheme: light dark }` in `globals.css`. Without
+  it Chrome and Edge auto-darken a page they think has no dark theme: they
+  repaint the light backgrounds dark and leave images alone, which put the
+  black-on-white logo on a black bar and made it vanish — while the `dark:`
+  swap that would have shown the light-on-dark drawing never fired, because
+  nothing had actually asked the page for dark. The app had always had a dark
+  theme; it had just never said so. It also hands the native controls their
+  theme, which matters here: every date and time field in the app opens a
+  picker the browser draws.
 - **The logo is imported, not linked, because of the base path.** A project
   page on GitHub Pages is served out of a subdirectory, so every asset URL
   needs that prefix. `next/image` adds it in its loader — but a static export

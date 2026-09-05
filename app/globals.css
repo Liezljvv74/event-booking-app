@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
 :root {
+  /**
+   * Both themes are handled here, in `prefers-color-scheme` below and in the
+   * `dark:` classes on the screens. Saying so is what stops a browser
+   * force-darkening the page for us: Chrome and Edge auto-darken a page that
+   * declares no colour scheme, which repaints the light backgrounds dark and
+   * leaves images exactly as they are — so a logo drawn in black lands on a
+   * black bar and disappears, and the `dark:` swap that would have put the
+   * light-on-dark logo there never fires, because as far as the page is
+   * concerned nothing asked for dark.
+   *
+   * It also hands the native controls their theme. This app is full of
+   * `input type="date"` and `type="time"`, and their pickers are drawn by the
+   * browser, not by us.
+   */
+  color-scheme: light dark;
+
   --background: #ffffff;
   --foreground: #171717;
 }
