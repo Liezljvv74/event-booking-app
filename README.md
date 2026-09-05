@@ -313,6 +313,14 @@ The ones that were argued out and would otherwise be re-litigated:
   note on the screen — the count beside **Scheduled Events** now just counts.
   The tab strip already scrolled and its tabs already refused to shrink, so it
   holds twelve events as readably as it held four.
+- **Explanation belongs in a walkthrough, not on the screen.** The New event
+  form used to carry a paragraph saying that times and expenses both start
+  from the most recent event and that times are optional. It was true and not
+  obvious, which is exactly why it read as something to teach a new user once
+  rather than something to print above the fields every time they are used.
+  Liezl asked for it off and said prose like it belongs in an app walkthrough,
+  which is not built. The behaviour it described is unchanged, and is recorded
+  here instead.
 - **An event in the list is a line, not a form.** Every event used to have
   every one of its fields on show at all times, whether or not any of them
   were being changed, and four events filled the screen. The list is read far
@@ -325,14 +333,16 @@ The ones that were argued out and would otherwise be re-litigated:
   name is being edited the line above still reads what is saved. It is the
   row's identity in the list rather than a preview of the edit, and it is what
   Cancel puts back.
-- **The two columns measure themselves, not the window.** An event's row is
-  name, date, start, end and Save across, and half of a wide window is not the
-  same width as a whole narrow one — so the rows inside each column are laid
-  out with container queries (`@2xl:`, `@xl:`, `@lg:`) against the column
-  rather than with `sm:`/`md:` against the viewport. Without that the rows
+- **The two columns measure themselves, not the window.** An opened event and
+  the New event form are the same four fields across, and half of a wide
+  window is not the same width as a whole narrow one — so the rows inside each
+  column are laid out with container queries (`@xl:`, `@lg:`) against the
+  column rather than with `sm:`/`md:` against the viewport. Without that they
   would keep claiming a full-width layout inside a half-width column and
-  overflow it. The split itself waits for `xl`, and below that the two columns
-  stack, so a phone gets the screen it always had.
+  overflow it. The columns are equal halves, because whatever width one of
+  those forms needs the other needs too; the split waits for `xl`, which is
+  where half a window is still wide enough for four fields, and below that the
+  two columns stack, so a phone gets the screen it always had.
 - **One page owns an event's own details.** Name, date, times and ticket
   prices are created and changed on Manage events and nowhere else. The
   dashboard used to edit the date and times inline and the entry screen used
@@ -470,6 +480,13 @@ every pen still enabled at twelve; the count beside the heading reading
 rather than pushing the page wide; an event well past the old ceiling opening,
 saving an edit and keeping it; and all twelve read back from IndexedDB after a
 reload, still collapsed.
+
+Evening up the two columns and taking the prose off the New event form took
+the pass to 75 assertions. The added ones: the columns measuring the same
+width to the pixel at 1600px and again at 1280px, where the split begins and
+each half is at its narrowest; an opened event and the New event form both
+still fitting four fields across at that width, with nothing overflowing
+sideways; and no trace of the removed paragraph anywhere in the page's text.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 

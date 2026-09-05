@@ -45,14 +45,13 @@ export default function ManageEventsScreen() {
     .reverse();
 
   return (
-    /* Two columns only once there is room for both — an event's row is name,
-       date, start, end and Save across, and squeezing two of those side by
-       side would cost more lines than the split saves. The list gets the
-       wider share, because it is the longer row and there are many of them.
+    /* Two columns of equal width, and only once there is room for both: an
+       opened event and the New event form are the same four fields across, so
+       whatever width one of them needs the other needs too.
 
        Each column is a query container, so the rows inside lay themselves
        out against the width they actually have rather than the window's. */
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section data-column="events" className="@container">
         <div className="flex flex-wrap items-baseline gap-x-3">
           <h2 className="text-xl font-semibold text-black dark:text-zinc-50">

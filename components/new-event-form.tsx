@@ -76,15 +76,9 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       onSubmit={submit}
       className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
     >
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        The times and the expenses both start from your most recent event, so a
-        run of functions keeping the same hours needs them entered once. Change
-        or clear either as you like; times are optional.
-      </p>
-
       {/* Name, then the date and times to the right of it, the same shape
           an event has on Manage events. */}
-      <div className="mt-3 grid gap-2 @xl:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem]">
+      <div className="grid gap-2 @xl:grid-cols-[minmax(9rem,1fr)_10rem_7rem_7rem]">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>Event name</span>
           <input
