@@ -124,6 +124,9 @@ app/
   events/manage/
     layout.tsx                   the same chrome, with no tab current
     page.tsx                     the events on the left, the new-event form on the right
+  data/
+    layout.tsx                   the same chrome again
+    page.tsx                     export on the left, import on the right
   event/                         one event, chosen by ?id= in the URL
     layout.tsx                   the chrome, around one event's screens
     page.tsx                     dashboard
@@ -136,6 +139,8 @@ components/                      the pieces those screens are built from
   tables-editor.tsx              an event's tables, and the rows behind them
 lib/
   db.ts                          IndexedDB plumbing: stores, transactions
+  data-transfer.ts               the backup format and the CSV reports, no DOM
+  file-access.ts                 the folder picker, the remembered handle, the download
   types.ts                       the domain: Event, Table, Booking, Attendee…
   repository.ts                  every read and write, and the rules
   use-events.ts                  the one React hook the screens talk to
@@ -279,6 +284,41 @@ there, the names a size below the table's own line since a full table is ten
 of them on one line. Guests with no name yet are counted rather than
 listed. Unseated guests are called out below, because a guest holding no seat
 appears in no table's tally.
+
+**Export/Import your data** (`/data`) — two columns, the same shape Manage
+events has: what goes out on the left, what comes in on the right.
+
+Export asks three things. *What* — current and future events by default,
+which is the active ones, since an event stays active until 48 hours after
+its date; or all of them, closed ones included; or a tick-list. *Which
+format* — JSON, one file, the events exactly as they are held and the only
+thing import reads; or CSV, three files, guests and tables and expenses, with
+the event's name and date repeated down every row so a row stands on its own.
+CSV does not come back in and is not meant to: a spreadsheet is a grid and an
+event is not one. *Where* — and this is the part with a browser problem
+inside it.
+
+Chrome and Edge on the desktop can hand a page a handle to a folder, and that
+handle can be kept in IndexedDB and used again next time. Firefox, Safari and
+every phone cannot: a file goes to downloads and there is no folder to
+remember. So the screen offers the folder where it can be offered and says
+nothing about it where it cannot, rather than offering a choice it cannot
+keep. Where there is a folder, every export asks whether it is still the
+right one before writing a thing — *Still saving to Backups?* with **Save
+here** and **Choose another folder** beside it. A handle kept from a previous
+session comes back valid but unpermitted, so permission is asked for again
+inside that press; it has to happen in the click or the browser refuses it.
+
+Import takes a JSON backup, says when it was written and what is in it, and
+lists its events with tick boxes — anything already stored is marked *already
+here* — so any of it can be left out. Then the one real choice: **add what is
+missing**, the default, which leaves everything already stored untouched and
+makes running the same file twice a no-op; or **replace everything**, which
+empties the store first and names how many events it would delete before it
+does. The whole import is one transaction, so a file that fails halfway
+leaves the store as it was. Reusable expense lines are merged either way,
+even by a restore: they belong to the app rather than to any event, and one
+the file does not know about is one this browser learned since.
 
 There was a **Tables** screen between the Dashboard and Bookings. It was cut
 down first, on request, to a plain table of two columns — Table Number and
@@ -517,8 +557,9 @@ The ones that were argued out and would otherwise be re-litigated:
 | Dashboard | Done, minus the bookings total, removed on request |
 | Auto-close 48h after the event date | Done — sweep runs on every app start |
 | Retention window, then silent delete | Logic done; not changeable without Settings |
-| **Settings screen** | **Not built** — retention period, desktop save folder |
-| **Export All Data (Excel or JSON)** | **Not built** |
+| Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
+| **Settings screen** | **Not built** — the retention period is still fixed at 14 days |
+| Export All Data | Done as JSON and CSV, with import beside it. Excel became CSV: a real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |

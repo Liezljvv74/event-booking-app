@@ -20,6 +20,8 @@ import {
   cancelBooking,
   clearExpenses,
   createBooking,
+  getSettings,
+  importBackup,
   createEvent,
   deleteEvent,
   lastSavedTimes,
@@ -28,6 +30,7 @@ import {
   moveAttendees,
   removeExpense,
   runRetentionSweep,
+  saveSettings,
   updateAttendee,
   updateBookingDetails,
   updateExpense,
@@ -38,11 +41,18 @@ import {
   type EventTimes,
   type ExpenseInput,
   type ExpensePatch,
+  type ImportMode,
+  type ImportOutcome,
   type MoveTarget,
   type TableInput,
   type TicketPriceInput,
 } from "./repository";
-import { type Event, type ExpenseTemplate } from "./types";
+import {
+  DEFAULT_SETTINGS,
+  type Event,
+  type ExpenseTemplate,
+  type Settings,
+} from "./types";
 
 export interface NewBookingInput {
   partyName: string;
@@ -89,6 +99,27 @@ export interface UseEventsResult {
    * form to start from. Both null when there is no event to copy.
    */
   lastTimes: EventTimes;
+  /**
+   * The app's own settings, as opposed to any event's: how long a closed
+   * event is kept, and the folder exports are written to.
+   */
+  settings: Settings;
+  /**
+   * Remember where exports go, or forget it with null. The handle is the
+   * browser's own object; nothing here can turn it into a path.
+   */
+  saveExportFolder: (
+    folder: FileSystemDirectoryHandle | null,
+  ) => Promise<void>;
+  /**
+   * Write a backup's events into the store and reload everything from it, so
+   * the tabs and the screens show what arrived.
+   */
+  importData: (
+    events: readonly Event[],
+    expenseTemplates: readonly ExpenseTemplate[],
+    mode: ImportMode,
+  ) => Promise<ImportOutcome>;
   addEvent: (input: NewEventInput) => Promise<Event>;
   /** Edit an event's name, date, times, ticket prices or tables. */
   editEventDetails: (id: string, patch: EventDetailsPatch) => Promise<Event>;
@@ -167,6 +198,7 @@ export function useEvents(): UseEventsResult {
     startTime: null,
     endTime: null,
   });
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   const refreshEvents = useCallback(async () => {
     const { all, active } = await readEvents();
@@ -188,6 +220,7 @@ export function useEvents(): UseEventsResult {
       await refreshEvents();
       setExpenseTemplates(await listExpenseTemplates());
       setLastTimes(await lastSavedTimes());
+      setSettings(await getSettings());
       setState("ready");
       setError("");
     } catch (caught) {
@@ -205,6 +238,13 @@ export function useEvents(): UseEventsResult {
     loadStarted.current = true;
     void load();
   }, [load]);
+
+  const saveExportFolder = useCallback(
+    async (folder: FileSystemDirectoryHandle | null) => {
+      setSettings(await saveSettings({ exportDirectory: folder }));
+    },
+    [],
+  );
 
   const addEvent = useCallback(async (input: NewEventInput) => {
     const created = await createEvent(input);
@@ -337,6 +377,23 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  // An import can bring in anything, so everything is re-read afterwards
+  // rather than the events alone: the reusable expense lines come in with it.
+  const importData = useCallback(
+    async (
+      events: readonly Event[],
+      templates: readonly ExpenseTemplate[],
+      mode: ImportMode,
+    ) => {
+      const outcome = await importBackup(events, templates, mode);
+      await refreshEvents();
+      setExpenseTemplates(await listExpenseTemplates());
+      setLastTimes(await lastSavedTimes());
+      return outcome;
+    },
+    [refreshEvents],
+  );
+
   return {
     state,
     error,
@@ -344,6 +401,9 @@ export function useEvents(): UseEventsResult {
     allEvents,
     expenseTemplates,
     lastTimes,
+    settings,
+    saveExportFolder,
+    importData,
     addEvent,
     editEventDetails,
     removeEvent,

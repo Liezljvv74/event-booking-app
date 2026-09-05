@@ -29,11 +29,22 @@ export type EventSection = (typeof EVENT_SEGMENTS)[number];
  */
 export const MANAGE_EVENTS_PATH = "/events/manage";
 
+/**
+ * Export and import, the other screen that belongs to no event: it writes
+ * the whole store to a file and reads one back.
+ */
+export const DATA_PATH = "/data";
+
 export type NavItem =
   /** One screen of the event currently open. */
   | { kind: "event"; segment: EventSection; label: string }
-  /** Manage events, which belongs to no event. */
-  | { kind: "manage"; label: string; shortLabel: string };
+  /**
+   * A screen about the app rather than about one event, so it carries its
+   * own path and no event id. There are two: Manage events, and Export and
+   * import. The short label is what a phone shows, where the full one would
+   * crowd everything beside it.
+   */
+  | { kind: "app"; path: string; label: string; shortLabel: string };
 
 /**
  * The section nav, in the order it is read, left to right.
@@ -51,7 +62,18 @@ export const SECTION_NAV: readonly NavItem[] = [
   { kind: "event", segment: "", label: "Dashboard" },
   { kind: "event", segment: "bookings", label: "Bookings" },
   { kind: "event", segment: "expenses", label: "Expenses" },
-  { kind: "manage", label: "Manage events", shortLabel: "Manage" },
+  {
+    kind: "app",
+    path: MANAGE_EVENTS_PATH,
+    label: "Manage events",
+    shortLabel: "Manage",
+  },
+  {
+    kind: "app",
+    path: DATA_PATH,
+    label: "Export/Import your data",
+    shortLabel: "Export/Import",
+  },
 ];
 
 /** The path of a section, with no event attached to it yet. */

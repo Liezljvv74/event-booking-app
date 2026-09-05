@@ -1440,6 +1440,133 @@ export async function getSettings(): Promise<Settings> {
   return { ...DEFAULT_SETTINGS, ...row?.value };
 }
 
+/**
+ * Change some of the settings, leaving the rest alone, and hand back the
+ * whole of them as they now stand.
+ *
+ * The read and the write share one transaction, so two changes made at once
+ * cannot each save over a copy taken before the other.
+ *
+ * A directory handle is stored as the live object it is, not as a path.
+ * IndexedDB can hold one because it is structured-cloneable, and it is the
+ * only thing that can be held: a browser will not tell a page where a folder
+ * is on the disk, only hand it something that can be written to. That is also
+ * why permission has to be asked for again each session — the handle survives
+ * and the permission does not.
+ */
+export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
+  return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
+    const row = await getOne<SettingsRow>(
+      transaction,
+      STORE_SETTINGS,
+      SETTINGS_KEY,
+    );
+    const value: Settings = { ...DEFAULT_SETTINGS, ...row?.value, ...patch };
+    await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });
+    return value;
+  });
+}
+
+/* --------------------------------------------------------------- importing */
+
+/**
+ * What an import does with an event already in the store.
+ *
+ * `add` leaves it alone and imports what is not there — the safe one, and the
+ * default, because running the same file twice then changes nothing. `replace`
+ * empties the store first, which is what restoring a backup means: the events
+ * are the ones in the file and no others.
+ */
+export type ImportMode = "add" | "replace";
+
+export interface ImportOutcome {
+  added: number;
+  /** Already in the store and left as they were. Only `add` skips. */
+  skipped: number;
+  /** Cleared before the file was written in. Only `replace` removes. */
+  removed: number;
+  expenseLinesAdded: number;
+  /**
+   * Imported events already past the retention window, which the sweep will
+   * delete when the app next loads. Worth saying out loud: importing an old
+   * backup and watching half of it disappear on the next refresh is otherwise
+   * a mystery.
+   */
+  pastRetention: number;
+}
+
+/**
+ * Write events and reusable expense lines from a backup into the store.
+ *
+ * The whole import is one transaction, so a file that fails halfway leaves
+ * the store as it was rather than half replaced.
+ */
+export async function importBackup(
+  events: readonly Event[],
+  expenseTemplates: readonly ExpenseTemplate[],
+  mode: ImportMode,
+): Promise<ImportOutcome> {
+  // Read before the write transaction opens: settings live in another store
+  // and awaiting them inside would let this transaction auto-commit.
+  const { retentionDays } = await getSettings();
+  const now = Date.now();
+
+  return runTransaction(
+    [STORE_EVENTS, STORE_EXPENSE_TEMPLATES],
+    "readwrite",
+    async (transaction) => {
+      const outcome: ImportOutcome = {
+        added: 0,
+        skipped: 0,
+        removed: 0,
+        expenseLinesAdded: 0,
+        pastRetention: 0,
+      };
+
+      const existing = await getAll<StoredEvent>(transaction, STORE_EVENTS);
+      const present = new Set(existing.map((event) => event.id));
+
+      if (mode === "replace") {
+        for (const event of existing) {
+          await remove(transaction, STORE_EVENTS, event.id);
+          outcome.removed += 1;
+        }
+        present.clear();
+      }
+
+      for (const event of events) {
+        if (present.has(event.id)) {
+          outcome.skipped += 1;
+          continue;
+        }
+
+        await put(transaction, STORE_EVENTS, event);
+        outcome.added += 1;
+
+        const deadline = purgeAt(event, retentionDays);
+        if (deadline !== null && now >= deadline) outcome.pastRetention += 1;
+      }
+
+      // The reusable lines are merged rather than replaced even by a restore:
+      // they belong to the app rather than to any event, and a line the file
+      // does not know about is one this browser learned since.
+      const heldTemplates = await getAll<ExpenseTemplate>(
+        transaction,
+        STORE_EXPENSE_TEMPLATES,
+      );
+      const heldIds = new Set(heldTemplates.map((template) => template.id));
+
+      for (const template of expenseTemplates) {
+        if (heldIds.has(template.id)) continue;
+        await put(transaction, STORE_EXPENSE_TEMPLATES, template);
+        outcome.expenseLinesAdded += 1;
+      }
+
+      return outcome;
+    },
+  );
+}
+
 
 /* ------------------------------------------------- auto-close & retention */
 

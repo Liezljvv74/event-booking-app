@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   eventHref,
   eventSectionPath,
-  MANAGE_EVENTS_PATH,
   SECTION_NAV,
 } from "@/lib/event-routes";
 
@@ -43,18 +42,18 @@ export function SectionNav({ eventId }: Props) {
     >
       <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto px-2 py-1">
         {SECTION_NAV.map((item) => {
-          if (item.kind === "manage") {
-            const managing = path === MANAGE_EVENTS_PATH;
+          if (item.kind === "app") {
+            const here = path === item.path;
             return (
               <Link
                 key={item.label}
-                href={MANAGE_EVENTS_PATH}
-                aria-current={managing ? "page" : undefined}
-                data-manage-events
-                className={`${itemClass} ${managing ? activeClass : restingClass}`}
+                href={item.path}
+                aria-current={here ? "page" : undefined}
+                data-nav-app={item.path}
+                className={`${itemClass} ${here ? activeClass : restingClass}`}
               >
                 {/* The full name wherever it fits. On a phone the row is
-                    four items under a strip of events, and the shorter label
+                    five items under a strip of events, and the shorter label
                     is what keeps them from crowding each other. */}
                 <span className="sm:hidden" aria-hidden="true">
                   {item.shortLabel}

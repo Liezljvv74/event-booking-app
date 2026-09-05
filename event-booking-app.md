@@ -97,15 +97,34 @@ Show all six of the following, always in this order:
 - After the retention window expires, that event's data is auto-deleted,
   with no prompt beforehand
 - On desktop, the user picks a save folder once (via the folder-picker);
-  it's remembered and reused for all future exports, and changeable in
-  Settings. On mobile, skip this — there is no remembered folder
+  it's remembered and reused for all future exports. It is chosen and changed
+  on the Export/Import screen rather than in Settings, since that is where it
+  is used. On mobile, skip this — there is no remembered folder
 
-### Manual export / backup
-- "Export All Data" action, available anytime, select one or all from past, current, and/or
-  future events
-- Format choice: Excel or JSON, meant as a full backup/restore file
-- Desktop: saved to the chosen folder. Mobile: delivered via the browser's
-  normal save/share prompt
+### Export and import
+- Reached from the section nav as "Export/Import your data", available at any
+  time. Export and import sit side by side on the one screen.
+- Export covers current and future events by default; "all events" and a
+  tick-list of any events wanted are both offered.
+- Format choice: CSV or JSON.
+  - **JSON** is the backup: the events as they are held, and the only format
+    import reads.
+  - **CSV** is a report, not a backup: three spreadsheets — guests, tables,
+    expenses — with the event name and date repeated down each row. An event
+    is nested and a spreadsheet is a grid, so nothing reads them back.
+  - Excel was in the earlier wording. A real `.xlsx` is a zip archive and
+    would mean a library, which the dependency rule above forbids; CSV opens
+    in Excel and costs nothing.
+- Desktop: saved to the chosen folder. The folder is remembered, and before
+  every export the user is asked whether it is still the right one, with the
+  folder-picker one press away if it is not. Mobile, and any browser without
+  the folder API: delivered via the browser's normal save/share prompt, where
+  there is no folder to remember and none is asked about.
+- Import reads a JSON backup, lists what is in it, and lets any of it be left
+  out. What happens to events already stored is a choice: **add what is
+  missing** by default, leaving anything already there untouched, or
+  **replace everything**, which empties the store first and is confirmed
+  before it runs.
 
 ## Explicitly out of scope
 - Visual/drag-and-drop floor plan (tables are a numbered list only)
