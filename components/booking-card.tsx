@@ -6,7 +6,6 @@ import {
   ATTENDEE_MIN_WIDTH,
   AttendeeRow,
 } from "@/components/attendee-row";
-import { CancelledGroup } from "@/components/cancelled-group";
 import { formatAmount } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
@@ -363,8 +362,13 @@ export function BookingCard({
           </div>
         )}
 
-        {/* The columns are narrower than a phone, so they scroll sideways
-            here rather than wrapping each guest onto several lines. */}
+        {/* Nothing to lay out for a party that is wholly cancelled: its
+            guests are all in Cancelled guests below, and the column headings
+            on their own read as a table waiting to be filled. The header
+            line above already says the party is off. */}
+        {allCancelled ? null : (
+        /* The columns are narrower than a phone, so they scroll sideways
+           here rather than wrapping each guest onto several lines. */
         <div className="mt-2 overflow-x-auto">
           <div className={ATTENDEE_MIN_WIDTH}>
             <div
@@ -407,9 +411,9 @@ export function BookingCard({
               ))}
             </ul>
 
-            <CancelledGroup booking={booking} />
           </div>
         </div>
+        )}
       </div>
     </li>
   );

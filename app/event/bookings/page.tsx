@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookingCard } from "@/components/booking-card";
+import { CancelledGuests } from "@/components/cancelled-guests";
 import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
 import { tableOccupancy, type SeatingShare } from "@/lib/repository";
@@ -271,7 +272,7 @@ export default function BookingsScreen() {
            bare `grid` sizes its implicit column to the widest thing in it,
            which on a phone is the 36rem of guest columns, and the page then
            scrolls sideways instead of the guest rows doing it. */
-        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-x-8 gap-y-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {event.bookings.map((booking) => (
             <BookingCard
               key={booking.id}
@@ -303,6 +304,9 @@ export default function BookingsScreen() {
           ))}
         </ul>
       )}
+
+      {/* Below every booking, whichever parties they were cancelled from. */}
+      <CancelledGuests event={event} />
     </section>
   );
 }

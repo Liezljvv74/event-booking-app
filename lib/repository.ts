@@ -1064,6 +1064,9 @@ export function cancelAttendee(
     const cancelled = findAttendee(event, bookingId, attendeeId);
     if (cancelled.status === "cancelled") return event;
 
+    // Built before the cancellation is written, so the replacement inherits
+    // the price the cancelled guest was on rather than the zero it is about
+    // to be put on.
     const replacement: Attendee = {
       id: newId(),
       name: "",
@@ -1081,7 +1084,13 @@ export function cancelAttendee(
               attendees: booking.attendees.flatMap((attendee) =>
                 attendee.id === attendeeId
                   ? [
-                      { ...attendee, status: "cancelled" as AttendeeStatus },
+                      // Nobody is charged for a seat they gave up: the money
+                      // owed is the replacement's now.
+                      {
+                        ...attendee,
+                        status: "cancelled" as AttendeeStatus,
+                        ticketPriceCents: 0,
+                      },
                       replacement,
                     ]
                   : [attendee],
@@ -1108,9 +1117,12 @@ export function cancelBooking(
       booking.id === bookingId
         ? {
             ...booking,
+            // No replacements: the booking is off, not reshuffled. Nothing
+            // is charged for it either.
             attendees: booking.attendees.map((attendee) => ({
               ...attendee,
               status: "cancelled" as AttendeeStatus,
+              ticketPriceCents: 0,
             })),
           }
         : booking,

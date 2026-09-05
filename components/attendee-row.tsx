@@ -58,40 +58,6 @@ interface Props {
 const controlClass =
   "h-9 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 
-/**
- * A cancelled guest, laid out on the same grid but as plain text.
- *
- * Disabled inputs would still read as fields waiting to be filled in. This
- * is a closed record: the name, table and price they held, kept for the
- * account of what happened, with the seat itself passed to the replacement
- * line the cancellation opened.
- */
-export function CancelledRow({ attendee }: { attendee: Attendee }) {
-  const muted = "text-xs text-zinc-500 dark:text-zinc-500";
-
-  return (
-    <li data-attendee={attendee.id} data-cancelled-guest={attendee.id}>
-      <div className={`${ATTENDEE_GRID} opacity-70`}>
-        <span aria-hidden="true" />
-        <span
-          data-cancelled-name={attendee.id}
-          className="truncate px-2 text-sm text-zinc-600 line-through dark:text-zinc-400"
-        >
-          {attendee.name.trim() === "" ? "Unnamed guest" : attendee.name}
-        </span>
-        <span className={`px-2 ${muted}`}>
-          {attendee.assignedTableNumber ?? "—"}
-        </span>
-        <span className={`px-2 ${muted}`}>{STATUS_LABELS.cancelled}</span>
-        <span className={`px-2 ${muted}`}>
-          {formatCents(attendee.ticketPriceCents)}
-        </span>
-        <span aria-hidden="true" />
-      </div>
-    </li>
-  );
-}
-
 export function AttendeeRow({
   event,
   attendee,
@@ -124,10 +90,6 @@ export function AttendeeRow({
   if (lastPrice !== attendee.ticketPriceCents) {
     setLastPrice(attendee.ticketPriceCents);
     setPrice(formatCents(attendee.ticketPriceCents));
-  }
-
-  if (attendee.status === "cancelled") {
-    return <CancelledRow attendee={attendee} />;
   }
 
   // Ignoring this guest, so the table they already sit at does not count

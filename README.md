@@ -233,7 +233,8 @@ the guests already seated there is refused.
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
 list runs two abreast on a wide screen so two of them can be read side by
-side. Guests are
+side. Every cancellation on the event is gathered under **Cancelled guests**
+below the bookings, each one a name with its party in brackets. Guests are
 edited individually: name, table, payment status, ticket price. The price a
 party is taken at is chosen from the event's own ticket prices, each shown
 with what it includes, with **Another amount** for anything off the list; the
@@ -289,11 +290,22 @@ whatever is already in the list.
 
 The ones that were argued out and would otherwise be re-litigated:
 
-- **A cancelled guest's line closes and a replacement opens.** Cancelling one
-  guest does not shrink the party: the line becomes a read-only record and a
-  blank line takes its table and price. So the table's occupancy and the
-  event's expected income do not move on a cancellation alone. Cancelling a
-  *whole party* opens no replacements — the booking is off.
+- **A cancelled guest leaves the party and a replacement opens.** Cancelling
+  one guest does not shrink the party: a blank line takes the cancelled
+  guest's table and price, so the table's occupancy and the event's expected
+  income do not move on a cancellation alone. The cancelled guest is out of
+  the party's rows altogether and appears under **Cancelled guests** at the
+  foot of the screen. Their own price is set to zero when they cancel —
+  nobody is charged for a seat they gave up, and the money owed for it is the
+  replacement's now. Cancelling a *whole party* opens no replacements — the
+  booking is off — and its card stays in the list marked as cancelled, with
+  its telephone number still reachable, but shows no table of guest columns
+  because it has no live guests to put in them.
+- **A cancelled guest is a name and a party, and nothing else.** The table
+  they held has gone to their replacement and their price is zero, so the
+  columns that used to follow them were a row of dashes. The party in
+  brackets is what makes the name findable: two guests called the same thing
+  are told apart by whose booking they were on.
 - **Cancelling is the Cancel button's job only.** The status dropdown offers
   the three live statuses. It used to offer Cancelled too, which set the
   status without opening a replacement and quietly took the party's seat away.
@@ -546,6 +558,21 @@ space; one column below the split and on a phone, where the page does not
 scroll sideways and the guest rows do; and the heading, counts and free-seats
 line still running the full width above the list. That pass is what caught
 the phone regression described above.
+
+Moving cancellations out of their parties has a pass of 25 assertions, which
+reads the stored event straight out of IndexedDB as well as the screen: the
+section absent until something is cancelled; a cancelled guest gone from her
+party's rows while the party still shows four live guests and the replacement
+holds her table; her line reading "Bea (Okonkwo)" and carrying no table,
+status or price; the section sitting below every booking; her stored record
+cancelled with a ticket price of zero while the replacement keeps the price
+she was on; two guests of the same name told apart by their parties; a guest
+cancelled before being named still saying which party she was; a wholly
+cancelled party keeping its card, its cancelled marking and its telephone
+number but showing no empty table of columns, with all five of its records
+below and every one of them charged nothing; seven cancellations surviving a
+reload; and the section reading one per line on a phone without the page
+scrolling sideways. The gutter between two parties was measured at 32px.
 
 `npm run build`, `npx tsc --noEmit` and `npx eslint .` are all clean.
 
