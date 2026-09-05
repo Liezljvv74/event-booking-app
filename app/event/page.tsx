@@ -83,16 +83,19 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-lg border p-2.5 ${
+      className={`rounded-lg border p-2 ${
         lead
           ? "border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900"
           : "border-zinc-200 dark:border-zinc-800"
       }`}
     >
-      {/* Two lines' worth of room whether or not the label needs it, so the
+      {/* Bold, on request, and dark enough for the weight to tell: a bold
+          zinc-600 at this size reads as a smudge rather than as a heading.
+
+          Two lines' worth of room whether or not the label needs it, so the
           figures line up across the row instead of stepping down wherever a
           longer label wraps. */}
-      <div className="min-h-[2rem] text-xs leading-4 text-zinc-600 dark:text-zinc-400">
+      <div className="min-h-[2rem] text-xs leading-4 font-semibold text-zinc-700 dark:text-zinc-300">
         {label}
       </div>
 
@@ -108,7 +111,11 @@ function Stat({
             className="flex items-baseline gap-x-1.5"
           >
             <span
-              className={`text-xl font-semibold ${
+              /* A size smaller than the heading above it rather than two
+                 sizes larger, which is what takes the height out of the
+                 cards: the labels are what the row is read by, and six
+                 figures in a row do not each need to shout. */
+              className={`text-base font-semibold ${
                 negative
                   ? "text-red-600 dark:text-red-400"
                   : "text-black dark:text-zinc-50"
@@ -226,7 +233,7 @@ export default function EventDashboard() {
           wrap into it, and the figures drop a size to match. Below that they
           fall back to three across, then two. Expected profit closes the
           set: it is what the five before it add up to. */}
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat
           label="Guests"
           figures={[
@@ -260,7 +267,7 @@ export default function EventDashboard() {
         />
       </div>
 
-      <section className="mt-4">
+      <section className="mt-3">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h2 className="text-base font-semibold text-black dark:text-zinc-50">
             Seating

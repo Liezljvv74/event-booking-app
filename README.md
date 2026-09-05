@@ -264,8 +264,13 @@ event's own details are set when it is created and changed on Manage events,
 which is one page owning the lot rather than three screens each owning a
 piece of it. Then six figures on one line (guests confirmed and cancelled,
 seats available, amount due at the venue, expenses, expected income, expected
-profit), then the seating list: each table with its seat count, what is free
-and who is sitting there. Guests with no name yet are counted rather than
+profit). Each is a small card read by its heading: the heading is bold and
+the number a size below it, on request, rather than the number being twice
+the heading's size and the card twice as tall as it needed to be. The row is
+scanned across for the label you want, not for the biggest number on the
+screen, and the two sizes it lost are two sizes of page the rest of the
+screen moves up by. Then the seating list: each table with its seat count,
+what is free and who is sitting there. Guests with no name yet are counted rather than
 listed. Unseated guests are called out below, because a guest holding no seat
 appears in no table's tally.
 
