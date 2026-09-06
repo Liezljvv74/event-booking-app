@@ -9,6 +9,7 @@
 
 import {
   AUTO_CLOSE_AFTER_HOURS,
+  REGULARS_PARTY,
   DEFAULT_SETTINGS,
   DEFAULT_TABLE_SHAPE,
   MAX_RETENTION_DAYS,
@@ -61,9 +62,18 @@ type StoredExpense = Omit<Expense, "provider" | "paid" | "notes"> &
 /** Tables gained a shape after the store was first written. */
 type StoredTable = Omit<Table, "shape"> & Partial<Pick<Table, "shape">>;
 
-type StoredEvent = Omit<Event, "expenses" | "tables"> & {
+/** Attendees gained the regular mark after the store was first written. */
+type StoredAttendee = Omit<Attendee, "regular"> &
+  Partial<Pick<Attendee, "regular">>;
+
+type StoredBooking = Omit<Booking, "attendees"> & {
+  attendees: StoredAttendee[];
+};
+
+type StoredEvent = Omit<Event, "expenses" | "tables" | "bookings"> & {
   expenses: StoredExpense[];
   tables: StoredTable[];
+  bookings: StoredBooking[];
 };
 
 /**
@@ -78,6 +88,13 @@ function withStoredDefaults(event: StoredEvent): Event {
     tables: event.tables.map((table) => ({
       ...table,
       shape: table.shape ?? DEFAULT_TABLE_SHAPE,
+    })),
+    bookings: event.bookings.map((booking) => ({
+      ...booking,
+      attendees: booking.attendees.map((attendee) => ({
+        ...attendee,
+        regular: attendee.regular ?? false,
+      })),
     })),
     expenses: event.expenses.map((expense) => ({
       ...expense,
@@ -167,6 +184,130 @@ export interface TableInput {
 }
 
 /**
+ * The regulars of one event, written afresh for another.
+ *
+ * A guest ticked as a regular is somebody who comes to everything, so a new
+ * event starts with them already on it — at the same table, which is the
+ * other half of the point: a standing crowd sits where it always sits.
+ *
+ * They arrive as one party called "Regular", which can then be renamed like
+ * any other party — and the new name sticks, because the event after that
+ * finds its regulars already gathered in a party of their own and keeps that
+ * party's name rather than starting again.
+ *
+ * Which is the whole of the rule: the name carries over only from a party
+ * whose every live guest is a regular. Two regulars ticked inside the Botha
+ * family booking are not the Botha party, so they arrive as "Regular"; the
+ * five who were the "Stamgaste" party last month still are, so they stay
+ * "Stamgaste".
+ *
+ * What travels and what does not:
+ *
+ * - The mark travels, which is what makes this happen again next time rather
+ *   than once.
+ * - The seat travels, but only if the new room has that table with room in
+ *   it. A regular whose table is gone or full arrives unseated rather than
+ *   pointing at a table that is not there.
+ * - Whether they had paid does not. It is a different event and nobody has
+ *   paid for it yet, so everyone arrives due to pay at the venue.
+ * - The price does not either: they start on the cheapest of the new event's
+ *   prices, which is where any new guest starts, and keep their old amount
+ *   only when the new event has no prices to start from.
+ * - Cancelled guests do not come. A guest cancelled off the last event is
+ *   still a regular, but their cancellation was about that night.
+ */
+function carriedRegulars(source: Event | null, made: Event): Booking | null {
+  if (source === null) return null;
+
+  const from = source.bookings
+    .map((booking) => ({
+      booking,
+      regulars: booking.attendees.filter(
+        (attendee) =>
+          attendee.regular && SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+      ),
+    }))
+    .filter((entry) => entry.regulars.length > 0);
+
+  if (from.length === 0) return null;
+
+  /**
+   * The party they came from, when they came from one and it was theirs.
+   *
+   * "Theirs" meaning everybody live in it was a regular — a party of regulars
+   * carried over and renamed. A booking that merely contains a regular or two
+   * is somebody else's party and lends nothing to this one, neither its name
+   * nor its telephone number.
+   */
+  const single = from.length === 1 ? from[0] : null;
+  const theirOwn =
+    single !== null &&
+    single.booking.attendees.filter((attendee) =>
+      SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+    ).length === single.regulars.length
+      ? single.booking
+      : null;
+  const cheapest = made.ticketPrices.reduce<number | null>(
+    (lowest, price) =>
+      lowest === null || price.amountCents < lowest ? price.amountCents : lowest,
+    null,
+  );
+
+  // Seats are taken in order and counted as they go, so two regulars from a
+  // table that has shrunk do not both claim the last chair on it.
+  const room = new Map(
+    made.tables.map((table) => [table.tableNumber, table.seatCount]),
+  );
+
+  // Kept beside the party each came from, because the new party's telephone
+  // has to come from one of them.
+  const carried = from.flatMap((entry) =>
+    entry.regulars.map((was) => ({ was, cameFrom: entry.booking })),
+  );
+
+  const attendees: Attendee[] = carried
+    .map(({ was }) => {
+      const wanted = was.assignedTableNumber;
+      const left = wanted === null ? undefined : room.get(wanted);
+      const keepsSeat = wanted !== null && left !== undefined && left > 0;
+      if (keepsSeat) room.set(wanted, left - 1);
+
+      return {
+        id: newId(),
+        regular: true,
+        name: was.name,
+        telephone: was.telephone,
+        assignedTableNumber: keepsSeat ? wanted : null,
+        status: "pay_at_venue" as AttendeeStatus,
+        ticketPriceCents: cheapest ?? was.ticketPriceCents,
+      };
+    });
+
+  /**
+   * A number for the party, which every booking must have — and without which
+   * this one could not even be renamed, since saving a party's details
+   * refuses an empty telephone. So it is taken from the first regular's own
+   * number, or from the party they came from, rather than left blank for the
+   * manager to discover the hard way.
+   */
+  const telephone =
+    [
+      theirOwn?.telephone,
+      carried[0].was.telephone,
+      carried[0].cameFrom.telephone,
+    ].find((number) => number !== undefined && number.trim() !== "") ?? "";
+
+  return {
+    id: newId(),
+    partyName: theirOwn?.partyName ?? REGULARS_PARTY,
+    telephone,
+    ticketPriceCents: cheapest ?? attendees[0].ticketPriceCents,
+    attendees,
+    createdAt: Date.now(),
+  };
+}
+
+/**
  * Create an event, seeding its expenses from the most recent existing event
  * so the manager starts from the previous event's costs rather than a blank
  * list.
@@ -214,8 +355,16 @@ export function createEvent(input: {
     // are numbered from 1 here and there is one place that numbers them.
     const laid = applyTables(event, input.tables ?? []);
 
-    await put(transaction, STORE_EVENTS, laid);
-    return laid;
+    // The regulars come after the tables, because where they sit depends on
+    // what the room turned out to be.
+    const regulars = carriedRegulars(source, laid);
+    const withRegulars =
+      regulars === null
+        ? laid
+        : { ...laid, bookings: [...laid.bookings, regulars] };
+
+    await put(transaction, STORE_EVENTS, withRegulars);
+    return withRegulars;
   });
 }
 
@@ -875,6 +1024,8 @@ export async function createBooking(
       { length: input.guestCount },
       (_unused, index) => ({
         id: newId(),
+        // Nobody is a regular until somebody says so.
+        regular: false,
         name: index === 0 ? partyName : "",
         assignedTableNumber: seats[index] ?? null,
         status: "pay_at_venue" as AttendeeStatus,
@@ -962,6 +1113,7 @@ export interface AttendeePatch {
   assignedTableNumber?: number | null;
   status?: AttendeeStatus;
   ticketPriceCents?: number;
+  regular?: boolean;
 }
 
 export class CancelledGuestError extends Error {
@@ -1179,6 +1331,7 @@ export function addAttendee(
 
     const added: Attendee = {
       id: newId(),
+      regular: false,
       name: "",
       assignedTableNumber: partyTables[0]?.tableNumber ?? null,
       status: "pay_at_venue",

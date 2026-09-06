@@ -33,7 +33,7 @@ const LIVE_STATUSES: readonly AttendeeStatus[] = [
  * rules out per-field labels; the header carries them once instead.
  */
 export const ATTENDEE_GRID =
-  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_5rem_8rem_7rem_2.5rem] items-center gap-2";
+  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_3.5rem_5rem_8rem_7rem_2.5rem] items-center gap-2";
 
 /** Narrower than a phone, so the columns scroll sideways instead of wrapping. */
 export const ATTENDEE_MIN_WIDTH = "min-w-[36rem]";
@@ -180,6 +180,27 @@ export function AttendeeRow({
             }
           }}
           className={controlClass}
+        />
+
+        {/* Between the name and the table, because it is about the person
+            rather than about this event: a regular is written into the next
+            event at the same table when it is created. */}
+        <input
+          type="checkbox"
+          checked={attendee.regular}
+          disabled={busy}
+          aria-label={
+            name.trim() === ""
+              ? `Guest ${position} is a regular`
+              : `${name.trim()} is a regular`
+          }
+          title="A regular: carried into the next event, at this table"
+          data-attendee-regular={attendee.id}
+          data-list-field="regular"
+          // No revert: the tick is drawn from the stored guest, so a refused
+          // change simply leaves it where it was.
+          onChange={(changed) => void apply({ regular: changed.target.checked })}
+          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
         />
 
         <select

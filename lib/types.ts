@@ -94,7 +94,19 @@ export interface Attendee {
   /** Optional per attendee; the booking's telephone is the required one. */
   telephone?: string;
   ticketPriceCents: number;
+  /**
+   * Somebody who comes to everything: a regular.
+   *
+   * A guest ticked here is written into the next event when it is created,
+   * at the same table, so a standing crowd is not retyped every month. The
+   * mark travels with the copy, which is what makes it carry on rather than
+   * only once. Guests stored before regulars existed read back as false.
+   */
+  regular: boolean;
 }
+
+/** What a party of carried-over regulars is called until it is renamed. */
+export const REGULARS_PARTY = "Regular";
 
 export interface Booking {
   id: string;

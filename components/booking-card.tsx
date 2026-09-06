@@ -433,6 +433,7 @@ export function BookingCard({
                 className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
               />
               <span>Name</span>
+              <span className="text-center">Regular</span>
               <span>Table</span>
               <span>Status</span>
               <span>Ticket</span>

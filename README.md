@@ -399,6 +399,29 @@ findable while scrolling past thirty parties and a badge has to be read to be
 noticed. A wholly cancelled party is left grey — nobody in it has a seat, and
 nobody in it is coming either. Seating the last guest takes the colour off.
 
+Each guest's row carries a **Regular** tick between their name and their
+table, on request: somebody who comes to everything. A guest ticked there is
+written into the next event as it is created, at the same table, and arrives
+still ticked so it happens again rather than once.
+
+They arrive as one party called **Regular** — not as the family booking they
+happened to be sitting in, which is somebody else's party. It can be renamed
+like any other party, and the new name carries on from then, because the event
+after that finds its regulars already gathered in a party whose every guest is
+one and keeps that party's name. That is the whole rule: a name travels only
+from a party that is entirely regulars.
+
+The party is given a telephone number — the first regular's own, or the number
+of the party they came from. Not tidiness: a booking cannot be saved without
+one, so a party carried over with the field blank could never have been
+renamed at all, which is the one thing this feature had to allow.
+
+What does not travel: whether they had paid (it is a different event, so
+everybody arrives due to pay at the venue), their old ticket price (they start
+on the cheapest of the new event's, where any new guest starts), and their
+seat when the new room has no such table or no room at it — then they arrive
+unseated, and the party is tinted amber until they are placed.
+
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
 list runs two abreast on a wide screen so two of them can be read side by

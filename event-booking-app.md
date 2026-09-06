@@ -30,7 +30,8 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - **Table**: id, table number, seat count (default 10), shape (long, round
   or square; default long)
 - **Booking**: id, party name, list of attendees, telephone manditory
-- **Attendee**: id, name, assigned table Number (nullable), status, telephone optional
+- **Attendee**: id, name, assigned table Number (nullable), status, telephone
+  optional, regular (a guest who comes to everything)
   (`paid` | `pay_at_venue` | `not_paying` | `cancelled`), ticket price
 - **Expense**: id, description, amount
 
@@ -94,6 +95,19 @@ event manager for now. (The app may evolve into a bigger app, with more function
   frees their seats
 - **Cancel part of a booking**: cancel individual attendees within a party
   without touching the rest
+- **Regular guests.** Each guest's row carries a Regular tick, between the
+  name and the table. A guest ticked there is written into the next event as
+  it is created, at the same table, and stays ticked so it happens again.
+  They arrive as one party called "Regular", which can be renamed like any
+  other — and the new name carries on from then, because the event after that
+  finds them already gathered in a party of their own.
+  - The seat carries only if the new room has that table with room in it;
+    otherwise they arrive unseated.
+  - Nobody arrives having paid: it is a different event.
+  - They start on the cheapest of the new event's ticket prices, which is
+    where any new guest starts.
+  - A guest cancelled off the last event is still a regular, but does not
+    come: the cancellation was about that night.
 - A party with any guest still unseated is tinted amber on the bookings
   screen, so it can be found while scrolling. A wholly cancelled party is
   not: nobody in it has a seat and nobody in it is coming.
