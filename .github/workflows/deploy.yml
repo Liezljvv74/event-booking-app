@@ -1,25 +1,23 @@
 # Builds the static export and publishes it to GitHub Pages.
 #
-# Pages has to be switched on for the repository once by hand, under
-# Settings → Pages → Build and deployment → Source: "GitHub Actions". The
-# action's own `enablement` option cannot do it: creating a Pages site needs
-# admin rights that the workflow token does not have. A private repository
-# also needs a plan that covers Pages; a public one does not.
+# Pages is switched on for this repository with Settings → Pages → Build and
+# deployment → Source set to "GitHub Actions", so this workflow is what
+# publishes the site. It was on "Deploy from a branch" before, which handed
+# the repository root to Jekyll and served the README as the home page
+# instead of the app.
 #
-# After that, the subdirectory the site is served from is read from
-# configure-pages rather than written down here, so renaming the repository
-# does not break links. Deploying this way runs no Jekyll.
+# The subdirectory the site is served from is read from configure-pages
+# rather than written down here, so renaming the repository does not break
+# links. Deploying this way runs no Jekyll.
 name: Deploy to GitHub Pages
 
-# Run by hand only, from the Actions tab. It stays that way until Pages is
-# switched on: with Pages off the build cannot get past configure-pages, and
-# on a push trigger that means a failed run, and a mail about it, for every
-# commit. Once Pages is on, uncomment the push trigger to publish on every
-# push to main.
+# Every push to main publishes, so what is on the branch is what is on the
+# site. It can still be run by hand from the Actions tab, which is how to
+# re-publish without a commit to make.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
-  # push:
-  #   branches: [main]
 
 permissions:
   contents: read
