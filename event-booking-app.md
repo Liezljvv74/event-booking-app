@@ -150,8 +150,19 @@ Show all six of the following, always in this order:
   before it runs.
 
 ### Settings
-- One screen for the things that are true of the app rather than of an event:
-  how long a closed event is kept, and which folder exports are written to.
+- One screen for the things that are true of the app rather than of an event.
+- **How long a closed event is kept** — see Auto-close & retention above.
+- **Seats a new table starts with** — the spec's default is 10; a room laid
+  out in eights or twelves should not be retyped table by table. Any table can
+  still be given a different number.
+- **Currency symbol** — what goes in front of an amount on screen. The spec
+  names no currency, so the default is none, which is what the app did before.
+  On screen only: exports keep writing bare numbers, because a symbol in a
+  spreadsheet cell makes it text and a spreadsheet cannot add up text.
+- **Delete everything** — every event and every saved expense line, named and
+  counted before it runs and gone for good after. Settings themselves stay,
+  including the export folder, which is where the backup was just written.
+- Which folder exports are written to.
 - The export folder is shown and can be forgotten here, but is chosen on
   Export/Import — the picker has to open inside the press that exports, or
   the browser refuses it.

@@ -130,9 +130,39 @@ export interface ExpenseTemplate {
   lastUsedAt: number;
 }
 
+/** Spec default seat count for a newly added table. */
+export const DEFAULT_SEAT_COUNT = 10;
+
+/** As many seats as one table may be given. A guard against a stray key. */
+export const MAX_SEAT_COUNT = 100;
+
+/**
+ * How long a currency symbol may be.
+ *
+ * Three characters covers everything anyone writes in front of an amount —
+ * R, £, kr, US$ — and stops the field from becoming somewhere to type a
+ * sentence that then appears in front of every figure on the dashboard.
+ */
+export const MAX_CURRENCY_SYMBOL = 3;
+
 export interface Settings {
   /** Days a closed event is kept before auto-deletion. Spec default: 14. */
   retentionDays: number;
+  /**
+   * Seats a table starts with when one is added. The spec's default is 10; a
+   * room laid out in eights or twelves should not have to be retyped table by
+   * table, event by event.
+   */
+  defaultSeatCount: number;
+  /**
+   * What goes in front of an amount on screen — "R", "£", or nothing, which
+   * is what the app did before this existed and remains the default. The spec
+   * names no currency, so neither does the app until it is told one.
+   *
+   * On screen only. Exports keep writing bare numbers: a symbol in a CSV cell
+   * makes it text, and a spreadsheet cannot add up text.
+   */
+  currencySymbol: string;
   /**
    * Remembered export folder, persisted as a live handle. Desktop Chromium
    * only; null everywhere else, where exports fall back to a download.
@@ -142,11 +172,10 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   retentionDays: 14,
+  defaultSeatCount: DEFAULT_SEAT_COUNT,
+  currencySymbol: "",
   exportDirectory: null,
 };
-
-/** Spec default seat count for a newly added table. */
-export const DEFAULT_SEAT_COUNT = 10;
 
 /** Hours after an event's date that it auto-closes. */
 export const AUTO_CLOSE_AFTER_HOURS = 48;

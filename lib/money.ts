@@ -38,11 +38,15 @@ export function formatCents(cents: number): string {
  * Format integer cents for display using the viewer's locale.
  * No currency symbol: the spec never names a currency.
  */
-export function formatAmount(cents: number): string {
-  return (Math.round(cents) / 100).toLocaleString(undefined, {
+export function formatAmount(cents: number, symbol = ""): string {
+  const amount = (Math.round(cents) / 100).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+  // A non-breaking space, so a figure never wraps away from its symbol at the
+  // end of a line and leaves an R sitting on its own.
+  return symbol === "" ? amount : `${symbol}\u00a0${amount}`;
 }
 
 /** Sum integer cents. Exact by construction, unlike summing floats. */

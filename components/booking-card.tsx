@@ -6,10 +6,11 @@ import {
   ATTENDEE_MIN_WIDTH,
   AttendeeRow,
 } from "@/components/attendee-row";
-import { formatAmount } from "@/lib/money";
+
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
 import { describeError } from "@/lib/errors";
+import { useMoney } from "@/components/event-provider";
 
 interface Props {
   event: Event;
@@ -53,6 +54,7 @@ export function BookingCard({
   onCancelBooking,
   onSaveDetails,
 }: Props) {
+  const money = useMoney();
   const [confirming, setConfirming] = useState(false);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -256,7 +258,7 @@ export function BookingCard({
             {live.length}/{booking.attendees.length} guests
             {seating === "" ? "" : ` · ${seating}`}
             {cancelledCount > 0 ? ` · ${cancelledCount} cancelled` : ""}
-            {dueCents > 0 ? ` · ${formatAmount(dueCents)} due` : ""}
+            {dueCents > 0 ? ` · ${money(dueCents)} due` : ""}
           </span>
         </button>
 

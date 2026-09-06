@@ -21,6 +21,7 @@ import {
   cancelBooking,
   clearExpenses,
   createBooking,
+  deleteEverything,
   getSettings,
   importBackup,
   createEvent,
@@ -106,14 +107,19 @@ export interface UseEventsResult {
    */
   settings: Settings;
   /**
-   * Remember where exports go, or forget it with null. The handle is the
-   * browser's own object; nothing here can turn it into a path.
+   * Change some of the settings and leave the rest.
+   *
+   * One call for all of them rather than one per field: they are one stored
+   * record, they are all written the same way, and the export folder — a live
+   * directory handle rather than a value — is no exception. Pass null for it
+   * to forget the folder.
    */
-  saveExportFolder: (
-    folder: FileSystemDirectoryHandle | null,
-  ) => Promise<void>;
-  /** How long a closed event is kept before it is deleted. */
-  saveRetentionDays: (days: number) => Promise<void>;
+  saveSetting: (patch: Partial<Settings>) => Promise<void>;
+  /**
+   * Empty the store: every event and the reusable expense lines. Settings
+   * stay. There is no undo, so the screen asking for this says what goes.
+   */
+  deleteAllData: () => Promise<{ events: number; expenseLines: number }>;
   /**
    * Write a backup's events into the store and reload everything from it, so
    * the tabs and the screens show what arrived.
@@ -237,15 +243,8 @@ export function useEvents(): UseEventsResult {
     void load();
   }, [load]);
 
-  const saveExportFolder = useCallback(
-    async (folder: FileSystemDirectoryHandle | null) => {
-      setSettings(await saveSettings({ exportDirectory: folder }));
-    },
-    [],
-  );
-
-  const saveRetentionDays = useCallback(async (days: number) => {
-    setSettings(await saveSettings({ retentionDays: days }));
+  const saveSetting = useCallback(async (patch: Partial<Settings>) => {
+    setSettings(await saveSettings(patch));
   }, []);
 
   const addEvent = useCallback(async (input: NewEventInput) => {
@@ -396,6 +395,16 @@ export function useEvents(): UseEventsResult {
     [refreshEvents],
   );
 
+  // Everything is re-read afterwards: the tabs, the rail and every screen
+  // are looking at a store that is now empty.
+  const deleteAllData = useCallback(async () => {
+    const gone = await deleteEverything();
+    await refreshEvents();
+    setExpenseTemplates(await listExpenseTemplates());
+    setLastTimes(await lastSavedTimes());
+    return gone;
+  }, [refreshEvents]);
+
   return {
     state,
     error,
@@ -404,8 +413,8 @@ export function useEvents(): UseEventsResult {
     expenseTemplates,
     lastTimes,
     settings,
-    saveExportFolder,
-    saveRetentionDays,
+    saveSetting,
+    deleteAllData,
     importData,
     addEvent,
     editEventDetails,

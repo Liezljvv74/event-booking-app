@@ -5,10 +5,11 @@ import {
   EXPENSE_GRID,
   expenseFieldClass,
 } from "@/components/expense-row";
-import { formatAmount, formatCents, parseCents } from "@/lib/money";
+import { formatCents, parseCents } from "@/lib/money";
 import type { ExpenseInput } from "@/lib/repository";
 import type { ExpenseTemplate } from "@/lib/types";
 import { describeError } from "@/lib/errors";
+import { useMoney } from "@/components/event-provider";
 
 interface Props {
   /** Saved lines not already held by a line on this event. */
@@ -52,6 +53,7 @@ export function NewExpenseRow({
   onCancel,
   focusToken,
 }: Props) {
+  const money = useMoney();
   const savedLinesId = useId();
   const [description, setDescription] = useState("");
   const [provider, setProvider] = useState("");
@@ -253,7 +255,7 @@ export function NewExpenseRow({
       <datalist id={savedLinesId} data-saved-lines="new">
         {templates.map((template) => (
           <option key={template.id} value={template.description}>
-            {formatAmount(template.amountCents)}
+            {money(template.amountCents)}
           </option>
         ))}
       </datalist>

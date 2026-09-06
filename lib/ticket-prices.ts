@@ -31,7 +31,7 @@ export function cheapestTicketPrice(
 }
 
 /** "500.00 — Dinner, drinks, table wine", or just the amount if it says nothing. */
-export function describeTicketPrice(price: TicketPrice): string {
-  const amount = formatAmount(price.amountCents);
+export function describeTicketPrice(price: TicketPrice, symbol = ""): string {
+  const amount = formatAmount(price.amountCents, symbol);
   return price.includes === "" ? amount : `${amount} — ${price.includes}`;
 }

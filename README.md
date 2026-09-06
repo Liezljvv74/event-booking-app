@@ -467,6 +467,28 @@ than a setting. The empty field is spelled out as not-a-number rather than
 left to `Number`, which reads `""` as `0`: a cleared box would otherwise arm
 the most destructive value on the screen and enable Save to go with it.
 
+*Seats a new table starts with.* Ten, until told otherwise. It is what the
+tables block on Manage events fills in for you, and it is read once when a
+form opens rather than watched, so changing the setting never renumbers seats
+in a form somebody is halfway through.
+
+*The currency symbol.* Amounts had none, because the spec names no currency,
+and none is still the default. Set it and every figure on screen carries it,
+with a live example of 1 250,50 beside the field so the effect is visible
+before it is saved. On screen only — the exports keep writing bare numbers,
+because a symbol in a spreadsheet cell makes it text and a spreadsheet cannot
+add up text. That split is the reason `formatCents` and `formatAmount` are two
+functions: one is data, the other is display, and only the second learned
+about symbols. Every place that shows money goes through a `useMoney()` hook
+rather than calling the formatter directly, so setting a symbol changes all
+twelve of them and not eleven.
+
+*Delete everything.* Last on the screen, ruled off in red, disabled when there
+is nothing to delete, and it names what goes — so many events, so many
+bookings, so many guests — before a second press does it. Settings survive it,
+the export folder included: that is where the backup was written, and it is
+the last thing to take from someone who has just emptied the store.
+
 *Which folder exports go to.* Shown here, and forgettable here, but chosen on
 Export/Import: the picker has to open inside the press that exports or the
 browser refuses it, so that screen owns the choosing and this one owns only
@@ -689,7 +711,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Auto-close 48h after the event date | Done — sweep runs on every app start |
 | Retention window, then silent delete | Done — 14 days by default, changeable on Settings |
 | Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
-| **Settings screen** | Done — the retention period, and the export folder shown and forgettable. The period goes shorter as well as longer, on request, with the spec's floor of two weeks amended away; shortening it names the closed events it would delete before it saves |
+| **Settings screen** | Done — the retention period, the seats a new table starts with, the currency symbol, delete-everything, and the export folder shown and forgettable. The period goes shorter as well as longer, on request, with the spec's floor of two weeks amended away; shortening it names the closed events it would delete before it saves |
 | Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as an Excel workbook, a web page, or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |

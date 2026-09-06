@@ -104,7 +104,7 @@ export default function DataScreen() {
     allEvents,
     expenseTemplates,
     settings,
-    saveExportFolder,
+    saveSetting,
     importData,
   } = useEventContext();
 
@@ -213,7 +213,7 @@ export default function DataScreen() {
       // about the old folder simply stays open.
       if (picked === null) return;
 
-      await saveExportFolder(picked);
+      await saveSetting({ exportDirectory: picked });
       await write(picked);
     } catch (caught) {
       setExportError(describeError(caught));

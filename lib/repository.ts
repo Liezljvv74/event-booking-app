@@ -10,7 +10,9 @@
 import {
   AUTO_CLOSE_AFTER_HOURS,
   DEFAULT_SETTINGS,
+  MAX_CURRENCY_SYMBOL,
   MAX_RETENTION_DAYS,
+  MAX_SEAT_COUNT,
   MIN_RETENTION_DAYS,
   SEAT_OCCUPYING_STATUSES,
   type Attendee,
@@ -1472,16 +1474,81 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
     }
   }
 
+  const seats = patch.defaultSeatCount;
+  if (seats !== undefined) {
+    if (!Number.isInteger(seats) || seats < 1) {
+      throw new Error("A table needs at least one seat.");
+    }
+    if (seats > MAX_SEAT_COUNT) {
+      throw new Error(`${MAX_SEAT_COUNT} seats is as large as a table gets.`);
+    }
+  }
+
+  if (
+    patch.currencySymbol !== undefined &&
+    patch.currencySymbol.trim().length > MAX_CURRENCY_SYMBOL
+  ) {
+    throw new Error(
+      `A currency symbol is ${MAX_CURRENCY_SYMBOL} characters at most.`,
+    );
+  }
+
   return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
     const row = await getOne<SettingsRow>(
       transaction,
       STORE_SETTINGS,
       SETTINGS_KEY,
     );
-    const value: Settings = { ...DEFAULT_SETTINGS, ...row?.value, ...patch };
+    const value: Settings = {
+      ...DEFAULT_SETTINGS,
+      ...row?.value,
+      ...patch,
+      // Trimmed on the way in rather than on the way out, so every screen
+      // reading it gets the same answer without each remembering to.
+      ...(patch.currencySymbol === undefined
+        ? {}
+        : { currencySymbol: patch.currencySymbol.trim() }),
+    };
     await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });
     return value;
   });
+}
+
+/**
+ * Empty the store: every event, and the library of reusable expense lines.
+ *
+ * Settings are deliberately left alone. The retention period, the seat count,
+ * the currency and the export folder are how this browser is set up rather
+ * than anything recorded in it — and forgetting the folder would lose the
+ * place the backup was just written to, which is the last thing to take away
+ * from somebody who has only now emptied the store.
+ *
+ * One transaction, so it empties or it does not.
+ */
+export function deleteEverything(): Promise<{
+  events: number;
+  expenseLines: number;
+}> {
+  return runTransaction(
+    [STORE_EVENTS, STORE_EXPENSE_TEMPLATES],
+    "readwrite",
+    async (transaction) => {
+      const events = await getAll<StoredEvent>(transaction, STORE_EVENTS);
+      for (const event of events) {
+        await remove(transaction, STORE_EVENTS, event.id);
+      }
+
+      const templates = await getAll<ExpenseTemplate>(
+        transaction,
+        STORE_EXPENSE_TEMPLATES,
+      );
+      for (const template of templates) {
+        await remove(transaction, STORE_EXPENSE_TEMPLATES, template.id);
+      }
+
+      return { events: events.length, expenseLines: templates.length };
+    },
+  );
 }
 
 /* --------------------------------------------------------------- importing */

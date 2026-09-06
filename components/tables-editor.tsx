@@ -19,6 +19,7 @@
 import { useState } from "react";
 import type { TableInput } from "@/lib/repository";
 import { DEFAULT_SEAT_COUNT, type Table } from "@/lib/types";
+import { useEventContext } from "@/components/event-provider";
 import { DENSE_FIELD_CLASS } from "@/components/form-styles";
 
 /** One table as typed, before it is a seat count. */
@@ -98,6 +99,20 @@ export function useTableRows(
   options: { startWithOne?: boolean } = {},
 ): TableRows {
   /**
+   * What a table starts with, from Settings — a room laid out in eights
+   * should not be retyped table by table. Read here rather than passed in by
+   * each caller: both of them are inside the provider, and a default is the
+   * hook's business rather than the form's.
+   *
+   * Read once, on the way in: changing the setting should not renumber the
+   * seats in a form somebody is halfway through filling out.
+   */
+  const { settings } = useEventContext();
+  const [defaultSeats] = useState(
+    () => settings.defaultSeatCount || DEFAULT_SEAT_COUNT,
+  );
+
+  /**
    * The lines and the next key to hand out in one piece of state, for the
    * same reason the ticket prices editor keeps its counter there: working the
    * key out inside the updater takes it from the value that was current.
@@ -109,7 +124,7 @@ export function useTableRows(
     // with one table at the default rather than with nothing.
     return existing.length === 0 && options.startWithOne === true
       ? {
-          rows: [{ key: 0, id: null, seats: String(DEFAULT_SEAT_COUNT) }],
+          rows: [{ key: 0, id: null, seats: String(defaultSeats) }],
           nextKey: 1,
           baseNumber: 0,
         }
@@ -151,7 +166,7 @@ export function useTableRows(
             id: null,
             seats:
               current.rows[current.rows.length - 1]?.seats ??
-              String(DEFAULT_SEAT_COUNT),
+              String(defaultSeats),
           },
         ],
         nextKey: current.nextKey + 1,

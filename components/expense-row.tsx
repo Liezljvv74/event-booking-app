@@ -1,10 +1,11 @@
 "use client";
 
 import { useId, useState } from "react";
-import { formatAmount, formatCents, parseCents } from "@/lib/money";
+import { formatCents, parseCents } from "@/lib/money";
 import type { ExpensePatch } from "@/lib/repository";
 import type { Expense, ExpenseTemplate } from "@/lib/types";
 import { describeError } from "@/lib/errors";
+import { useMoney } from "@/components/event-provider";
 
 /**
  * One grid template shared by the header, every line and the add row, so the
@@ -45,6 +46,7 @@ export function ExpenseRow({
   onClear,
   onEnter,
 }: Props) {
+  const money = useMoney();
   const savedLinesId = useId();
   const [description, setDescription] = useState(expense.description);
   const [provider, setProvider] = useState(expense.provider);
@@ -231,7 +233,7 @@ export function ExpenseRow({
       <datalist id={savedLinesId} data-saved-lines={expense.id}>
         {templates.map((template) => (
           <option key={template.id} value={template.description}>
-            {formatAmount(template.amountCents)}
+            {money(template.amountCents)}
           </option>
         ))}
       </datalist>

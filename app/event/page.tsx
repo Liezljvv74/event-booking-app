@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEventContext } from "@/components/event-provider";
+import { useEventContext, useMoney } from "@/components/event-provider";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
-import { formatAmount, sumCents } from "@/lib/money";
+import { sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import {
@@ -183,6 +183,7 @@ function Seated({ table }: { table: TableOccupancy }) {
 }
 
 export default function EventDashboard() {
+  const money = useMoney();
   const { activeEvents } = useEventContext();
   const eventId = useEventId();
 
@@ -231,19 +232,19 @@ export default function EventDashboard() {
         />
         <Stat
           label="Amount due at the venue"
-          figures={[{ value: formatAmount(summary.dueCents) }]}
+          figures={[{ value: money(summary.dueCents) }]}
         />
         <Stat
           label="Expenses"
-          figures={[{ value: formatAmount(summary.expensesCents) }]}
+          figures={[{ value: money(summary.expensesCents) }]}
         />
         <Stat
           label="Expected income"
-          figures={[{ value: formatAmount(summary.incomeCents) }]}
+          figures={[{ value: money(summary.incomeCents) }]}
         />
         <Stat
           label="Expected profit"
-          figures={[{ value: formatAmount(summary.profitCents) }]}
+          figures={[{ value: money(summary.profitCents) }]}
           lead
           negative={summary.profitCents < 0}
         />

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useEventContext } from "@/components/event-provider";
+import { useEventContext, useMoney } from "@/components/event-provider";
 import {
   EXPENSE_GRID,
   EXPENSE_MIN_WIDTH,
   ExpenseRow,
 } from "@/components/expense-row";
 import { NewExpenseRow } from "@/components/new-expense-row";
-import { formatAmount, sumCents } from "@/lib/money";
+import { sumCents } from "@/lib/money";
 import { unusedExpenseTemplates } from "@/lib/repository";
 import type { Expense } from "@/lib/types";
 import { useEventId } from "@/lib/event-routes";
@@ -29,6 +29,7 @@ function totals(expenses: readonly Expense[]) {
 }
 
 export default function ExpensesScreen() {
+  const money = useMoney();
   const {
     activeEvents,
     addExpenseLine,
@@ -98,9 +99,9 @@ export default function ExpensesScreen() {
         >
           {event.expenses.length} line
           {event.expenses.length === 1 ? "" : "s"} ·{" "}
-          {formatAmount(summary.allCents)} total
+          {money(summary.allCents)} total
           {summary.paidCount > 0
-            ? ` · ${formatAmount(summary.paidCents)} paid · ${formatAmount(summary.outstandingCents)} outstanding`
+            ? ` · ${money(summary.paidCents)} paid · ${money(summary.outstandingCents)} outstanding`
             : ""}
         </p>
 
@@ -219,7 +220,7 @@ export default function ExpensesScreen() {
                 data-expense-total
                 className="text-right text-sm font-semibold text-black dark:text-zinc-50"
               >
-                {formatAmount(summary.allCents)}
+                {money(summary.allCents)}
               </span>
               <span />
               <span
@@ -228,7 +229,7 @@ export default function ExpensesScreen() {
               >
                 {summary.outstandingCents === 0
                   ? "all paid"
-                  : `${formatAmount(summary.outstandingCents)} outstanding`}
+                  : `${money(summary.outstandingCents)} outstanding`}
               </span>
               <span />
             </div>
