@@ -370,6 +370,14 @@ The red button that answers *Cancel all 3?* keeps its words. A cross beside
 un-cancelling is not possible: a party cancelled by a misread cross does not
 come back.
 
+A party with anybody still to place is **tinted amber**, border and all, on
+request: the same colour the dashboard's unseated line and the too-many-guests
+warning already use for something wanting attention that is not yet wrong. The
+whole card rather than a badge on it, because the point of a colour is to be
+findable while scrolling past thirty parties and a badge has to be read to be
+noticed. A wholly cancelled party is left grey — nobody in it has a seat, and
+nobody in it is coming either. Seating the last guest takes the colour off.
+
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
 list runs two abreast on a wide screen so two of them can be read side by

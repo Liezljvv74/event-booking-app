@@ -87,6 +87,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
   frees their seats
 - **Cancel part of a booking**: cancel individual attendees within a party
   without touching the rest
+- A party with any guest still unseated is tinted amber on the bookings
+  screen, so it can be found while scrolling. A wholly cancelled party is
+  not: nobody in it has a seat and nobody in it is coming.
 
 ### Expenses
 - Add line items (description + amount) per event. The blank line to type

@@ -181,9 +181,25 @@ export function BookingCard({
   }
 
   return (
+    /**
+     * A party with anybody still to place is marked, on request, in the amber
+     * this app already uses for something that wants attention but is not
+     * wrong — the same colour as the dashboard's unseated line and the
+     * bookings screen's own warning about more guests than seats.
+     *
+     * The whole card rather than a badge on it: the point of a colour is to
+     * be findable while scrolling past thirty parties, and a badge has to be
+     * read to be noticed. A wholly cancelled party is left alone even though
+     * nobody in it has a seat — nobody in it is coming either.
+     */
     <li
       data-booking={booking.id}
-      className="rounded-lg border border-zinc-200 p-2 dark:border-zinc-800"
+      data-has-unseated={unseated > 0 && !allCancelled ? "" : undefined}
+      className={`rounded-lg border p-2 ${
+        unseated > 0 && !allCancelled
+          ? "border-amber-400 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-950/30"
+          : "border-zinc-200 dark:border-zinc-800"
+      }`}
     >
       {/* Editing replaces the header rather than opening a panel beneath it.
           The name and the telephone are what the header already shows, so a
