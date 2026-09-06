@@ -101,8 +101,13 @@ event manager for now. (The app may evolve into a bigger app, with more function
   They arrive as one party called "Regular", which can be renamed like any
   other — and the new name carries on from then, because the event after that
   finds them already gathered in a party of their own.
-  - The seat carries only if the new room has that table with room in it;
-    otherwise they arrive unseated.
+  - They come from the most recently created event that has any regulars on
+    it, not simply the most recent event. Marking somebody a regular says
+    they come to everything, and it keeps meaning that however many events
+    without regulars are created in between.
+  - They are seated at the same table number, always, so long as the new room
+    has that table. A room laid out without it leaves them unseated, and the
+    party is tinted amber until they are placed.
   - Nobody arrives having paid: it is a different event.
   - They start on the cheapest of the new event's ticket prices, which is
     where any new guest starts.

@@ -416,11 +416,26 @@ of the party they came from. Not tidiness: a booking cannot be saved without
 one, so a party carried over with the field blank could never have been
 renamed at all, which is the one thing this feature had to allow.
 
+They come from **the most recently created event that has any regulars on
+it**, which is not the same as the most recent event and was the bug in the
+first version of this. Regulars get marked on whichever event happens to be
+open, and events are created in whatever order suits: tick two on a February
+function, then create a March one from a blank form, and the most recent
+event has none — so nobody came through. The mark says "this person comes to
+everything", and it has to keep meaning that however many events without
+regulars are made in between.
+
+They are seated at **the same table number, always**, so long as the new room
+has that table — they are placed before anybody else, into an empty room, so
+nothing else can have taken the chair. A room laid out without that table
+leaves them unseated, which is the one case the guarantee cannot cover: there
+is no table to put them at, and inventing one nobody asked for would be
+worse. They still come, and their party is tinted amber until they are
+placed.
+
 What does not travel: whether they had paid (it is a different event, so
-everybody arrives due to pay at the venue), their old ticket price (they start
-on the cheapest of the new event's, where any new guest starts), and their
-seat when the new room has no such table or no room at it — then they arrive
-unseated, and the party is tinted amber until they are placed.
+everybody arrives due to pay at the venue) and their old ticket price (they
+start on the cheapest of the new event's, where any new guest starts).
 
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the

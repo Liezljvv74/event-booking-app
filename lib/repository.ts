@@ -183,6 +183,39 @@ export interface TableInput {
   shape?: TableShape;
 }
 
+/** Whether an event has anybody on it who is coming to everything. */
+function hasRegulars(event: Event): boolean {
+  return event.bookings.some((booking) =>
+    booking.attendees.some(
+      (attendee) =>
+        attendee.regular && SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+    ),
+  );
+}
+
+/**
+ * Which event's regulars a new one starts from: the most recently created
+ * event that has any.
+ *
+ * Not simply the most recent event, which is what the expenses copy from and
+ * what this copied from at first — and it was wrong. Regulars are marked on
+ * whichever event happens to be open, and events are created in whatever
+ * order suits: tick two regulars on a February function, create a March one
+ * from a blank form afterwards, and the most recent event has no regulars on
+ * it, so nobody came through. The mark says "this person comes to
+ * everything", and it has to keep meaning that however many events without
+ * regulars are made in between.
+ */
+function regularsFrom(events: readonly Event[]): Event | null {
+  return events
+    .filter(hasRegulars)
+    .reduce<Event | null>(
+      (latest, event) =>
+        latest === null || event.createdAt > latest.createdAt ? event : latest,
+      null,
+    );
+}
+
 /**
  * The regulars of one event, written afresh for another.
  *
@@ -356,8 +389,10 @@ export function createEvent(input: {
     const laid = applyTables(event, input.tables ?? []);
 
     // The regulars come after the tables, because where they sit depends on
-    // what the room turned out to be.
-    const regulars = carriedRegulars(source, laid);
+    // what the room turned out to be. They come from the last event that had
+    // any rather than from the last event, which is a different question and
+    // often a different event.
+    const regulars = carriedRegulars(regularsFrom(existing), laid);
     const withRegulars =
       regulars === null
         ? laid
