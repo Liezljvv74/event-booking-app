@@ -230,7 +230,9 @@ to the right of them. No labels — a name beside a date needs none — and no
 fields until they are asked for. Beside the pen is a cross, on request, so an
 event can be got rid of without opening it first: it asks below the line,
 naming the event and how many bookings go with it, and the row stays shut
-while it does. The same question is asked inside the detail when the row is
+while it does. The question is written in the same red as the button that
+answers it, on request - the question and the answer are one thing, and the
+colour is what says at a glance that this line is not an ordinary one. The same question is asked inside the detail when the row is
 open, because that is where the eye is in each case. The pen opens the
 event's detail below the line it was on: name, date, start and end across, ticket prices beneath, the
 event's tables under those, and then Remove event, Cancel and Save. Saving closes the row again, and so does

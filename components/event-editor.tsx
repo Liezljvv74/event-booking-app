@@ -250,7 +250,10 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           names what goes, since none of it comes back. */}
       {confirming && !open && (
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-zinc-700 dark:text-zinc-300">
+          {/* Red, the same red as the button beside it: the question and the
+              answer are one thing, and the colour is what says at a glance
+              that this line is not an ordinary one. */}
+          <span className="text-xs text-red-600 dark:text-red-400">
             Delete {event.name} and its {held.bookings} booking
             {held.bookings === 1 ? "" : "s"}?
           </span>
@@ -399,8 +402,9 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
             <div className="ml-auto flex items-center gap-2">
               {confirming ? (
                 <>
-                  {/* Names what goes, because none of it comes back. */}
-                  <span className="text-xs text-zinc-700 dark:text-zinc-300">
+                  {/* Names what goes, because none of it comes back, and in
+                      the red of the button that does it. */}
+                  <span className="text-xs text-red-600 dark:text-red-400">
                     Delete {event.name} and its {held.bookings} booking
                     {held.bookings === 1 ? "" : "s"}?
                   </span>
