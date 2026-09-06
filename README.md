@@ -227,8 +227,12 @@ event** on the right.
 
 On the left, each event is a single closed line: its name, its date, and a pen
 to the right of them. No labels — a name beside a date needs none — and no
-fields until they are asked for. The pen opens the event's detail below the
-line it was on: name, date, start and end across, ticket prices beneath, the
+fields until they are asked for. Beside the pen is a cross, on request, so an
+event can be got rid of without opening it first: it asks below the line,
+naming the event and how many bookings go with it, and the row stays shut
+while it does. The same question is asked inside the detail when the row is
+open, because that is where the eye is in each case. The pen opens the
+event's detail below the line it was on: name, date, start and end across, ticket prices beneath, the
 event's tables under those, and then Remove event, Cancel and Save. Saving closes the row again, and so does
 Cancel and so does the pen, both of which put back what was stored; only a
 refused save keeps it open, with the reason showing. Closed events follow

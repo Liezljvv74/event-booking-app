@@ -228,7 +228,51 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
         >
           <PenIcon />
         </button>
+
+        {/* Beside the pen, so an event can be got rid of without opening it
+            first. It only asks: the answer is the line below, where there is
+            room to say what deleting takes with it. */}
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          disabled={busy || confirming}
+          aria-label={`Delete ${event.name}`}
+          title="Delete this event"
+          data-manage-remove-quick={event.id}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
+
+      {/* Asked here while the row is shut, and inside the detail while it is
+          open, because that is where the eye is in each case. Either way it
+          names what goes, since none of it comes back. */}
+      {confirming && !open && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-700 dark:text-zinc-300">
+            Delete {event.name} and its {held.bookings} booking
+            {held.bookings === 1 ? "" : "s"}?
+          </span>
+          <button
+            type="button"
+            onClick={remove}
+            disabled={busy}
+            data-manage-confirm-remove-quick={event.id}
+            className="h-8 rounded-md bg-red-600 px-3 text-xs font-medium text-white disabled:opacity-50"
+          >
+            {busy ? "Deleting…" : "Delete"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            disabled={busy}
+            className="h-8 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+          >
+            Keep
+          </button>
+        </div>
+      )}
 
       {open && (
         <form onSubmit={submit} className="mt-2">
