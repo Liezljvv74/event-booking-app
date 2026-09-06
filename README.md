@@ -271,7 +271,14 @@ who has cancelled, a party gone entirely, and a settled party saying **paid**
 rather than saying nothing), on the dashboard (guests confirmed and cancelled,
 the amount due at the venue and whether it is settled, seats short, and each
 table's **full** or **N free**), on the expenses screen (paid, outstanding, and
-the footer's **all paid**), and in the cancelled-guests count.
+the footer's **all paid**), on Manage events (a closed event says **Closed**
+between its name and its date), and in the cancelled-guests count.
+
+Nothing marks an active event. Manage events already puts the two groups
+under their own headings, so a row is understood where it sits either way;
+what the pill adds is a row read on its own, or found by its name after a
+scroll, saying which of the two it is. Marking the active ones as well would
+be a badge on every row, which is a badge saying nothing.
 
 The one status that is not a pill is the payment dropdown on a guest's row,
 because that is where a payment state is *changed* and a dropdown is how you

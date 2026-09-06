@@ -72,7 +72,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
   never coloured as an error.
 - Used wherever a status or an amount due is shown: the bookings screen, the
   dashboard summaries and table cards, the expenses screen and its totals,
-  and the cancelled-guests count.
+  the cancelled-guests count, and a closed event's row on Manage events.
+- Only the closed events are marked there. Active is the ordinary state, and
+  a badge on every row would say nothing.
 - The exception is the payment dropdown on a guest's row, which stays a
   dropdown because that is where the status is changed. It takes its colour
   from the same three tones.

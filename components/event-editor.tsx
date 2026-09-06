@@ -7,6 +7,7 @@ import { useEventContext } from "@/components/event-provider";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import { eventHref } from "@/lib/event-routes";
 import { formatEventDate } from "@/lib/event-time";
+import { StatusPill } from "@/components/status-pill";
 import { describeError } from "@/lib/errors";
 import {
   TicketPricesEditor,
@@ -209,6 +210,19 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
         <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
           {event.name}
         </span>
+
+        {/* Only the closed ones are marked. The two groups have headings, so
+            the row does not have to carry its status to be understood in
+            place - but a row read on its own, or found by its name after a
+            scroll, would otherwise not say which of the two it is. Nothing
+            marks an active event: that is the ordinary state, and a badge on
+            every row would be a badge saying nothing. */}
+        {event.status === "closed" && (
+          <StatusPill tone="cancelled" marker={`closed-${event.id}`}>
+            Closed
+          </StatusPill>
+        )}
+
         <span className="shrink-0 text-sm text-ink-muted tabular-nums">
           {formatEventDate(event.eventDate)}
         </span>
