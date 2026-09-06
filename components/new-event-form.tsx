@@ -8,7 +8,8 @@ import {
   TicketPricesEditor,
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
-import { TablesEditor, useTableRows } from "@/components/tables-editor";
+import { TablesPlanner, useTablePlan } from "@/components/tables-editor";
+import { useEventContext } from "@/components/event-provider";
 import { describeError } from "@/lib/errors";
 import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";
 
@@ -36,9 +37,11 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   const [endTime, setEndTime] = useState(lastTimes.endTime ?? "");
   // A new event has no prices to load, and opens with one blank line ready.
   const prices = useTicketPriceRows([], { startWithBlank: true });
-  // A new event opens with one table at the default, so the room is visibly
-  // somewhere to be laid out rather than something to remember later.
-  const tables = useTableRows([], { startWithOne: true });
+  // How the room is laid out, said as a plan: so many tables of such a shape
+  // with so many seats each. Twenty of the same table is one line to read
+  // rather than twenty, and one decision rather than twenty presses.
+  const { settings } = useEventContext();
+  const tables = useTablePlan(settings.defaultSeatCount);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -146,11 +149,11 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       </div>
 
       {/* Last thing before the button: the tables are the event's furniture
-          rather than its identity, and they are the longest list here. The
-          same block appears in the event's row on Manage events, which is
-          where they are changed afterwards. */}
+          rather than its identity. Manage events is where they become a list
+          — by then they differ from one another, which is the point at which
+          a list is worth reading. */}
       <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
-        <TablesEditor control={tables} disabled={saving} />
+        <TablesPlanner plan={tables} disabled={saving} />
       </div>
 
       {error !== "" && (

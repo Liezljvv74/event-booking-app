@@ -23,11 +23,32 @@ export const SEAT_OCCUPYING_STATUSES: readonly AttendeeStatus[] = [
 /** An event is active until 48 hours after its date, then closed. */
 export type EventStatus = "active" | "closed";
 
+/**
+ * The shape of a table, which is what the venue has to put out.
+ *
+ * Descriptive only. The spec keeps a floor plan out of scope and tables a
+ * numbered list, so nothing seats anybody differently for being round — it is
+ * on the table so the setup sheet can say what to carry in.
+ */
+export type TableShape = "long" | "round" | "square";
+
+/** What a table is when nobody has said. Round is the usual banquet table. */
+export const DEFAULT_TABLE_SHAPE: TableShape = "round";
+
+/** The most tables one event can be laid out with. A guard against a typo. */
+export const MAX_TABLES = 200;
+
 export interface Table {
   id: string;
   /** Displayed number, not an index. Unique within its event. */
   tableNumber: number;
   seatCount: number;
+  /**
+   * Long, round or square. Tables created before shapes existed are read back
+   * as round, which is a guess — the app never asked, so there is nothing
+   * better to say and nothing that depends on the answer.
+   */
+  shape: TableShape;
 }
 
 /**

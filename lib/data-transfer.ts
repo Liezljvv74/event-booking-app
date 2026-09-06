@@ -245,18 +245,24 @@ export function guestsCsv(events: readonly Event[]): string {
   );
 }
 
-/** One row per table: how the room is laid out. */
+/**
+ * One row per table: how the room is laid out, and what to carry into it.
+ *
+ * The shape is here and nowhere else in the exports, because this is the only
+ * one of the three a venue reads before the night rather than during it.
+ */
 export function tablesCsv(events: readonly Event[]): string {
   const body = events.flatMap((event) =>
     event.tables.map((table) => [
       event.name,
       event.eventDate,
       String(table.tableNumber),
+      table.shape,
       String(table.seatCount),
     ]),
   );
 
-  return rows(["event", "date", "table", "seats"], body);
+  return rows(["event", "date", "table", "shape", "seats"], body);
 }
 
 /** One row per expense line: what the event costs. */

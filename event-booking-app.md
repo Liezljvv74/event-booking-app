@@ -27,7 +27,8 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ## Data model
 - **Event**: id, name, event date, list of tables, list of bookings, list
   of expenses
-- **Table**: id, table number, seat count (default 10)
+- **Table**: id, table number, seat count (default 10), shape (long, round
+  or square)
 - **Booking**: id, party name, list of attendees, telephone manditory
 - **Attendee**: id, name, assigned table Number (nullable), status, telephone optional
   (`paid` | `pay_at_venue` | `not_paying` | `cancelled`), ticket price
@@ -55,9 +56,15 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ### Tables
 - Simple numbered list, no visual floor plan yet.  
 - Default 10 seats per table; editable per table, per event
-- Add/remove tables freely, and change their seats, on Manage events: at the
-  foot of the New event form when the event is scheduled, and in the event's
-  own row afterwards. That is the only place an event is laid out.
+- A new event is laid out as a plan rather than a list: table form, number of
+  tables, seats per table. Twenty of the same table is three fields, not
+  twenty rows. Nought tables is allowed and means the room is not laid out yet.
+- Afterwards, on the event's own row on Manage events, the tables are a list
+  again — by then they differ from one another — and each can have its seats
+  or its shape changed, or be removed, and more can be added. That is the only
+  place an event is laid out.
+- The shape is descriptive: nothing seats anybody differently for being round.
+  It is on the tables export so the venue knows what to carry in.
 - No Tables screen of its own. The dashboard's seating list is where the
   tables are read: each with its seats, what is free and who is at it.
 - Removing a table unseats whoever was at it; they return to the unseated

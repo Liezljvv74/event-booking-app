@@ -10,6 +10,7 @@
 import {
   AUTO_CLOSE_AFTER_HOURS,
   DEFAULT_SETTINGS,
+  DEFAULT_TABLE_SHAPE,
   MAX_RETENTION_DAYS,
   MAX_SEAT_COUNT,
   MIN_RETENTION_DAYS,
@@ -22,6 +23,7 @@ import {
   type ExpenseTemplate,
   type Settings,
   type Table,
+  type TableShape,
   type TicketPrice,
 } from "./types";
 import { isKnownCurrency } from "./currency";
@@ -56,7 +58,13 @@ interface SettingsRow {
 type StoredExpense = Omit<Expense, "provider" | "paid" | "notes"> &
   Partial<Pick<Expense, "provider" | "paid" | "notes">>;
 
-type StoredEvent = Omit<Event, "expenses"> & { expenses: StoredExpense[] };
+/** Tables gained a shape after the store was first written. */
+type StoredTable = Omit<Table, "shape"> & Partial<Pick<Table, "shape">>;
+
+type StoredEvent = Omit<Event, "expenses" | "tables"> & {
+  expenses: StoredExpense[];
+  tables: StoredTable[];
+};
 
 /**
  * Fill in the fields a stored record may predate.
@@ -67,6 +75,10 @@ type StoredEvent = Omit<Event, "expenses"> & { expenses: StoredExpense[] };
 function withStoredDefaults(event: StoredEvent): Event {
   return {
     ...event,
+    tables: event.tables.map((table) => ({
+      ...table,
+      shape: table.shape ?? DEFAULT_TABLE_SHAPE,
+    })),
     expenses: event.expenses.map((expense) => ({
       ...expense,
       provider: expense.provider ?? "",
@@ -150,6 +162,8 @@ export interface TableInput {
    */
   id?: string | null;
   seatCount: number;
+  /** Long, round or square. Round when the caller does not care. */
+  shape?: TableShape;
 }
 
 /**
@@ -445,6 +459,7 @@ function applyTables(event: Event, inputs: readonly TableInput[]): Event {
         id: newId(),
         tableNumber: highest,
         seatCount: input.seatCount,
+        shape: input.shape ?? DEFAULT_TABLE_SHAPE,
       });
       continue;
     }
@@ -456,7 +471,11 @@ function applyTables(event: Event, inputs: readonly TableInput[]): Event {
     }
 
     kept.add(existing.id);
-    tables.push({ ...existing, seatCount: input.seatCount });
+    tables.push({
+      ...existing,
+      seatCount: input.seatCount,
+      shape: input.shape ?? existing.shape ?? DEFAULT_TABLE_SHAPE,
+    });
   }
 
   const gone = new Set(

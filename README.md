@@ -235,18 +235,36 @@ underneath in their own section, collapsed the same way, and appear nowhere
 else in the app, so this is the only place one can be looked at or removed
 early. Deleting names what goes with it.
 
-Both columns carry the same tables block, ruled off below the ticket prices:
-a line per table, its number, its seats and a cross, and a button to add
-another. A new line copies the seat count of the one above it, because a room
-is usually laid out in tables of one size, and the New event form opens with
-one table of ten so the room is visibly somewhere to be laid out. The numbers
-are read-only. On a new event they are the positions in the list, so deleting
-the second of four moves the ones below up. On an event that exists they are
-not: a table keeps the number its guests are seated by, so removing the first
-of four leaves the other three where they were and the next table added is
-numbered past the highest ever used, never into the gap. A cross on a table
-with guests at it says in its tooltip how many would be unseated, and unseats
-them only when Save is pressed — Cancel puts the table back.
+The two columns carry the tables differently, on request, because they are
+two different jobs.
+
+On the right, laying a room out is a **plan**: *Table form: Long · Number of
+tables: 20 · Seats per table: 10*, with a line underneath saying what the
+three add up to. A room is laid out in twenty of the same table, not in twenty
+decisions, and the form used to ask for a line per table with a button to add
+another — twenty presses and twenty identical rows to read back before the
+event existed. Nought tables is allowed and says so: the room can be laid out
+later.
+
+On the left, an event that exists has a **list**, because by then its tables
+differ from one another: this one has been made bigger, that one has gone. A
+line per table with its number, its seats, its shape and a cross, and a button
+to add another, which copies the line above it — shape included, since a room
+gains another of what it already has far more often than the odd one out. The
+numbers are read-only and a table keeps the number its guests are seated by,
+so removing the first of four leaves the other three where they were and the
+next table added is numbered past the highest ever used, never into the gap. A
+cross on a table with guests at it says in its tooltip how many would be
+unseated, and unseats them only when Save is pressed — Cancel puts the table
+back.
+
+The shape — long, round or square — is descriptive and nothing depends on it:
+the spec keeps a floor plan out of scope and tables a numbered list, so nobody
+is seated differently for being round. It is on the tables export, which is
+the one report a venue reads before the night rather than during it, and it is
+deliberately absent from the other two. Tables stored before shapes existed
+read back as round, which is a guess: the app never asked, and nothing turns
+on the answer.
 
 On the right, the New event form, permanently. It used to be behind a
 `+ New event` button that swapped itself for the form; with the form given a
