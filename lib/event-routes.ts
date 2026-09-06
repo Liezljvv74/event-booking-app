@@ -92,6 +92,26 @@ export function eventHref(eventId: string, section: EventSection = ""): string {
 }
 
 /**
+ * Asks the bookings screen to open at the parties with somebody still to
+ * place, rather than at the top of the list.
+ *
+ * A flag in the URL rather than an instruction passed between screens,
+ * because it has to survive the navigation and because it is then a link
+ * somebody can keep: the dashboard's "Seat them" is a bookmark to the work.
+ */
+export const UNSEATED_PARAM = "unseated";
+
+/** The bookings screen, opened at whoever still needs a seat. */
+export function unseatedHref(eventId: string): string {
+  return `${eventHref(eventId, "bookings")}&${UNSEATED_PARAM}=1`;
+}
+
+/** Whether the URL asked for that. */
+export function useWantsUnseated(): boolean {
+  return useSearchParams().get(UNSEATED_PARAM) === "1";
+}
+
+/**
  * The event the URL points at, or null when there is none.
  *
  * Also null while the page is being prerendered, since the query string is

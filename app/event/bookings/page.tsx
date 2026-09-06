@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BookingCard } from "@/components/booking-card";
 import { CancelledGuests } from "@/components/cancelled-guests";
@@ -12,6 +12,7 @@ import {
   MANAGE_EVENTS_PATH,
   eventHref,
   useEventId,
+  useWantsUnseated,
 } from "@/lib/event-routes";
 
 /** How many tables to name before the line gets too long to scan. */
@@ -94,6 +95,38 @@ export default function BookingsScreen() {
   // Several can be open at once, since comparing two parties is common.
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   /**
+   * Arriving from the dashboard's "Seat them", which asks for the parties
+   * with somebody still to place rather than the top of the list.
+   */
+  const wantsUnseated = useWantsUnseated();
+  /**
+   * The event this screen has already opened for the dashboard's "Seat them",
+   * so it does that once and not on every render.
+   *
+   * Opening the parties is a starting position, not a rule: one closed
+   * afterwards stays closed, and nothing folds up under the cursor while a
+   * guest is being seated.
+   */
+  const [openedFor, setOpenedFor] = useState<string | null>(null);
+  /** The party to bring on screen, once it has been opened. */
+  const [seatTarget, setSeatTarget] = useState<string | null>(null);
+
+  /**
+   * Scrolling is a thing done to the document rather than to any state, so it
+   * is what an effect is for. Setting the state that leads here is done while
+   * rendering instead — the way every "the stored value has changed" case in
+   * this app is — because state set from inside an effect renders twice for
+   * no reason and the linter rightly says so.
+   */
+  useEffect(() => {
+    if (seatTarget === null) return;
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-booking="${CSS.escape(seatTarget)}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [seatTarget]);
+  /**
    * What became of the party just booked. A split is news and reads in the
    * ordinary text colour; only an unseated party is a problem to solve, and
    * only that is amber.
@@ -113,6 +146,34 @@ export default function BookingsScreen() {
 
   const event = activeEvents.find((candidate) => candidate.id === eventId);
   if (!event) return null;
+
+  /**
+   * Arriving from the dashboard's "Seat them": open every party with somebody
+   * still to place, and mark the first of them to be brought on screen.
+   *
+   * Worked out here rather than on mount because the events are still loading
+   * on the first render — there is nothing to look through until this line
+   * has found one.
+   */
+  if (wantsUnseated && openedFor !== event.id) {
+    setOpenedFor(event.id);
+
+    const needing = event.bookings.filter((booking) =>
+      booking.attendees.some(
+        (attendee) =>
+          SEAT_OCCUPYING_STATUSES.includes(attendee.status) &&
+          attendee.assignedTableNumber === null,
+      ),
+    );
+
+    if (needing.length > 0) {
+      setExpanded(
+        (current) =>
+          new Set([...current, ...needing.map((booking) => booking.id)]),
+      );
+      setSeatTarget(needing[0].id);
+    }
+  }
 
   const attendees = event.bookings.flatMap((booking) => booking.attendees);
   const live = attendees.filter((attendee) =>

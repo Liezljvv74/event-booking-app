@@ -9,6 +9,7 @@ import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import {
   MANAGE_EVENTS_PATH,
   eventHref,
+  unseatedHref,
   useEventId,
 } from "@/lib/event-routes";
 
@@ -347,12 +348,13 @@ export default function EventDashboard() {
             {summary.unseated} guest{summary.unseated === 1 ? "" : "s"} not yet
             seated.{" "}
             <Link
-              href={eventHref(event.id, "bookings")}
+              href={unseatedHref(event.id)}
+              data-seat-them
               className="underline"
             >
               Seat them
             </Link>{" "}
-            from the bookings screen.
+            on the bookings screen.
           </p>
         )}
       </section>

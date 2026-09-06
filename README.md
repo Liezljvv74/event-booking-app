@@ -347,7 +347,13 @@ seating list: each table with its seat count, what is free and who is sitting
 there, the names a size below the table's own line since a full table is ten
 of them on one line. Guests with no name yet are counted rather than
 listed. Unseated guests are called out below, because a guest holding no seat
-appears in no table's tally.
+appears in no table's tally — and **Seat them** goes to them rather than to
+the bookings screen in general: it carries `unseated=1`, and the bookings
+screen opens every party with somebody still to place and brings the first of
+them on screen. Opening those parties is a starting position rather than a
+rule, so one closed afterwards stays closed and nothing folds up under the
+cursor while a guest is being seated. Arriving at bookings any other way opens
+nothing, as before.
 
 There was a **Tables** screen between the Dashboard and Bookings. It was cut
 down first, on request, to a plain table of two columns — Table Number and

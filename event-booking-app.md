@@ -105,7 +105,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
 
 ### Dashboard (per active event)
 Show all six of the following, always in this order:
-1. Table list with seat count and assigned attendee names per table
+1. Table list with seat count and assigned attendee names per table, and a
+   line naming anyone not yet seated. Following it opens the bookings screen
+   at the parties they belong to rather than at the top of the list.
 2. Total seats still available across all tables — the room less every
    confirmed guest, whether or not they have been seated yet. A guest with no
    table still needs a chair, so counting only the chairs being sat in
