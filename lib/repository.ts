@@ -1463,9 +1463,7 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
       throw new Error("Enter a whole number of days.");
     }
     if (days < MIN_RETENTION_DAYS) {
-      throw new Error(
-        `Closed events are kept at least ${MIN_RETENTION_DAYS} days. To be rid of one sooner, delete it on Manage events.`,
-      );
+      throw new Error("A number of days cannot be negative.");
     }
     if (days > MAX_RETENTION_DAYS) {
       throw new Error(

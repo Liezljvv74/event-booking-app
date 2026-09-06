@@ -99,11 +99,12 @@ Show all six of the following, always in this order:
 ### Auto-close & retention
 - An event auto-closes 48 hours after its event date has passed
 - Closed event data is kept for 2 weeks by default — a global setting,
-  changeable to a longer period in Settings. Two weeks is the floor: a closed
-  event can be deleted sooner one at a time on Manage events, which is a
-  decision about that event rather than a rule applying to every event from
-  then on. Shortening the period says how many closed events it would delete
-  before it is saved.
+  changeable in Settings, shorter as well as longer. The original wording was
+  "changeable to a longer period" and the floor that came from it was asked
+  off: how long a finished event is kept is the manager's business. Zero is
+  allowed and means a closed event is deleted by the sweep that closes it,
+  never appearing under Closed. Shortening the period names the closed events
+  it would delete before it is saved.
 - After the retention window expires, that event's data is auto-deleted,
   with no prompt beforehand
 - On desktop, the user picks a save folder once (via the folder-picker);

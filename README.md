@@ -451,16 +451,21 @@ and already read and neither of which could be changed from anywhere.
 
 *How long a closed event is kept.* An event closes 48 hours after its date
 and is deleted a fortnight after that; the fortnight is now a number on this
-screen. Fourteen days is the floor, because the spec's wording is that the
-two weeks are changeable *to a longer period* — being rid of one event sooner
-is still a matter of deleting it on Manage events, which is a decision about
-that event rather than a rule that quietly applies to every event afterwards.
+screen, and it goes down as well as up. It had a floor of fourteen days at
+first, taken from the spec's "changeable to a longer period", and the floor
+was asked off: how long a finished event is kept is the manager's business,
+and a limit the app will not go below is the app deciding it knows better.
+Zero is allowed, and says so — at zero a closed event is deleted by the same
+sweep that closes it and never appears under Closed at all.
+
 The screen says how many closed events it is holding and how far back they
 go, and — this is the part that matters — **shortening the period names the
 events it would destroy before it saves**. The sweep runs on the next app
 start rather than on Save, so without that warning those events would simply
 not be there the next time the app was opened, which is a trapdoor rather
-than a setting.
+than a setting. The empty field is spelled out as not-a-number rather than
+left to `Number`, which reads `""` as `0`: a cleared box would otherwise arm
+the most destructive value on the screen and enable Save to go with it.
 
 *Which folder exports go to.* Shown here, and forgettable here, but chosen on
 Export/Import: the picker has to open inside the press that exports or the
@@ -666,7 +671,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Auto-close 48h after the event date | Done — sweep runs on every app start |
 | Retention window, then silent delete | Done — 14 days by default, changeable on Settings |
 | Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
-| **Settings screen** | Done — the retention period, and the export folder shown and forgettable. Two weeks is the floor the spec asks for, and shortening the period names the closed events it would delete before it saves |
+| **Settings screen** | Done — the retention period, and the export folder shown and forgettable. The period goes shorter as well as longer, on request, with the spec's floor of two weeks amended away; shortening it names the closed events it would delete before it saves |
 | Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as an Excel workbook, a web page, or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |

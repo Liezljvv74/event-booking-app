@@ -154,13 +154,17 @@ export const AUTO_CLOSE_AFTER_HOURS = 48;
 /**
  * The shortest retention period Settings will accept.
  *
- * The spec's wording is that the two weeks are "changeable to a longer
- * period", so two weeks is the floor rather than a default that can be dialled
- * down. Deleting a closed event sooner than that is still possible one event
- * at a time on Manage events, where it is a decision about that event rather
- * than a rule that quietly applies to every event from then on.
+ * Zero, which means a closed event is deleted by the same sweep that closes
+ * it and never appears in the Closed list at all.
+ *
+ * The spec said the two weeks were "changeable to a longer period", and this
+ * was 14 for that reason. It was asked to go down as well as up, and the spec
+ * is amended to match: how long to keep a finished event is the manager's
+ * business, and a floor the app will not go below is the app deciding it
+ * knows better. The screen still says what a shorter period would destroy
+ * before it saves one.
  */
-export const MIN_RETENTION_DAYS = 14;
+export const MIN_RETENTION_DAYS = 0;
 
 /** Ten years. Not a rule, just a guard against a typo becoming forever. */
 export const MAX_RETENTION_DAYS = 3650;

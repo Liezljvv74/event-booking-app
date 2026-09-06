@@ -60,7 +60,16 @@ export default function SettingsScreen() {
   }
 
   const closed = allEvents.filter((event) => event.status === "closed");
-  const wanted = Number(days);
+  /**
+   * What is in the box, or NaN when it is not a number.
+   *
+   * The empty string is spelled out rather than left to `Number`, which reads
+   * it as 0 — and 0 is a real setting now, the one that deletes a closed event
+   * the moment it closes. A cleared field would otherwise arm the most
+   * destructive value on the screen and light up Save to go with it.
+   */
+  const typed = days.trim();
+  const wanted = typed === "" ? Number.NaN : Number(typed);
   const changed =
     Number.isInteger(wanted) && wanted !== settings.retentionDays;
 
@@ -131,6 +140,18 @@ export default function SettingsScreen() {
           />
           days after they close, then deleted.
         </label>
+
+        {/* Zero is allowed and does not read as a duration, so it says what
+            it does instead of leaving "kept for 0 days" to be worked out. */}
+        {wanted === 0 && (
+          <p
+            data-retention-zero
+            className="text-sm text-amber-700 dark:text-amber-500"
+          >
+            At zero a closed event is deleted by the same sweep that closes
+            it, and never appears under Closed at all.
+          </p>
+        )}
 
         <p className={FIELD_LABEL_CLASS}>
           An event closes 48 hours after its date. {closed.length} closed event
