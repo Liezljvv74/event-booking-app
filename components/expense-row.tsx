@@ -231,15 +231,20 @@ export function ExpenseRow({
           className={expenseFieldClass}
         />
 
+        {/* Square, so it reads as a cross rather than as a word. What it
+            does is in its name and its tooltip, which is where the word went:
+            a line's own button does not need to spell itself out in a column
+            it shares with nineteen others saying the same thing. */}
         <button
           type="button"
           onClick={() => void onClear()}
           disabled={busy}
           aria-label={`Clear ${expense.description}`}
+          title="Clear this line, keeping it in the saved lines"
           data-expense-clear={expense.id}
-          className="h-9 rounded-md border border-zinc-300 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+          className="h-9 w-9 justify-self-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
-          Clear
+          <span aria-hidden="true">×</span>
         </button>
       </div>
 

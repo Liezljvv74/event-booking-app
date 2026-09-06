@@ -371,10 +371,12 @@ export function BookingCard({
               type="button"
               onClick={() => setSelected(new Set())}
               disabled={busy}
+              aria-label={`Clear the guests picked in ${booking.partyName}`}
+              title="Clear the guests picked"
               data-move-clear={booking.id}
-              className="h-9 rounded-md px-2 text-xs font-medium text-zinc-700 underline disabled:opacity-50 dark:text-zinc-300"
+              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
             >
-              Clear
+              <span aria-hidden="true">×</span>
             </button>
 
           </div>

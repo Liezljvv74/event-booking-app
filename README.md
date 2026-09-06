@@ -400,7 +400,13 @@ something they never agreed to.
 **Expenses** — a six-column table (description, provider, amount, paid, notes)
 edited in place. Only description and amount are required. Clearing a line
 saves it to a library that every Description dropdown then offers, minus
-whatever is already in the list.
+whatever is already in the list. The button that clears one is a cross, on
+request, as is the one that clears the guests picked for a move on Bookings:
+a button in a column of twenty identical buttons does not need to spell
+itself out, and the word has gone to the tooltip and the accessible name
+rather than disappeared. **Clear all lines** keeps its words — it is one
+button rather than a column of them, and a cross where an unlabelled press
+would empty the screen is not a saving.
 
 A blank line is written where it will end up, in the table's own columns,
 rather than in a form above or below it — but only while one is being
