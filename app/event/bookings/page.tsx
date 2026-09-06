@@ -200,12 +200,12 @@ export default function BookingsScreen() {
           rows have to fit on a phone screen, and a separate button row costs
           about sixty pixels of that. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="text-lg font-semibold text-black dark:text-zinc-50">
+        <h1 className="text-lg font-semibold text-ink">
           Bookings
         </h1>
         <p
           data-bookings-summary
-          className="text-xs text-zinc-600 dark:text-zinc-400"
+          className="text-xs text-ink-muted"
         >
           {event.bookings.length} booking
           {event.bookings.length === 1 ? "" : "s"} · {live.length} guest
@@ -216,7 +216,7 @@ export default function BookingsScreen() {
           <button
             type="button"
             onClick={() => setCreating(true)}
-            className="ml-auto h-9 rounded-md bg-black px-3 text-sm font-medium whitespace-nowrap text-white dark:bg-zinc-50 dark:text-black"
+            className="ml-auto h-9 rounded-md bg-primary hover:bg-primary-hover transition-colors px-3 text-sm font-medium whitespace-nowrap text-primary-ink"
           >
             <span className="sm:hidden" aria-hidden="true">
               +
@@ -229,13 +229,13 @@ export default function BookingsScreen() {
       {event.tables.length > 0 && (
         <p
           data-free-seats
-          className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-400"
+          className="mt-1.5 text-xs text-ink-muted"
         >
           {withRoom.length === 0 ? (
             <>All {seatsTotal} seats are taken.</>
           ) : (
             <>
-              <span className="font-medium text-zinc-700 dark:text-zinc-300">
+              <span className="font-medium text-ink-soft">
                 Free seats
               </span>
               {" - "}
@@ -251,11 +251,11 @@ export default function BookingsScreen() {
       {/* Guests can be booked before any table exists, but they cannot be
           seated, so say so rather than leaving an empty Table dropdown. */}
       {event.tables.length === 0 && (
-        <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-3 max-w-prose text-sm text-ink-muted">
           This event has no tables yet, so guests cannot be seated.{" "}
           <Link
             href={MANAGE_EVENTS_PATH}
-            className="underline dark:text-zinc-300"
+            className="underline"
           >
             Add tables on Manage events
           </Link>{" "}
@@ -266,7 +266,7 @@ export default function BookingsScreen() {
       {live.length > seatsTotal && (
         <p
           role="alert"
-          className="mt-3 max-w-prose text-sm text-amber-700 dark:text-amber-500"
+          className="mt-3 max-w-prose text-sm text-cta"
         >
           {live.length} guests booked but only {seatsTotal} seats exist. Add
           tables or seats to fit everyone.
@@ -279,8 +279,8 @@ export default function BookingsScreen() {
           data-notice-tone={notice.tone}
           className={`mt-3 max-w-prose text-sm ${
             notice.tone === "problem"
-              ? "text-amber-700 dark:text-amber-500"
-              : "text-zinc-700 dark:text-zinc-300"
+              ? "text-cta"
+              : "text-ink-soft"
           }`}
         >
           {notice.text}
@@ -322,7 +322,7 @@ export default function BookingsScreen() {
       )}
 
       {event.bookings.length === 0 ? (
-        <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-3 max-w-prose text-sm text-ink-muted">
           No bookings yet. A booking is a party name, a telephone number and a
           guest count.
         </p>

@@ -43,8 +43,8 @@ export const TABLE_SHAPES: readonly { value: TableShape; label: string }[] = [
 ];
 
 const fieldClass =
-  "h-11 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 sm:h-9 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
-const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
+  "h-11 w-full min-w-0 rounded-md border border-line bg-field px-2 text-base text-ink disabled:opacity-50 sm:h-9 sm:text-sm";
+const labelClass = "text-xs text-ink-muted";
 const ROW_GRID = "grid grid-cols-[minmax(5rem,1fr)_minmax(4rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-1";
 
 /** What the tables are, in a form two layouts can be compared by. */
@@ -346,7 +346,7 @@ export function TablesPlanner({
 
   return (
     <div data-tables-plan={scope}>
-      <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="text-xs font-medium text-ink-soft">
         Tables
       </div>
 
@@ -421,7 +421,7 @@ export function TablesPlanner({
                 aria-label={`Remove table line ${index + 1}${suffix}`}
                 title="Remove this line"
                 data-table-group-remove={index}
-                className="h-11 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                className="h-11 w-9 shrink-0 rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50 sm:h-9"
               >
                 <span aria-hidden="true">×</span>
               </button>
@@ -437,7 +437,7 @@ export function TablesPlanner({
         onClick={plan.add}
         disabled={disabled}
         data-add-table-group={scope}
-        className="mt-1.5 h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+        className="mt-1.5 h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
       >
         + Add another table size or shape
       </button>
@@ -446,7 +446,7 @@ export function TablesPlanner({
           arithmetic. */}
       <p
         data-tables-plan-summary
-        className="mt-1 text-xs text-zinc-600 dark:text-zinc-400"
+        className="mt-1 text-xs text-ink-muted"
       >
         {"error" in planned
           ? planned.error
@@ -460,7 +460,7 @@ export function TablesPlanner({
       {plan.removed.length > 0 && (
         <p
           data-tables-removing
-          className="mt-1 text-xs text-amber-700 dark:text-amber-500"
+          className="mt-1 text-xs text-cta"
         >
           Saving drops table
           {plan.removed.length === 1
@@ -476,7 +476,7 @@ export function TablesPlanner({
       {plan.altered.length > 0 && (
         <p
           data-tables-altering
-          className="mt-1 text-xs text-amber-700 dark:text-amber-500"
+          className="mt-1 text-xs text-cta"
         >
           Saving changes the size or shape of table
           {plan.altered.length === 1

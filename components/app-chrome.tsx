@@ -18,7 +18,7 @@ import { SectionNav } from "@/components/section-nav";
 
 export function ChromeLoading() {
   return (
-    <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
+    <p className="p-6 text-sm text-ink-muted">
       Loading your events…
     </p>
   );
@@ -35,10 +35,10 @@ export function ChromeLoading() {
 export function StorageFailure({ error }: { error: string }) {
   return (
     <div className="p-6">
-      <h1 className="text-lg font-semibold text-red-600 dark:text-red-400">
+      <h1 className="text-lg font-semibold text-danger">
         Could not open local storage
       </h1>
-      <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-2 max-w-prose text-sm text-ink-muted">
         {error} This app keeps everything in the browser, so it needs
         IndexedDB. Private browsing windows often block it.
       </p>

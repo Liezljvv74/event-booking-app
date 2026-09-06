@@ -152,7 +152,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   return (
     <form
       onSubmit={submit}
-      className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
+      className="rounded-lg border border-line-soft bg-surface p-4"
     >
       {/* Name, then the date and times to the right of it, the same shape
           an event has on Manage events. */}
@@ -216,12 +216,12 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
           rather than its identity. Manage events is where they become a list
           — by then they differ from one another, which is the point at which
           a list is worth reading. */}
-      <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+      <div className="mt-3 border-t border-line-soft pt-3">
         <TablesPlanner plan={tables} disabled={saving} />
       </div>
 
       {error !== "" && (
-        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-3 text-sm text-danger">
           {error}
         </p>
       )}
@@ -233,12 +233,12 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
           type="submit"
           disabled={saving}
           data-create-event
-          className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+          className="h-11 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-base font-medium text-primary-ink disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Creating…" : made === 1 ? "Create event" : `Create ${made} events`}
         </button>
 
-        <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
+        <label className="flex items-center gap-2 text-sm text-ink">
           Repeat event
           <select
             value={repeat}
@@ -249,7 +249,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
               setRepeat(changed.target.value as "no" | "yes");
               setError("");
             }}
-            className="h-11 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+            className="h-11 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50 sm:h-9"
           >
             <option value="no">No</option>
             <option value="yes">Yes</option>
@@ -257,7 +257,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
         </label>
 
         {repeat === "yes" && (
-          <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
+          <label className="flex items-center gap-2 text-sm text-ink">
             times
             <input
               type="number"
@@ -273,7 +273,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
                 setTimes(changed.target.value);
                 setError("");
               }}
-              className="h-11 w-20 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="h-11 w-20 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50 sm:h-9"
             />
           </label>
         )}
@@ -284,7 +284,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       {repeat === "yes" && (
         <p
           data-repeat-summary
-          className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-400"
+          className="mt-1.5 text-xs text-ink-muted"
         >
           {"error" in planned
             ? planned.error

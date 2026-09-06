@@ -201,15 +201,15 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
     <li
       data-manage-event={event.id}
       data-open={open ? "" : undefined}
-      className="rounded-lg border border-zinc-200 px-2 py-1.5 dark:border-zinc-800"
+      className="rounded-lg border border-line-soft px-2 py-1.5"
     >
       {/* The closed row, and the heading of the open one: what the event is,
           with no labels on it, because a name beside a date needs none. */}
       <div className="flex items-center gap-3">
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-black dark:text-zinc-50">
+        <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
           {event.name}
         </span>
-        <span className="shrink-0 text-sm text-zinc-600 tabular-nums dark:text-zinc-400">
+        <span className="shrink-0 text-sm text-ink-muted tabular-nums">
           {formatEventDate(event.eventDate)}
         </span>
         <button
@@ -220,10 +220,10 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           aria-label={open ? `Close ${event.name}` : `Edit ${event.name}`}
           title={open ? "Close without saving" : "Edit this event"}
           data-manage-edit={event.id}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-zinc-700 disabled:opacity-50 dark:text-zinc-300 ${
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-ink-soft disabled:opacity-50 ${
             open
-              ? "border-zinc-400 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800"
-              : "border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              ? "border-line-strong bg-muted"
+              : "border-line hover:bg-muted"
           }`}
         >
           <PenIcon />
@@ -239,7 +239,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           aria-label={`Delete ${event.name}`}
           title="Delete this event"
           data-manage-remove-quick={event.id}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-40"
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -253,7 +253,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           {/* Red, the same red as the button beside it: the question and the
               answer are one thing, and the colour is what says at a glance
               that this line is not an ordinary one. */}
-          <span className="text-xs text-red-600 dark:text-red-400">
+          <span className="text-xs text-danger">
             Delete {event.name} and its {held.bookings} booking
             {held.bookings === 1 ? "" : "s"}?
           </span>
@@ -262,7 +262,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
             onClick={remove}
             disabled={busy}
             data-manage-confirm-remove-quick={event.id}
-            className="h-8 rounded-md bg-red-600 px-3 text-xs font-medium text-white disabled:opacity-50"
+            className="h-8 rounded-md bg-danger hover:bg-danger-hover transition-colors px-3 text-xs font-medium text-danger-ink disabled:opacity-50"
           >
             {busy ? "Deleting…" : "Delete"}
           </button>
@@ -270,7 +270,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
             type="button"
             onClick={() => setConfirming(false)}
             disabled={busy}
-            className="h-8 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+            className="h-8 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
           >
             Keep
           </button>
@@ -359,7 +359,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           {/* Last of the fields, as on the New event form. Removing a table
               unseats whoever is at it, so the crosses say how many that
               would be, and nothing is written until Save. */}
-          <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+          <div className="mt-3 border-t border-line-soft pt-3">
             <TablesPlanner
               plan={tables}
               disabled={busy}
@@ -372,7 +372,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           {error !== "" && (
             <p
               role="alert"
-              className="mt-1.5 text-sm text-red-600 dark:text-red-400"
+              className="mt-1.5 text-sm text-danger"
             >
               {error}
             </p>
@@ -381,7 +381,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <p
               data-manage-contents={event.id}
-              className="text-xs text-zinc-600 dark:text-zinc-400"
+              className="text-xs text-ink-muted"
             >
               {held.tables} table{held.tables === 1 ? "" : "s"} ·{" "}
               {held.bookings} booking{held.bookings === 1 ? "" : "s"} ·{" "}
@@ -393,7 +393,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
               <Link
                 href={eventHref(event.id)}
                 data-manage-open={event.id}
-                className="text-xs text-zinc-700 underline dark:text-zinc-300"
+                className="text-xs text-primary underline"
               >
                 Open
               </Link>
@@ -404,7 +404,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
                 <>
                   {/* Names what goes, because none of it comes back, and in
                       the red of the button that does it. */}
-                  <span className="text-xs text-red-600 dark:text-red-400">
+                  <span className="text-xs text-danger">
                     Delete {event.name} and its {held.bookings} booking
                     {held.bookings === 1 ? "" : "s"}?
                   </span>
@@ -413,7 +413,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
                     onClick={remove}
                     disabled={busy}
                     data-manage-confirm-remove={event.id}
-                    className="h-9 rounded-md bg-red-600 px-3 text-xs font-medium text-white disabled:opacity-50"
+                    className="h-9 rounded-md bg-danger hover:bg-danger-hover transition-colors px-3 text-xs font-medium text-danger-ink disabled:opacity-50"
                   >
                     Delete
                   </button>
@@ -421,7 +421,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
                     type="button"
                     onClick={() => setConfirming(false)}
                     disabled={busy}
-                    className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+                    className="h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
                   >
                     Keep
                   </button>
@@ -434,7 +434,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
                     disabled={busy}
                     data-manage-remove={event.id}
                     aria-label={`Remove ${event.name}`}
-                    className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+                    className="h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
                   >
                     Remove event
                   </button>
@@ -443,7 +443,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
                     onClick={close}
                     disabled={busy}
                     data-manage-cancel={event.id}
-                    className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+                    className="h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -451,7 +451,7 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
                     type="submit"
                     disabled={busy || !changed}
                     data-manage-save={event.id}
-                    className="h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
+                    className="h-9 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-xs font-medium text-primary-ink disabled:opacity-40"
                   >
                     {busy ? "Saving…" : "Save"}
                   </button>

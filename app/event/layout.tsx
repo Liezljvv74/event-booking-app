@@ -19,17 +19,17 @@ import { MANAGE_EVENTS_PATH, useEventId } from "@/lib/event-routes";
 function EventGone() {
   return (
     <div className="max-w-prose">
-      <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+      <h1 className="text-xl font-semibold text-ink">
         That event is not open
       </h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-2 text-sm text-ink-muted">
         It may have closed automatically 48 hours after its date, or the link
         may be stale. Closed events are still on Manage events until the
         retention period runs out.
       </p>
       <Link
         href={MANAGE_EVENTS_PATH}
-        className="mt-4 inline-block h-11 rounded-md bg-black px-4 text-base leading-[2.75rem] font-medium text-white dark:bg-zinc-50 dark:text-black"
+        className="mt-4 inline-block h-11 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-base leading-[2.75rem] font-medium text-primary-ink"
       >
         Manage events
       </Link>

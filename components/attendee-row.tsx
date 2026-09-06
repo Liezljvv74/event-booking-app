@@ -67,7 +67,7 @@ interface Props {
 }
 
 const controlClass =
-  "h-9 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+  "h-9 w-full min-w-0 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50";
 
 export function AttendeeRow({
   event,
@@ -163,7 +163,7 @@ export function AttendeeRow({
           aria-label={`Select guest ${position} to move`}
           data-select-attendee={attendee.id}
           onChange={(changed) => onSelect(changed.target.checked)}
-          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+          className="h-4 w-4 justify-self-center accent-primary"
         />
 
         <input
@@ -208,7 +208,7 @@ export function AttendeeRow({
               .catch((caught: unknown) => setError(describeError(caught)))
               .finally(() => setBusy(false));
           }}
-          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+          className="h-4 w-4 justify-self-center accent-primary"
         />
 
         <select
@@ -368,7 +368,7 @@ export function AttendeeRow({
           }
           title="Cancel this guest"
           data-cancel-attendee={attendee.id}
-          className="h-9 w-9 justify-self-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          className="h-9 w-9 justify-self-center rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50"
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -377,7 +377,7 @@ export function AttendeeRow({
       {error !== "" && (
         <p
           role="alert"
-          className="mt-1 mb-1 text-xs text-red-600 dark:text-red-400"
+          className="mt-1 mb-1 text-xs text-danger"
         >
           {error}
         </p>

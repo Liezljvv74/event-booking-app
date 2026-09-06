@@ -54,19 +54,19 @@ export default function ManageEventsScreen() {
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section data-column="events" className="@container">
         <div className="flex flex-wrap items-baseline gap-x-3">
-          <h2 className="text-xl font-semibold text-black dark:text-zinc-50">
+          <h2 className="text-xl font-semibold text-ink">
             Scheduled Events
           </h2>
           <p
             data-active-count
-            className="text-xs text-zinc-600 dark:text-zinc-400"
+            className="text-xs text-ink-muted"
           >
             {active.length} event{active.length === 1 ? "" : "s"}
           </p>
         </div>
 
         {active.length === 0 ? (
-          <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 max-w-prose text-sm text-ink-muted">
             {allEvents.length === 0
               ? "You have no events yet. Schedule your first one to start adding tables and bookings."
               : "Nothing active. An event closes automatically 48 hours after its date."}
@@ -86,10 +86,10 @@ export default function ManageEventsScreen() {
 
         {closed.length > 0 && (
           <div className="mt-5">
-            <h3 className="text-base font-semibold text-black dark:text-zinc-50">
+            <h3 className="text-base font-semibold text-ink">
               Closed
             </h3>
-            <p className="mt-1 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
+            <p className="mt-1 max-w-prose text-xs text-ink-muted">
               Kept for the retention period and then deleted automatically.
               This is the only screen they appear on, so delete one here to be
               rid of it sooner.
@@ -108,7 +108,7 @@ export default function ManageEventsScreen() {
         )}
 
         {allEvents.length > 0 && (
-          <p className="mt-6 text-xs text-zinc-500 dark:text-zinc-500">
+          <p className="mt-6 text-xs text-ink-faint">
             Earliest event {formatEventDate(allEvents[0].eventDate)} ·{" "}
             {allEvents.length} event{allEvents.length === 1 ? "" : "s"} stored
           </p>
@@ -116,7 +116,7 @@ export default function ManageEventsScreen() {
       </section>
 
       <section data-column="new" className="@container">
-        <h2 className="text-xl font-semibold text-black dark:text-zinc-50">
+        <h2 className="text-xl font-semibold text-ink">
           Schedule a new event
         </h2>
 

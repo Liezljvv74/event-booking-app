@@ -189,7 +189,7 @@ export function TicketPricesEditor({
           three across leaves no room, and an amount beside a description
           reads as what it is — but without this the New event form would
           show a row of nameless boxes between the name and the date. */}
-      <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="text-xs font-medium text-ink-soft">
         Ticket prices
       </div>
 
@@ -239,7 +239,7 @@ export function TicketPricesEditor({
                 aria-label={`Remove ticket price ${index + 1}${suffix}`}
                 title="Delete this price"
                 data-ticket-remove={index}
-                className="h-11 w-11 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 sm:h-9 sm:w-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                className="h-11 w-11 shrink-0 rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50 sm:h-9 sm:w-9"
               >
                 <span aria-hidden="true">×</span>
               </button>
@@ -253,7 +253,7 @@ export function TicketPricesEditor({
         onClick={control.add}
         disabled={disabled}
         data-ticket-add
-        className="mt-1.5 h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+        className="mt-1.5 h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
       >
         {control.rows.length === 0
           ? "+ Add a ticket price"

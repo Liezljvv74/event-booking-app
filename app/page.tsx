@@ -34,7 +34,7 @@ export default function Home() {
   if (state === "error") return <StorageFailure error={error} />;
 
   return (
-    <p className="p-6 text-sm text-zinc-600 dark:text-zinc-400">
+    <p className="p-6 text-sm text-ink-muted">
       Opening your events…
     </p>
   );

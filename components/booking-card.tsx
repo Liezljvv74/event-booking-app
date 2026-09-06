@@ -200,8 +200,8 @@ export function BookingCard({
       data-has-unseated={unseated > 0 && !allCancelled ? "" : undefined}
       className={`rounded-lg border p-2 ${
         unseated > 0 && !allCancelled
-          ? "border-amber-400 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-950/30"
-          : "border-zinc-200 dark:border-zinc-800"
+          ? "border-cta-line bg-cta-soft"
+          : "border-line-soft"
       }`}
     >
       {/* Editing replaces the header rather than opening a panel beneath it.
@@ -221,7 +221,7 @@ export function BookingCard({
             aria-label={`Party name of ${booking.partyName}`}
             data-party-name-input={booking.id}
             onChange={(changed) => setDraftName(changed.target.value)}
-            className="h-9 min-w-[8rem] flex-1 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+            className="h-9 min-w-[8rem] flex-1 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50"
           />
           <input
             type="tel"
@@ -230,13 +230,13 @@ export function BookingCard({
             aria-label={`Telephone for ${booking.partyName}`}
             data-party-phone-input={booking.id}
             onChange={(changed) => setDraftPhone(changed.target.value)}
-            className="h-9 min-w-[8rem] flex-1 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+            className="h-9 min-w-[8rem] flex-1 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={busy}
             data-party-save={booking.id}
-            className="h-9 rounded-md bg-black px-3 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+            className="h-9 rounded-md bg-primary hover:bg-primary-hover transition-colors px-3 text-xs font-medium text-primary-ink disabled:opacity-50"
           >
             {busy ? "Saving…" : "Save"}
           </button>
@@ -244,7 +244,7 @@ export function BookingCard({
             type="button"
             onClick={() => setEditing(false)}
             disabled={busy}
-            className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+            className="h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
           >
             Cancel
           </button>
@@ -259,20 +259,20 @@ export function BookingCard({
           aria-expanded={expanded}
           aria-controls={guestsId}
           data-party-toggle={booking.id}
-          className="flex min-w-0 items-center gap-2 rounded-md px-1 py-0.5 text-left hover:bg-zinc-100 dark:hover:bg-zinc-900"
+          className="flex min-w-0 items-center gap-2 rounded-md px-1 py-0.5 text-left hover:bg-muted"
         >
           <span
             aria-hidden="true"
-            className={`text-xs text-zinc-500 transition-transform ${expanded ? "rotate-90" : ""}`}
+            className={`text-xs text-ink-faint transition-transform ${expanded ? "rotate-90" : ""}`}
           >
             ▶
           </span>
-          <span className="truncate text-sm font-semibold text-black dark:text-zinc-50">
+          <span className="truncate text-sm font-semibold text-ink">
             {booking.partyName}
           </span>
           <span
             data-booking-summary={booking.id}
-            className="truncate text-xs font-normal text-zinc-600 dark:text-zinc-400"
+            className="truncate text-xs font-normal text-ink-muted"
           >
             {live.length}/{booking.attendees.length} guests
             {seating === "" ? "" : ` · ${seating}`}
@@ -284,7 +284,7 @@ export function BookingCard({
         <div className="ml-auto flex items-center gap-1.5">
           <a
             href={`tel:${booking.telephone}`}
-            className="hidden text-xs text-zinc-600 underline sm:inline dark:text-zinc-400"
+            className="hidden text-xs text-primary underline sm:inline"
           >
             {booking.telephone}
           </a>
@@ -294,18 +294,18 @@ export function BookingCard({
             onClick={openEdit}
             data-party-edit={booking.id}
             aria-label={`Edit ${booking.partyName} details`}
-            className="h-9 rounded-md border border-zinc-300 px-2 text-xs font-medium text-black dark:border-zinc-700 dark:text-zinc-50"
+            className="h-9 rounded-md border border-line px-2 text-xs font-medium text-ink"
           >
             Edit
           </button>
 
           {allCancelled ? (
-            <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+            <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-ink-soft">
               Party cancelled
             </span>
           ) : confirming ? (
             <>
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+              <span className="text-xs text-ink-muted">
                 Cancel all {live.length}?
               </span>
               <button
@@ -313,7 +313,7 @@ export function BookingCard({
                 onClick={cancelAll}
                 disabled={busy}
                 data-confirm-cancel-booking={booking.id}
-                className="h-9 rounded-md bg-red-600 px-2 text-xs font-medium text-white disabled:opacity-50"
+                className="h-9 rounded-md bg-danger hover:bg-danger-hover transition-colors px-2 text-xs font-medium text-danger-ink disabled:opacity-50"
               >
                 Cancel party
               </button>
@@ -321,7 +321,7 @@ export function BookingCard({
                 type="button"
                 onClick={() => setConfirming(false)}
                 disabled={busy}
-                className="h-9 rounded-md border border-zinc-300 px-2 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+                className="h-9 rounded-md border border-line px-2 text-xs font-medium text-ink disabled:opacity-50"
               >
                 Keep
               </button>
@@ -338,7 +338,7 @@ export function BookingCard({
               aria-label={`Cancel the whole of ${booking.partyName}`}
               title="Cancel this whole party"
               data-cancel-booking={booking.id}
-              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              className="h-9 w-9 shrink-0 rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50"
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -348,7 +348,7 @@ export function BookingCard({
       )}
 
       {error !== "" && (
-        <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-2 text-xs text-danger">
           {error}
         </p>
       )}
@@ -359,9 +359,9 @@ export function BookingCard({
         {selected.size > 0 && (
           <div
             data-move-bar={booking.id}
-            className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-zinc-100 px-2 py-1.5 dark:bg-zinc-900"
+            className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-muted px-2 py-1.5"
           >
-            <span className="text-xs font-medium text-black dark:text-zinc-50">
+            <span className="text-xs font-medium text-ink">
               {selected.size} guest{selected.size === 1 ? "" : "s"} picked
             </span>
 
@@ -374,7 +374,7 @@ export function BookingCard({
               aria-label={`Move ${selected.size} picked guests`}
               data-move-to={booking.id}
               onChange={(changed) => void move(changed.target.value)}
-              className="h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+              className="h-9 rounded-md border border-line bg-surface px-2 text-sm text-ink disabled:opacity-50"
             >
               <option value="">Move to…</option>
               <option value="none">No table</option>
@@ -400,7 +400,7 @@ export function BookingCard({
               aria-label={`Clear the guests picked in ${booking.partyName}`}
               title="Clear the guests picked"
               data-move-clear={booking.id}
-              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              className="h-9 w-9 shrink-0 rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50"
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -418,7 +418,7 @@ export function BookingCard({
         <div className="mt-2 overflow-x-auto">
           <div className={ATTENDEE_MIN_WIDTH}>
             <div
-              className={`${ATTENDEE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
+              className={`${ATTENDEE_GRID} px-1 pb-1 text-xs text-ink-faint`}
             >
               <input
                 type="checkbox"
@@ -433,7 +433,7 @@ export function BookingCard({
                       : new Set(),
                   )
                 }
-                className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+                className="h-4 w-4 justify-self-center accent-primary"
               />
               <span>Name</span>
               <span className="text-center">Regular</span>
@@ -481,7 +481,7 @@ export function BookingCard({
               data-add-guest={booking.id}
               aria-label={`Add a guest to ${booking.partyName}`}
               title="Add a guest to this party"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50"
             >
               <span aria-hidden="true">+</span>
             </button>

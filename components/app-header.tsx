@@ -46,7 +46,7 @@ import logoDark from "../public/event_diary_logo-horizontal-dark.svg";
 
 export function AppHeader() {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-2 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line-soft bg-surface px-2 sm:px-6">
       {/* Left. The logo names the app — there is no wordmark beside it — so
           its alt text is the app's name rather than empty.
 

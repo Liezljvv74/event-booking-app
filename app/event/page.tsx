@@ -104,8 +104,8 @@ function Stat({
     <div
       className={`rounded-lg border p-2 ${
         lead
-          ? "border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900"
-          : "border-zinc-200 dark:border-zinc-800"
+          ? "border-primary bg-muted"
+          : "border-line-soft"
       }`}
     >
       {/* Bold, on request, and dark enough for the weight to tell: a bold
@@ -119,7 +119,7 @@ function Stat({
           At 14 a label like "Amount due at the venue" takes a third line in
           a sixth-width card, and the two lines' room below stops being the
           two lines it is there to reserve. */}
-      <div className="min-h-[2rem] text-[0.8125rem] leading-4 font-semibold text-zinc-700 dark:text-zinc-300">
+      <div className="min-h-[2rem] text-[0.8125rem] leading-4 font-semibold text-ink-soft">
         {label}
       </div>
 
@@ -141,14 +141,14 @@ function Stat({
                  each need to shout. */
               className={`text-sm font-semibold ${
                 negative
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-black dark:text-zinc-50"
+                  ? "text-danger"
+                  : "text-ink"
               }`}
             >
               {figure.value}
             </span>
             {figure.unit !== undefined && (
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+              <span className="text-xs text-ink-muted">
                 {figure.unit}
               </span>
             )}
@@ -170,7 +170,7 @@ function Schedule({ event }: { event: Event }) {
   return (
     <p
       data-schedule
-      className="text-xl font-semibold text-zinc-600 dark:text-zinc-400"
+      className="text-xl font-semibold text-ink-muted"
     >
       {formatEventDate(event.eventDate)}
       {times === "" ? " · no times set" : ` · ${times}`}
@@ -182,7 +182,7 @@ function Schedule({ event }: { event: Event }) {
 function Seated({ table }: { table: TableOccupancy }) {
   if (table.taken === 0) {
     return (
-      <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-500">
+      <p className="mt-0.5 text-xs text-ink-faint">
         No one seated yet
       </p>
     );
@@ -192,10 +192,10 @@ function Seated({ table }: { table: TableOccupancy }) {
     /* Smaller than the table's own line above it, on request. A full table
        is ten names on one line, and they are a list to be found in rather
        than a heading to be read. */
-    <p className="mt-0.5 text-xs text-zinc-700 dark:text-zinc-300">
+    <p className="mt-0.5 text-xs text-ink-soft">
       {table.guestNames.join(", ")}
       {table.unnamed > 0 && (
-        <span className="text-zinc-500 dark:text-zinc-500">
+        <span className="text-ink-faint">
           {table.guestNames.length > 0
             ? ` · ${table.unnamed} not named yet`
             : `${table.unnamed} guest${table.unnamed === 1 ? "" : "s"}, not named yet`}
@@ -228,7 +228,7 @@ export default function EventDashboard() {
           here is editable either — an event's own details are edited on
           Manage events, which is a section along the nav above. */}
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+        <h1 className="text-xl font-semibold text-ink">
           {event.name}
         </h1>
         <Schedule event={event} />
@@ -281,12 +281,12 @@ export default function EventDashboard() {
 
       <section className="mt-3">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="text-base font-semibold text-black dark:text-zinc-50">
+          <h2 className="text-base font-semibold text-ink">
             Seating
           </h2>
           <p
             data-seating-summary
-            className="text-xs text-zinc-600 dark:text-zinc-400"
+            className="text-xs text-ink-muted"
           >
             {event.tables.length} table{event.tables.length === 1 ? "" : "s"} ·{" "}
             {summary.seatsTotal} seat{summary.seatsTotal === 1 ? "" : "s"} ·{" "}
@@ -295,11 +295,11 @@ export default function EventDashboard() {
         </div>
 
         {event.tables.length === 0 ? (
-          <p className="mt-2 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 max-w-prose text-sm text-ink-muted">
             No tables yet, so no one can be seated.{" "}
             <Link
               href={MANAGE_EVENTS_PATH}
-              className="underline dark:text-zinc-300"
+              className="underline"
             >
               Add tables on Manage events
             </Link>{" "}
@@ -311,21 +311,21 @@ export default function EventDashboard() {
               <li
                 key={table.tableNumber}
                 data-seating={table.tableNumber}
-                className="rounded-lg border border-zinc-200 p-2.5 dark:border-zinc-800"
+                className="rounded-lg border border-line-soft p-2.5"
               >
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <span className="text-sm font-semibold text-black dark:text-zinc-50">
+                  <span className="text-sm font-semibold text-ink">
                     Table {table.tableNumber}
                   </span>
-                  <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                  <span className="text-xs text-ink-muted">
                     {table.taken} of {table.seatCount} seat
                     {table.seatCount === 1 ? "" : "s"}
                   </span>
                   <span
                     className={`text-xs ${
                       table.free === 0
-                        ? "text-zinc-500 dark:text-zinc-500"
-                        : "font-medium text-emerald-700 dark:text-emerald-500"
+                        ? "text-ink-faint"
+                        : "font-medium text-positive"
                     }`}
                   >
                     {table.free === 0 ? "full" : `${table.free} free`}
@@ -343,7 +343,7 @@ export default function EventDashboard() {
         {summary.unseated > 0 && (
           <p
             data-unseated
-            className="mt-2 max-w-prose text-sm text-amber-700 dark:text-amber-500"
+            className="mt-2 max-w-prose text-sm text-cta"
           >
             {summary.unseated} guest{summary.unseated === 1 ? "" : "s"} not yet
             seated.{" "}

@@ -50,15 +50,15 @@ const DOOR_FORMATS: readonly { as: DoorAs; label: string; note: string }[] = [
 ];
 
 const cardClass =
-  "rounded-lg border border-zinc-200 p-3 dark:border-zinc-800";
+  "rounded-lg border border-line-soft p-3";
 const legendClass =
-  "text-xs font-semibold text-zinc-700 dark:text-zinc-300";
+  "text-xs font-semibold text-ink-soft";
 const choiceClass =
-  "flex items-center gap-2 text-sm text-black dark:text-zinc-50";
+  "flex items-center gap-2 text-sm text-ink";
 const buttonClass =
-  "h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black";
+  "h-9 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-xs font-medium text-primary-ink disabled:opacity-40";
 const quietButtonClass =
-  "h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-50";
+  "h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-40";
 
 /** Newest first: a list of events to pick from is read from the top. */
 function byDateDescending(a: Event, b: Event): number {
@@ -88,10 +88,10 @@ function EventChoice({
         aria-label={`${event.name}, ${formatEventDate(event.eventDate)}`}
         className="h-4 w-4 shrink-0"
       />
-      <span className="min-w-0 flex-1 truncate text-sm text-black dark:text-zinc-50">
+      <span className="min-w-0 flex-1 truncate text-sm text-ink">
         {event.name}
       </span>
-      <span className="shrink-0 text-xs text-zinc-600 tabular-nums dark:text-zinc-400">
+      <span className="shrink-0 text-xs text-ink-muted tabular-nums">
         {formatEventDate(event.eventDate)}
         {note === undefined ? "" : ` · ${note}`}
       </span>
@@ -319,7 +319,7 @@ export default function DataScreen() {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section data-column="export" className="@container">
-        <h2 className="text-xl font-semibold text-black dark:text-zinc-50">
+        <h2 className="text-xl font-semibold text-ink">
           Export
         </h2>
 
@@ -363,7 +363,7 @@ export default function DataScreen() {
             </div>
 
             {scope === "choose" && (
-              <ul className="mt-1.5 flex max-h-56 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-200 p-2 dark:border-zinc-800">
+              <ul className="mt-1.5 flex max-h-56 flex-col gap-1 overflow-y-auto rounded-md border border-line-soft p-2">
                 {sorted.map((event) => (
                   <EventChoice
                     key={event.id}
@@ -397,7 +397,7 @@ export default function DataScreen() {
                   className="h-4 w-4"
                 />
                 JSON
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs text-ink-muted">
                   one file · imports back
                 </span>
               </label>
@@ -411,7 +411,7 @@ export default function DataScreen() {
                   className="h-4 w-4"
                 />
                 CSV
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs text-ink-muted">
                   guests, tables, expenses · for a spreadsheet
                 </span>
               </label>
@@ -425,7 +425,7 @@ export default function DataScreen() {
                   className="h-4 w-4"
                 />
                 Tables and guests
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs text-ink-muted">
                   one file per event · tick guests in at the door
                 </span>
               </label>
@@ -447,7 +447,7 @@ export default function DataScreen() {
                       className="h-4 w-4"
                     />
                     {option.label}
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                    <span className="text-xs text-ink-muted">
                       {option.note}
                     </span>
                   </label>
@@ -462,7 +462,7 @@ export default function DataScreen() {
           {canRemember && folder !== null && !askingFolder && (
             <p
               data-export-folder
-              className="text-xs text-zinc-600 dark:text-zinc-400"
+              className="text-xs text-ink-muted"
             >
               Saving to <span className="font-medium">{folder.name}</span>
             </p>
@@ -470,7 +470,7 @@ export default function DataScreen() {
 
           {askingFolder ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-black dark:text-zinc-50">
+              <span className="text-sm text-ink">
                 Still saving to{" "}
                 <span className="font-semibold">{folder?.name}</span>?
               </span>
@@ -512,7 +512,7 @@ export default function DataScreen() {
               >
                 {exporting ? "Exporting…" : "Export"}
               </button>
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+              <span className="text-xs text-ink-muted">
                 {chosen.length} event{chosen.length === 1 ? "" : "s"} ·{" "}
                 {fileCount} file{fileCount === 1 ? "" : "s"}
               </span>
@@ -520,14 +520,14 @@ export default function DataScreen() {
           )}
 
           {exportError !== "" && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            <p role="alert" className="text-sm text-danger">
               {exportError}
             </p>
           )}
           {exported !== "" && (
             <p
               data-export-done
-              className="text-sm text-emerald-700 dark:text-emerald-500"
+              className="text-sm text-positive"
             >
               {exported}
             </p>
@@ -536,7 +536,7 @@ export default function DataScreen() {
       </section>
 
       <section data-column="import" className="@container">
-        <h2 className="text-xl font-semibold text-black dark:text-zinc-50">
+        <h2 className="text-xl font-semibold text-ink">
           Import
         </h2>
 
@@ -548,13 +548,13 @@ export default function DataScreen() {
               accept=".json,application/json"
               data-import-file
               onChange={(changed) => void readFile(changed.target.files?.[0])}
-              className="text-sm text-black file:mr-3 file:h-9 file:rounded-md file:border file:border-zinc-300 file:bg-transparent file:px-3 file:text-xs file:font-medium dark:text-zinc-50 dark:file:border-zinc-700 dark:file:text-zinc-50"
+              className="text-sm text-ink file:mr-3 file:h-9 file:rounded-md file:border file:border-line file:bg-transparent file:px-3 file:text-xs file:font-medium dark:file:border-line dark:file:text-ink"
             />
           </label>
 
           {incoming !== null && (
             <>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              <p className="text-xs text-ink-muted">
                 <span className="font-medium">{fileName}</span> ·{" "}
                 {incoming.exportedAt === 0
                   ? "no date in the file"
@@ -563,7 +563,7 @@ export default function DataScreen() {
                 {incoming.events.length === 1 ? "" : "s"}
               </p>
 
-              <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto rounded-md border border-zinc-200 p-2 dark:border-zinc-800">
+              <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto rounded-md border border-line-soft p-2">
                 {[...incoming.events].sort(byDateDescending).map((event) => (
                   <EventChoice
                     key={event.id}
@@ -600,7 +600,7 @@ export default function DataScreen() {
                       className="h-4 w-4"
                     />
                     Add what is missing
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                    <span className="text-xs text-ink-muted">
                       events already here are left alone
                     </span>
                   </label>
@@ -614,7 +614,7 @@ export default function DataScreen() {
                       className="h-4 w-4"
                     />
                     Replace everything
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                    <span className="text-xs text-ink-muted">
                       every event here is deleted first
                     </span>
                   </label>
@@ -624,7 +624,7 @@ export default function DataScreen() {
               <div className="flex flex-wrap items-center gap-2">
                 {confirmingReplace && (
                   /* Names what goes, because none of it comes back. */
-                  <span className="text-sm text-red-600 dark:text-red-400">
+                  <span className="text-sm text-danger">
                     Delete all {allEvents.length} event
                     {allEvents.length === 1 ? "" : "s"} here and put back{" "}
                     {toImport.length} from the file?
@@ -637,7 +637,7 @@ export default function DataScreen() {
                   data-import
                   className={
                     confirmingReplace
-                      ? "h-9 rounded-md bg-red-600 px-4 text-xs font-medium text-white disabled:opacity-40"
+                      ? "h-9 rounded-md bg-danger hover:bg-danger-hover transition-colors px-4 text-xs font-medium text-danger-ink disabled:opacity-40"
                       : buttonClass
                   }
                 >
@@ -660,14 +660,14 @@ export default function DataScreen() {
           )}
 
           {importError !== "" && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            <p role="alert" className="text-sm text-danger">
               {importError}
             </p>
           )}
           {imported !== "" && (
             <p
               data-import-done
-              className="text-sm text-emerald-700 dark:text-emerald-500"
+              className="text-sm text-positive"
             >
               {imported}
             </p>

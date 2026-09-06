@@ -191,6 +191,60 @@ home.
 from IndexedDB and re-renders from that. Screens show what was actually
 saved rather than an optimistic guess that could drift from it.
 
+## The palette
+
+Every colour in the app comes from `app/globals.css` and from nowhere else.
+No screen names a colour: there is no `zinc-600`, no `#fff`, no `bg-black`
+anywhere under `app/` or `components/`, and a check drives the built app and
+fails if one appears.
+
+It is built in three layers.
+
+**The ramps** are the brand colours, named for what they are. Royal blue
+(`--royal-*`) is the primary, 500 being royal blue proper at `#4169e1`. A
+light blue (`--azure-*`) is the accent. The neutrals (`--steel-*`) are grey
+tinted towards blue, which is what stops the app reading as a grey form with
+blue buttons dropped on it. Orange (`--ember-*`) is the call to action and
+attention. Red (`--alarm-*`) is a sixth, kept deliberately outside the brand
+five: orange asks to be looked at, red says something is about to be lost,
+and an app that deletes events needs to say the second without borrowing the
+word for the first.
+
+**The semantic tokens** are named for the job rather than the colour -
+`--ink`, `--ink-muted`, `--line`, `--surface`, `--primary`, `--cta`,
+`--danger` - and they are what the screens are written against. Body text is
+black, as asked, with three degrees of quiet beneath it.
+
+**`@theme inline`** hands those tokens to Tailwind, which emits them as
+ordinary utilities: `text-ink`, `bg-surface`, `border-line`, `bg-primary`,
+`text-cta`. The `inline` is load-bearing - it makes each utility resolve to
+the `var()` rather than to a copy of its value.
+
+That last part is why the dark theme is now one block of CSS rather than a
+class on every element. The tokens are repointed inside one
+`prefers-color-scheme: dark` query and every utility in the app follows.
+Before this, each colour was written twice - a light one and a `dark:` one
+side by side, to be kept in step by hand - and taking the pairs out took the
+app from 594 colour classes to 323. The only
+`dark:` left in the whole app is the pair on the logo, which swaps one
+drawing for another rather than one colour for another.
+
+Where a colour carries meaning it now says so in the name. The primary fills
+the button that does the main thing, the current section in the nav, the
+current event's marker in the rail and the focus ring. Orange is the party
+with somebody still to seat, the dashboard's unseated line, and a table plan
+about to drop a table someone is sitting at. Red is destruction and failure
+only. What used to be green - seats free, a backup written, a setting saved -
+is `--positive`, and `--positive` is royal blue: the palette has five colours
+in it, green is not one of them, and a confirmation is not urgent enough to
+be worth a sixth.
+
+The two quietest colours were measured rather than guessed, and two of them
+had to move: the faintest grey and the orange both came in under 4.5:1 on
+white at the size they are used, so `--steel-500` was darkened to `#647691`
+and the call to action taken from `--ember-600` to `--ember-700`. Every
+text token now clears AA against the surface it sits on in both themes.
+
 ## What each screen does
 
 Every screen sits in the same shell: the app header across the top, the
@@ -397,9 +451,11 @@ The red button that answers *Cancel all 3?* keeps its words. A cross beside
 un-cancelling is not possible: a party cancelled by a misread cross does not
 come back.
 
-A party with anybody still to place is **tinted amber**, border and all, on
-request: the same colour the dashboard's unseated line and the too-many-guests
-warning already use for something wanting attention that is not yet wrong. The
+A party with anybody still to place is **tinted orange**, border and all, on
+request: the palette's attention colour, the same one the dashboard's unseated
+line and the too-many-guests warning already use for something wanting
+attention that is not yet wrong. It reads `border-cta-line bg-cta-soft`, so
+the tint and the warnings cannot drift apart - they are the one token. The
 whole card rather than a badge on it, because the point of a colour is to be
 findable while scrolling past thirty parties and a badge has to be read to be
 noticed. A wholly cancelled party is left grey — nobody in it has a seat, and
@@ -443,7 +499,7 @@ has that table — they are placed before anybody else, into an empty room, so
 nothing else can have taken the chair. A room laid out without that table
 leaves them unseated, which is the one case the guarantee cannot cover: there
 is no table to put them at, and inventing one nobody asked for would be
-worse. They still come, and their party is tinted amber until they are
+worse. They still come, and their party is tinted orange until they are
 placed.
 
 What does not travel: whether they had paid (it is a different event, so
@@ -738,7 +794,7 @@ The ones that were argued out and would otherwise be re-litigated:
   amended to match, so `event-booking-app.md` now reads *any number of active
   events*. It was enforced in one place, so removing it took the constant, the
   check in `createEvent`, the `TooManyActiveEventsError` it threw, the
-  `atEventLimit` flag the hook published, and the greyed-out form and amber
+  `atEventLimit` flag the hook published, and the greyed-out form and its
   note on the screen — the count beside **Scheduled Events** now just counts.
   The strip of tabs already scrolled and already refused to shrink its tabs,
   so it held twelve events as readably as four; down the left-hand side, where
@@ -798,10 +854,10 @@ The ones that were argued out and would otherwise be re-litigated:
   guessing.** `:root { color-scheme: light dark }` in `globals.css`. Without
   it Chrome and Edge auto-darken a page they think has no dark theme: they
   repaint the light backgrounds dark and leave images alone, which put the
-  black-on-white logo on a black bar and made it vanish — while the `dark:`
-  swap that would have shown the light-on-dark drawing never fired, because
-  nothing had actually asked the page for dark. The app had always had a dark
-  theme; it had just never said so. It also hands the native controls their
+  black-on-white logo on a black bar and made it vanish — while the swap that
+  would have shown the light-on-dark drawing never fired, because nothing had
+  actually asked the page for dark. The app had always had a dark theme; it
+  had just never said so. It also hands the native controls their
   theme, which matters here: every date and time field in the app opens a
   picker the browser draws.
 - **The door list is a real Excel workbook and no library was added to make
@@ -927,6 +983,20 @@ stood in for one.
 **Everything is typechecked, linted and built.** `npx tsc --noEmit`, `npx
 eslint .` and `npm run build` are run against every change, and the build is a
 real static export of all nine routes rather than a compile.
+
+**The palette is checked by walking the rendered page.** The audit resolves
+every semantic token to the colour the browser actually paints, then reads
+`color`, `backgroundColor`, all four border colours, the outline and the
+accent colour off every element on six screens and fails on any value that is
+not one of them. It ran over 517 elements in each theme with nothing off the
+palette in either, which is a stronger claim than grepping the source: it
+catches a colour arriving from a stylesheet, an inherited value or a
+component nobody thought to grep. Alongside it, spot checks confirm body text
+is black on white in daylight and the light ink on the steel near-black at
+night, that the current section in the nav is filled with exactly the
+`--primary` value, and that royal blue is still `#4169e1`. The contrast of
+every text token against its surface was computed rather than eyeballed, and
+two colours were darkened because of it.
 
 **The file formats are checked by assertion, against the compiled module.**
 `lib/data-transfer.ts` deliberately touches no DOM, so it can be compiled on
@@ -1078,7 +1148,7 @@ fourteen guests filling five, five and four rather than spreading evenly; and
 a party splitting around one already seated, taking the three seats left at
 its table and seven next door. The messages were checked word for word, and
 the split message was confirmed to read in the ordinary text colour while the
-unseated one is amber.
+unseated one is the attention orange.
 
 Running the bookings list two abreast has its own pass of 20 assertions:
 two parties sharing a top edge with the second starting where the first ends

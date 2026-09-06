@@ -31,12 +31,12 @@ export function CancelledGuests({ event }: { event: Event }) {
   return (
     <section data-cancelled-section className="mt-6">
       <div className="flex flex-wrap items-baseline gap-x-3">
-        <h2 className="text-base font-semibold text-black dark:text-zinc-50">
+        <h2 className="text-base font-semibold text-ink">
           Cancelled guests
         </h2>
         <p
           data-cancelled-count
-          className="text-xs text-zinc-600 dark:text-zinc-400"
+          className="text-xs text-ink-muted"
         >
           {cancelled.length} guest{cancelled.length === 1 ? "" : "s"}
         </p>
@@ -50,10 +50,10 @@ export function CancelledGuests({ event }: { event: Event }) {
           <li
             key={guest.id}
             data-cancelled-guest={guest.id}
-            className="truncate text-sm text-zinc-600 dark:text-zinc-400"
+            className="truncate text-sm text-ink-muted"
           >
             {guest.name === "" ? "Unnamed guest" : guest.name}{" "}
-            <span className="text-zinc-500 dark:text-zinc-500">
+            <span className="text-ink-faint">
               ({guest.partyName})
             </span>
           </li>

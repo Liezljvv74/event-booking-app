@@ -34,7 +34,7 @@ interface Props {
  */
 export function EventTabs({ events, selectedId }: Props) {
   return (
-    <div className="border-b border-zinc-200 sm:w-44 sm:shrink-0 sm:border-r sm:border-b-0 dark:border-zinc-800">
+    <div className="border-b border-line-soft sm:w-44 sm:shrink-0 sm:border-r sm:border-b-0">
       <nav
         aria-label="Events"
         className="flex items-stretch gap-1 overflow-x-auto px-2 pt-1.5 sm:flex-col sm:overflow-x-visible sm:p-2"
@@ -52,8 +52,8 @@ export function EventTabs({ events, selectedId }: Props) {
                  edge to the edge facing the screen it opens. */
               className={`shrink-0 rounded-t-md px-3 py-2 text-left text-sm sm:w-full sm:rounded-md ${
                 selected
-                  ? "bg-zinc-100 font-semibold text-black shadow-[inset_0_-2px_0_0_currentColor] sm:shadow-[inset_2px_0_0_0_currentColor] dark:bg-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+                  ? "bg-muted font-semibold text-ink shadow-[inset_0_-2px_0_0_var(--primary)] sm:shadow-[inset_2px_0_0_0_var(--primary)]"
+                  : "text-ink-muted hover:bg-muted"
               }`}
             >
               {/* Truncated to a tab's width in the strip; in the rail the
@@ -61,7 +61,7 @@ export function EventTabs({ events, selectedId }: Props) {
               <span className="block max-w-[12rem] truncate sm:max-w-none">
                 {event.name}
               </span>
-              <span className="block text-xs font-normal text-zinc-500 dark:text-zinc-500">
+              <span className="block text-xs font-normal text-ink-faint">
                 {formatEventDate(event.eventDate)}
               </span>
             </Link>

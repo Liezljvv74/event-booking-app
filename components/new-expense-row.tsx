@@ -217,7 +217,7 @@ export function NewExpenseRow({
           name="paid"
           data-list-field="paid"
           onChange={(changed) => setPaid(changed.target.checked)}
-          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+          className="h-4 w-4 justify-self-center accent-primary"
         />
 
         <input
@@ -239,7 +239,7 @@ export function NewExpenseRow({
             type="submit"
             disabled={saving}
             data-add-expense
-            className="h-9 flex-1 rounded-md bg-black text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+            className="h-9 flex-1 rounded-md bg-primary hover:bg-primary-hover transition-colors text-xs font-medium text-primary-ink disabled:opacity-50"
           >
             {saving ? "…" : "Save"}
           </button>
@@ -250,7 +250,7 @@ export function NewExpenseRow({
             aria-label="Discard this new expense line"
             title="Discard this line"
             data-cancel-expense
-            className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            className="h-9 w-9 shrink-0 rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted disabled:opacity-50"
           >
             <span aria-hidden="true">×</span>
           </button>
@@ -266,7 +266,7 @@ export function NewExpenseRow({
       </datalist>
 
       {error !== "" && (
-        <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-1 text-xs text-danger">
           {error}
         </p>
       )}

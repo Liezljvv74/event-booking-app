@@ -41,11 +41,11 @@ type Section =
   | "wipe";
 
 const numberFieldClass =
-  "h-9 w-20 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+  "h-9 w-20 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50";
 const buttonClass =
-  "h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black";
+  "h-9 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-xs font-medium text-primary-ink disabled:opacity-40";
 const quietButtonClass =
-  "h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-50";
+  "h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-40";
 
 /** An example amount, so a currency can be seen rather than imagined. */
 const EXAMPLE_CENTS = 125050;
@@ -98,8 +98,8 @@ function Setting({
       data-setting={name}
       className={`rounded-lg border ${
         danger
-          ? "border-red-300 dark:border-red-900"
-          : "border-zinc-200 dark:border-zinc-800"
+          ? "border-danger-line"
+          : "border-line-soft"
       }`}
     >
       <button
@@ -111,20 +111,20 @@ function Setting({
         <span
           className={`shrink-0 text-sm font-semibold ${
             danger
-              ? "text-red-700 dark:text-red-400"
-              : "text-black dark:text-zinc-50"
+              ? "text-danger"
+              : "text-ink"
           }`}
         >
           {name}
         </span>
-        <span className="ml-auto truncate text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="ml-auto truncate text-sm text-ink-muted">
           {value}
         </span>
         <Caret open={open} />
       </button>
 
       {open && (
-        <div className="flex flex-col gap-2 border-t border-zinc-200 p-3 dark:border-zinc-800">
+        <div className="flex flex-col gap-2 border-t border-line-soft p-3">
           {children}
         </div>
       )}
@@ -265,14 +265,14 @@ export default function SettingsScreen() {
   const outcome = (
     <>
       {error !== "" && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
       {saved !== "" && (
         <p
           data-setting-saved
-          className="text-sm text-emerald-700 dark:text-emerald-500"
+          className="text-sm text-positive"
         >
           {saved}
         </p>
@@ -282,7 +282,7 @@ export default function SettingsScreen() {
 
   return (
     <section className="max-w-xl">
-      <h1 className="text-xl font-semibold text-black dark:text-zinc-50">
+      <h1 className="text-xl font-semibold text-ink">
         Settings
       </h1>
 
@@ -313,10 +313,10 @@ export default function SettingsScreen() {
                     data-regular={regular.id}
                     className="flex items-center gap-2"
                   >
-                    <span className="min-w-0 flex-1 truncate text-sm text-black dark:text-zinc-50">
+                    <span className="min-w-0 flex-1 truncate text-sm text-ink">
                       {regular.name.trim() === "" ? "Not named yet" : regular.name}
                     </span>
-                    <span className="shrink-0 text-xs text-zinc-600 dark:text-zinc-400">
+                    <span className="shrink-0 text-xs text-ink-muted">
                       {regular.tableNumber === null
                         ? "no table"
                         : `table ${regular.tableNumber}`}
@@ -327,7 +327,7 @@ export default function SettingsScreen() {
                       aria-label={`Take ${regular.name.trim() === "" ? "this guest" : regular.name} off the regulars`}
                       title="Take them off the regulars"
                       data-drop-regular={regular.id}
-                      className="h-8 w-8 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                      className="h-8 w-8 shrink-0 rounded-md border border-line text-base leading-none text-ink-soft hover:bg-muted"
                     >
                       <span aria-hidden="true">×</span>
                     </button>
@@ -357,7 +357,7 @@ export default function SettingsScreen() {
           open={open === "retention"}
           onToggle={() => show("retention")}
         >
-          <label className="flex flex-wrap items-center gap-2 text-sm text-black dark:text-zinc-50">
+          <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
             Kept for
             <input
               type="number"
@@ -396,7 +396,7 @@ export default function SettingsScreen() {
           {wantedDays === 0 && (
             <p
               data-retention-zero
-              className="text-sm text-amber-700 dark:text-amber-500"
+              className="text-sm text-cta"
             >
               At zero a closed event is deleted by the same sweep that closes
               it, and never appears under Closed at all.
@@ -406,7 +406,7 @@ export default function SettingsScreen() {
           {daysChanged && nowDue.length > 0 && (
             <p
               data-retention-warning
-              className="text-sm text-amber-700 dark:text-amber-500"
+              className="text-sm text-cta"
             >
               {nowDue.length} closed event{nowDue.length === 1 ? "" : "s"} would
               already be past {wantedDays} days, and would be deleted when the
@@ -447,7 +447,7 @@ export default function SettingsScreen() {
           open={open === "seats"}
           onToggle={() => show("seats")}
         >
-          <label className="flex flex-wrap items-center gap-2 text-sm text-black dark:text-zinc-50">
+          <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
             A table starts with
             <input
               type="number"
@@ -502,7 +502,7 @@ export default function SettingsScreen() {
           open={open === "currency"}
           onToggle={() => show("currency")}
         >
-          <label className="flex flex-wrap items-center gap-2 text-sm text-black dark:text-zinc-50">
+          <label className="flex flex-wrap items-center gap-2 text-sm text-ink">
             Amounts are in
             <select
               value={currency}
@@ -514,7 +514,7 @@ export default function SettingsScreen() {
                 setError("");
                 setSaved("");
               }}
-              className="h-9 min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="h-9 min-w-0 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50"
             >
               <option value="">None</option>
               {CURRENCIES.map((option) => (
@@ -529,7 +529,7 @@ export default function SettingsScreen() {
             An amount then reads{" "}
             <span
               data-currency-example
-              className="font-medium text-zinc-800 tabular-nums dark:text-zinc-200"
+              className="font-medium text-ink-soft tabular-nums"
             >
               {formatAmount(EXAMPLE_CENTS, currency)}
             </span>
@@ -624,13 +624,13 @@ export default function SettingsScreen() {
           {wiped !== "" && (
             <p
               data-wiped
-              className="text-sm text-emerald-700 dark:text-emerald-500"
+              className="text-sm text-positive"
             >
               {wiped}
             </p>
           )}
           {error !== "" && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            <p role="alert" className="text-sm text-danger">
               {error}
             </p>
           )}
@@ -638,7 +638,7 @@ export default function SettingsScreen() {
           {confirmingWipe ? (
             <div className="flex flex-wrap items-center gap-2">
               {/* Names what goes, because none of it comes back. */}
-              <span className="text-sm text-red-700 dark:text-red-400">
+              <span className="text-sm text-danger">
                 Delete {held.events} event{held.events === 1 ? "" : "s"},{" "}
                 {held.bookings} booking{held.bookings === 1 ? "" : "s"} and{" "}
                 {held.guests} guest{held.guests === 1 ? "" : "s"}?
@@ -648,7 +648,7 @@ export default function SettingsScreen() {
                 onClick={() => void wipe()}
                 disabled={saving}
                 data-confirm-wipe
-                className="h-9 rounded-md bg-red-600 px-4 text-xs font-medium text-white disabled:opacity-40"
+                className="h-9 rounded-md bg-danger hover:bg-danger-hover transition-colors px-4 text-xs font-medium text-danger-ink disabled:opacity-40"
               >
                 {saving ? "Deleting…" : "Delete everything"}
               </button>
@@ -671,7 +671,7 @@ export default function SettingsScreen() {
                 }}
                 disabled={saving || held.events === 0}
                 data-wipe
-                className="h-9 rounded-md border border-red-300 px-3 text-xs font-medium text-red-700 disabled:opacity-40 dark:border-red-900 dark:text-red-400"
+                className="h-9 rounded-md border border-danger-line px-3 text-xs font-medium text-danger disabled:opacity-40"
               >
                 Delete everything
               </button>

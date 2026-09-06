@@ -25,8 +25,8 @@ interface Props {
 const CUSTOM = "custom";
 
 const fieldClass =
-  "h-11 rounded-md border border-zinc-300 bg-white px-3 text-base text-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
-const labelClass = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
+  "h-11 rounded-md border border-line bg-field px-3 text-base text-ink";
+const labelClass = "text-sm font-medium text-ink-soft";
 
 export function NewBookingForm({
   ticketPrices,
@@ -94,12 +94,12 @@ export function NewBookingForm({
   return (
     <form
       onSubmit={submit}
-      className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
+      className="rounded-lg border border-line-soft bg-surface p-4"
     >
-      <h2 className="text-base font-semibold text-black dark:text-zinc-50">
+      <h2 className="text-base font-semibold text-ink">
         New booking
       </h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-1 text-sm text-ink-muted">
         The guest count creates that many guests, each starting unseated at
         this ticket price. Names, tables and prices are editable per guest.
       </p>
@@ -201,7 +201,7 @@ export function NewBookingForm({
       </div>
 
       {error !== "" && (
-        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-3 text-sm text-danger">
           {error}
         </p>
       )}
@@ -211,7 +211,7 @@ export function NewBookingForm({
           type="submit"
           data-create-booking
           disabled={saving}
-          className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+          className="h-11 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-base font-medium text-primary-ink disabled:opacity-50"
         >
           {saving ? "Creating…" : "Create booking"}
         </button>
@@ -219,7 +219,7 @@ export function NewBookingForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="h-11 rounded-md border border-zinc-300 px-4 text-base font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+          className="h-11 rounded-md border border-line px-4 text-base font-medium text-ink disabled:opacity-50"
         >
           Cancel
         </button>

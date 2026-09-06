@@ -90,12 +90,12 @@ export default function ExpensesScreen() {
   return (
     <section>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="text-lg font-semibold text-black dark:text-zinc-50">
+        <h1 className="text-lg font-semibold text-ink">
           Expenses
         </h1>
         <p
           data-expense-summary
-          className="text-xs text-zinc-600 dark:text-zinc-400"
+          className="text-xs text-ink-muted"
         >
           {event.expenses.length} line
           {event.expenses.length === 1 ? "" : "s"} ·{" "}
@@ -109,7 +109,7 @@ export default function ExpensesScreen() {
           {event.expenses.length > 0 &&
             (confirmingClearAll ? (
               <>
-                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="text-xs text-ink-muted">
                   Clear all {event.expenses.length} lines?
                 </span>
                 <button
@@ -117,7 +117,7 @@ export default function ExpensesScreen() {
                   onClick={clearAll}
                   disabled={busy}
                   data-confirm-clear-all
-                  className="h-9 rounded-md bg-red-600 px-3 text-xs font-medium text-white disabled:opacity-50"
+                  className="h-9 rounded-md bg-danger hover:bg-danger-hover transition-colors px-3 text-xs font-medium text-danger-ink disabled:opacity-50"
                 >
                   Clear all
                 </button>
@@ -125,7 +125,7 @@ export default function ExpensesScreen() {
                   type="button"
                   onClick={() => setConfirmingClearAll(false)}
                   disabled={busy}
-                  className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+                  className="h-9 rounded-md border border-line px-3 text-xs font-medium text-ink disabled:opacity-50"
                 >
                   Keep
                 </button>
@@ -135,7 +135,7 @@ export default function ExpensesScreen() {
                 type="button"
                 onClick={() => setConfirmingClearAll(true)}
                 data-clear-all
-                className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black dark:border-zinc-700 dark:text-zinc-50"
+                className="h-9 rounded-md border border-line px-3 text-xs font-medium text-ink"
               >
                 Clear all lines
               </button>
@@ -150,14 +150,14 @@ export default function ExpensesScreen() {
             onClick={openBlankLine}
             disabled={adding}
             data-add-line
-            className="h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
+            className="h-9 rounded-md bg-primary hover:bg-primary-hover transition-colors px-4 text-xs font-medium text-primary-ink disabled:opacity-40"
           >
             Add
           </button>
         </div>
       </div>
 
-      <p className="mt-1.5 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
+      <p className="mt-1.5 max-w-prose text-xs text-ink-muted">
         A line needs a description and an amount. Provider, the paid tick and
         notes can be filled in whenever you know them. Each Description offers
         the lines you have cleared before, minus any already in the list, so a
@@ -165,7 +165,7 @@ export default function ExpensesScreen() {
       </p>
 
       {error !== "" && (
-        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="mt-3 text-sm text-danger">
           {error}
         </p>
       )}
@@ -184,7 +184,7 @@ export default function ExpensesScreen() {
               empty space. */}
           {(event.expenses.length > 0 || adding) && (
             <div
-              className={`${EXPENSE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
+              className={`${EXPENSE_GRID} px-1 pb-1 text-xs text-ink-faint`}
               aria-hidden="true"
             >
               <span>Description</span>
@@ -215,22 +215,22 @@ export default function ExpensesScreen() {
               it adds up. */}
           {event.expenses.length > 0 && (
             <div
-              className={`${EXPENSE_GRID} border-t border-zinc-200 pt-1.5 dark:border-zinc-800`}
+              className={`${EXPENSE_GRID} border-t border-line-soft pt-1.5`}
             >
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+              <span className="text-xs text-ink-muted">
                 Total
               </span>
               <span />
               <span
                 data-expense-total
-                className="text-right text-sm font-semibold text-black dark:text-zinc-50"
+                className="text-right text-sm font-semibold text-ink"
               >
                 {money(summary.allCents)}
               </span>
               <span />
               <span
                 data-expense-outstanding
-                className="text-xs text-zinc-600 dark:text-zinc-400"
+                className="text-xs text-ink-muted"
               >
                 {summary.outstandingCents === 0
                   ? "all paid"
@@ -255,7 +255,7 @@ export default function ExpensesScreen() {
       </div>
 
       {event.expenses.length === 0 && (
-        <p className="mt-3 max-w-prose text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-3 max-w-prose text-sm text-ink-muted">
           No expense lines yet. Whatever you add here is copied into your next
           event as a starting point.
         </p>

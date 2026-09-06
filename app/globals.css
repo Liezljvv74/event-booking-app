@@ -1,42 +1,310 @@
 @import "tailwindcss";
 
+/**
+ * The brand palette, and the only place in the app a colour is written down.
+ *
+ * Three layers, in this order:
+ *
+ *   1. the ramps below - the raw brand colours, named for what they are
+ *      (`--royal-600`), each a full range so a tint or a shade is always to
+ *      hand without anyone mixing one by eye;
+ *   2. the semantic tokens under them - named for the job (`--ink-muted`,
+ *      `--line`, `--cta`), which is what the screens are written against;
+ *   3. `@theme inline`, which hands the semantic tokens to Tailwind so they
+ *      come out as ordinary utilities: `text-ink`, `bg-surface`,
+ *      `border-line`, `bg-primary`.
+ *
+ * The screens use layer 3 and nothing else. No `zinc-600`, no `#fff`, no
+ * `bg-black` - those are what this replaced, and they are what made a colour
+ * change a hunt through six hundred class names across twenty-three files.
+ *
+ * The two lower layers exist separately because they answer different
+ * questions. "Which blue is the royal one" is answered once, in the ramp.
+ * "What colour is a heading" is answered once, in the tokens. Changing the
+ * brand is the first; changing the design is the second; neither needs a
+ * screen opened.
+ */
+
+/* ------------------------------------------------------------------ ramps */
+
 :root {
   /**
-   * Both themes are handled here, in `prefers-color-scheme` below and in the
-   * `dark:` classes on the screens. Saying so is what stops a browser
-   * force-darkening the page for us: Chrome and Edge auto-darken a page that
-   * declares no colour scheme, which repaints the light backgrounds dark and
-   * leaves images exactly as they are — so a logo drawn in black lands on a
-   * black bar and disappears, and the `dark:` swap that would have put the
-   * light-on-dark logo there never fires, because as far as the page is
-   * concerned nothing asked for dark.
+   * Royal blue: the primary. The buttons that do the main thing, the current
+   * section in the nav, the current event in the rail, the focus ring.
+   * 500 is royal blue proper (#4169e1); the app leans on 600 in daylight and
+   * 500 in the dark, where a shade that deep goes muddy against near-black.
+   */
+  --royal-50: #eff3fe;
+  --royal-100: #dde6fd;
+  --royal-200: #c3d2fc;
+  --royal-300: #9ab3fa;
+  --royal-400: #6b8bf5;
+  --royal-500: #4169e1;
+  --royal-600: #2f4fd0;
+  --royal-700: #273fa9;
+  --royal-800: #26398a;
+  --royal-900: #24346e;
+  --royal-950: #171f44;
+
+  /**
+   * Light blue: the accent. The quieter brand note - a tinted panel, a
+   * marker, a link - kept off anything royal blue is already saying, so the
+   * primary stays the loudest blue on the page.
+   */
+  --azure-50: #f0f8ff;
+  --azure-100: #dfeffe;
+  --azure-200: #b8dffd;
+  --azure-300: #7cc7fb;
+  --azure-400: #38adf6;
+  --azure-500: #0f92e5;
+  --azure-600: #0374c2;
+  --azure-700: #045d9d;
+  --azure-800: #084f81;
+  --azure-900: #0d426b;
+  --azure-950: #082947;
+
+  /**
+   * The neutrals, tinted blue rather than truly grey. Every border, every
+   * rule, every quiet line of text and every panel of the dark theme is one
+   * of these, so the tint is what keeps the app from reading as a grey form
+   * with blue buttons dropped on it: the greys sit on the same side of the
+   * wheel as the brand.
+   */
+  --steel-50: #f6f8fb;
+  --steel-100: #eaeff6;
+  --steel-200: #dbe3ee;
+  --steel-300: #c4d0e1;
+  --steel-400: #93a4bd;
+  --steel-500: #647691;
+  --steel-600: #52657f;
+  --steel-700: #3f4f66;
+  --steel-800: #2c3a4e;
+  --steel-900: #202b3c;
+  --steel-950: #121a27;
+
+  /**
+   * Orange: the call to action, and attention. Whatever the app wants looked
+   * at that is not an error - guests still to be seated, a table plan about
+   * to lose a table someone is sitting at, a setting changed and not yet
+   * saved. Nothing routine is orange, or it would stop meaning anything.
+   */
+  --ember-50: #fff7ed;
+  --ember-100: #ffedd4;
+  --ember-200: #fed7aa;
+  --ember-300: #fdba74;
+  --ember-400: #fb923c;
+  --ember-500: #f2740c;
+  --ember-600: #dd5c05;
+  --ember-700: #b74508;
+  --ember-800: #92370e;
+  --ember-900: #782f0f;
+  --ember-950: #411505;
+
+  /**
+   * Red, for destruction and for failure, and for nothing else. Not one of
+   * the five brand colours and deliberately outside them: orange asks to be
+   * looked at, red says something is about to be lost or already has been,
+   * and an app whose Manage events screen deletes events needs to say the
+   * second without borrowing the word for the first.
+   */
+  --alarm-300: #fca5a5;
+  --alarm-400: #f87171;
+  --alarm-600: #dc2626;
+  --alarm-700: #b91c1c;
+  --alarm-900: #7f1d1d;
+}
+
+/* -------------------------------------------------------- semantic tokens */
+
+:root {
+  /**
+   * Declaring the scheme is what stops a browser force-darkening the page
+   * for us: Chrome and Edge auto-darken a page that declares none, which
+   * repaints the light backgrounds dark and leaves images exactly as they
+   * are - so a logo drawn in black lands on a black bar and disappears, and
+   * the swap that would have put the light-on-dark logo there never fires,
+   * because as far as the page is concerned nothing asked for dark.
    *
    * It also hands the native controls their theme. This app is full of
-   * `input type="date"` and `type="time"`, and their pickers are drawn by the
-   * browser, not by us.
+   * `input type="date"` and `type="time"`, and their pickers are drawn by
+   * the browser, not by us.
    */
   color-scheme: light dark;
 
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Surfaces, from the back of the page forwards. */
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --field: #ffffff;
+  --muted: var(--steel-100);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Rules. `line` divides things; `line-soft` only suggests a division. */
+  --line: var(--steel-300);
+  --line-soft: var(--steel-200);
+  --line-strong: var(--steel-400);
+
+  /**
+   * Text, in four degrees of quiet. Body text is black, as asked; the three
+   * below it are steel rather than grey, so a caption belongs to the same
+   * family as the border beside it.
+   */
+  --ink: #000000;
+  --ink-soft: var(--steel-800);
+  --ink-muted: var(--steel-600);
+  --ink-faint: var(--steel-500);
+  --ink-inverse: #ffffff;
+
+  /* Primary: royal blue, and the white that goes on top of it. */
+  --primary: var(--royal-600);
+  --primary-hover: var(--royal-700);
+  --primary-soft: var(--royal-50);
+  --primary-ink: #ffffff;
+
+  /* Accent: the light blue. */
+  --accent: var(--azure-500);
+  --accent-soft: var(--azure-50);
+  --accent-ink: var(--azure-800);
+
+  /**
+   * Orange, for the call to action and for attention. 700 rather than the
+   * 600 it started as: a warning is text before it is anything else, and
+   * 600 on white measures 3.7:1, which is under what small text needs.
+   */
+  --cta: var(--ember-700);
+  --cta-hover: var(--ember-800);
+  --cta-soft: var(--ember-50);
+  --cta-line: var(--ember-400);
+  --cta-ink: #ffffff;
+
+  /* Red, for what does not come back. */
+  --danger: var(--alarm-600);
+  --danger-hover: var(--alarm-700);
+  --danger-soft: #fef2f2;
+  --danger-line: var(--alarm-300);
+  --danger-ink: #ffffff;
+
+  /**
+   * Good news - seats free, a backup written, a setting saved. Royal blue
+   * rather than the green it used to be: the palette has five colours in it
+   * and green is not one of them, and a confirmation is not urgent enough to
+   * be worth a sixth.
+   */
+  --positive: var(--royal-600);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /**
+     * The same tokens, repointed. This is the whole of the dark theme now:
+     * every screen is written once, against the names above, and not one of
+     * them carries a `dark:` colour of its own any more. That is what took
+     * the colour classes in this app from 594 to 323 - each colour used to
+     * be written twice, a light one and a `dark:` one side by side, to be
+     * kept in step by hand.
+     */
+    --canvas: var(--steel-950);
+    --surface: #161f2e;
+    --field: #1b2534;
+    --muted: #202b3b;
+
+    --line: #2f3d51;
+    --line-soft: #232f40;
+    --line-strong: #43587a;
+
+    --ink: #eef2f8;
+    --ink-soft: #cdd7e4;
+    --ink-muted: #a2b1c6;
+    --ink-faint: #7e8ea6;
+    --ink-inverse: #0b111c;
+
+    --primary: var(--royal-500);
+    --primary-hover: var(--royal-400);
+    --primary-soft: #1c2749;
+    --primary-ink: #ffffff;
+
+    --accent: var(--azure-400);
+    --accent-soft: #0c2438;
+    --accent-ink: var(--azure-200);
+
+    --cta: var(--ember-400);
+    --cta-hover: var(--ember-300);
+    --cta-soft: #2a1608;
+    --cta-line: var(--ember-700);
+    --cta-ink: #1b0d02;
+
+    --danger: var(--alarm-400);
+    --danger-hover: var(--alarm-300);
+    --danger-soft: #2a1417;
+    --danger-line: var(--alarm-900);
+    --danger-ink: #1a0808;
+
+    --positive: var(--royal-400);
   }
 }
 
+/* ----------------------------------------------- the tokens, as utilities */
+
+/**
+ * `inline` is what makes the dark theme work. It has each Tailwind colour
+ * resolve to the `var()` above rather than to a copy of its value, so the
+ * media query repoints every utility in the app at once. Without it the
+ * theme would be baked at build time and the block above would do nothing.
+ */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-muted: var(--muted);
+
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-inverse: var(--ink-inverse);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-cta-soft: var(--cta-soft);
+  --color-cta-line: var(--cta-line);
+  --color-cta-ink: var(--cta-ink);
+
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-danger-ink: var(--danger-ink);
+
+  --color-positive: var(--positive);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/**
+ * One focus ring for the whole app, in the primary, rather than whatever
+ * outline the browser reaches for. Enter and Tab are how this app is meant
+ * to be driven down a list of guests, so the ring a keyboard follows ought
+ * to be part of the palette rather than an accident of the platform.
+ */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

@@ -10,9 +10,9 @@ import {
 
 const itemClass = "shrink-0 rounded-md px-3 py-1.5 text-sm whitespace-nowrap";
 const activeClass =
-  "bg-zinc-900 font-medium text-white dark:bg-zinc-100 dark:text-black";
+  "bg-primary font-medium text-primary-ink";
 const restingClass =
-  "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900";
+  "text-ink-muted hover:bg-muted";
 
 interface Props {
   /**
@@ -38,7 +38,7 @@ export function SectionNav({ eventId }: Props) {
   return (
     <nav
       aria-label="Sections"
-      className="flex items-stretch border-b border-zinc-200 dark:border-zinc-800"
+      className="flex items-stretch border-b border-line-soft"
     >
       <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto px-2 py-1">
         {SECTION_NAV.map((item) => {

@@ -46,6 +46,22 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - Present on every screen, the entry and loading screens included, so it does
   not appear and disappear as a screen loads.
 
+### Palette
+- One palette, defined as CSS custom properties in `app/globals.css`, and no
+  colour named anywhere else in the app.
+- Royal blue is the primary, a light blue the accent, a blue-tinted grey the
+  neutrals, orange the call to action and attention, and black the body text.
+  Red is kept for destruction and failure only.
+- Two layers below the screens: brand ramps named for the colour
+  (`--royal-600`), and semantic tokens named for the job (`--ink-muted`,
+  `--line`, `--primary`, `--cta`). Screens use the tokens, as Tailwind
+  utilities - `text-ink`, `bg-surface`, `border-line`.
+- Light and dark are the same tokens pointed at different values inside one
+  media query. No screen carries a colour for one theme and a second colour
+  for the other.
+- Every text token clears WCAG AA against the surface it is used on, in both
+  themes.
+
 ### Events
 - Any number of active events at a time, listed down the left-hand side of
   the page and switched by picking one. Each shows its name and its date
@@ -108,13 +124,13 @@ event manager for now. (The app may evolve into a bigger app, with more function
     events, and it unticks them wherever they are ticked.
   - They are seated at the same table number, always, so long as the new room
     has that table. A room laid out without it leaves them unseated, and the
-    party is tinted amber until they are placed.
+    party is tinted orange until they are placed.
   - Nobody arrives having paid: it is a different event.
   - They start on the cheapest of the new event's ticket prices, which is
     where any new guest starts.
   - A guest cancelled off the last event is still a regular, but does not
     come: the cancellation was about that night.
-- A party with any guest still unseated is tinted amber on the bookings
+- A party with any guest still unseated is tinted orange on the bookings
   screen, so it can be found while scrolling. A wholly cancelled party is
   not: nobody in it has a seat and nobody in it is coming.
 
