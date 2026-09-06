@@ -141,6 +141,7 @@ components/                      the pieces those screens are built from
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
   tables-editor.tsx              an event's tables, and the rows behind them
   status-pill.tsx                one badge, and what colour each status is
+  capacity-bar.tsx               one bar, for every filled-against-free ratio
   form-styles.ts                 one definition of what a form field looks like
   list-keys.ts                   Enter, moving down a list of fields
 lib/
@@ -293,6 +294,39 @@ a tone colour, which put two text colours on one element and left the winner
 to whichever Tailwind emitted last - the blue won and the orange lost, on the
 same line of code. The base class has no colour on it now, and the tone is
 the only one there.
+
+### Capacity
+
+A room's seats, one table's seats and the share of the spending that has been
+settled are the same shape of fact: some of a known total is taken and the
+rest is not. They were four sentences on four screens, and the only way to
+tell a table nearly full from one nearly empty was to do the subtraction.
+
+`components/capacity-bar.tsx` draws all of them. Royal blue fills a light
+blue track - `--track`, which is the accent doing the quietest job it has -
+so a bar is the palette's two blues and nothing else. It is used on the
+dashboard's **Seats available** card, on every table card in the seating
+list, on the bookings screen above the free-seats line, and on the expenses
+screen for what has been paid of what has been spent.
+
+Past the total it fills completely and turns the attention orange. A room can
+be booked past its seats in this app, and a bar that simply sat at 100% would
+say the room was exactly full at the moment it stopped being able to hold
+everybody. It is a real `role="progressbar"` with `aria-valuenow`,
+`aria-valuemax` and a label that repeats the sentence beside it, and a bar of
+nothing out of nothing is not drawn at all - an event with no tables yet gets
+no rule across its page.
+
+The numbers stayed. "6 free" is what somebody seats a party by, and a length
+on a screen is not a number; what the bar adds is that a screenful of tables
+can be read at a glance rather than one at a time.
+
+One thing it could not do as asked: there is no budget in this app to spend
+against. An event is costed by what is written on the Expenses screen, not
+against a figure set beforehand, so there is nothing to draw a spent-of-budget
+bar from. What that screen has is a total and how much of it is settled, so
+that is the ratio the bar shows. A budget field would be a data-model change
+and a screen to set it on, which is a different piece of work.
 
 ## What each screen does
 
@@ -1032,6 +1066,17 @@ stood in for one.
 **Everything is typechecked, linted and built.** `npx tsc --noEmit`, `npx
 eslint .` and `npm run build` are run against every change, and the build is a
 real static export of all nine routes rather than a compile.
+
+**The capacity bars are checked by measuring them.** A seeded event with a
+quarter-full table, a full table, a half-full room and 120 paid of 420 spent
+is driven through three screens in both themes, and each bar's fill is
+measured against its track: 25%, 100%, 50% and 29% on the screen, not in the
+props. On top of that, one track colour and one fill colour across all five
+bars, the same height on each, the fill confirmed to be `--primary` and the
+track `--track`, and the accessible attributes present. Then the room is
+overfilled to sixteen guests in twelve seats, where the bar has to fill
+completely and turn orange, and finally the tables are taken away, where it
+has to draw nothing at all. 33 assertions.
 
 **Statuses are checked for being identical rather than merely correct.** The
 pass drives a seeded event through the dashboard, bookings and expenses in

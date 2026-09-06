@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEventContext, useMoney } from "@/components/event-provider";
 import { StatusPill, type StatusTone } from "@/components/status-pill";
+import { CapacityBar } from "@/components/capacity-bar";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import { sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
@@ -98,11 +99,18 @@ interface Figure {
 function Stat({
   label,
   figures,
+  bar,
   lead = false,
   negative = false,
 }: {
   label: string;
   figures: readonly Figure[];
+  /**
+   * Drawn under the figures when the card is a share of a known total, and
+   * left off when it is not: money spent has no ceiling to fill, so a bar
+   * beneath it would have to invent one.
+   */
+  bar?: { filled: number; total: number; label: string };
   /** The bottom line of the page, given a heavier edge than the rest. */
   lead?: boolean;
   /** A loss, coloured as one. Separate from the emphasis. */
@@ -168,6 +176,17 @@ function Stat({
           </span>
         ))}
       </div>
+
+      {bar !== undefined && (
+        <div className="mt-1.5">
+          <CapacityBar
+            filled={bar.filled}
+            total={bar.total}
+            label={bar.label}
+            marker="seats"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -284,6 +303,11 @@ export default function EventDashboard() {
                 ]
               : []),
           ]}
+          bar={{
+            filled: summary.guestsConfirmed,
+            total: summary.seatsTotal,
+            label: `${summary.guestsConfirmed} of ${summary.seatsTotal} seats taken`,
+          }}
           negative={summary.seatsShort > 0}
         />
         <Stat
@@ -365,6 +389,17 @@ export default function EventDashboard() {
                   >
                     {table.free === 0 ? "full" : `${table.free} free`}
                   </StatusPill>
+                </div>
+                {/* Under the line rather than beside it: a table's fill is
+                    what the row of cards is scanned for, and a bar the width
+                    of the card is legible across a screenful of them. */}
+                <div className="mt-1.5">
+                  <CapacityBar
+                    filled={table.taken}
+                    total={table.seatCount}
+                    label={`Table ${table.tableNumber}: ${table.taken} of ${table.seatCount} seats taken`}
+                    marker={`table-${table.tableNumber}`}
+                  />
                 </div>
                 <Seated table={table} />
               </li>

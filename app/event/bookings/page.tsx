@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookingCard } from "@/components/booking-card";
 import { CancelledGuests } from "@/components/cancelled-guests";
 import { StatusPill } from "@/components/status-pill";
+import { CapacityBar } from "@/components/capacity-bar";
 import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
 import { tableOccupancy, type SeatingShare } from "@/lib/repository";
@@ -232,6 +233,20 @@ export default function BookingsScreen() {
           </button>
         )}
       </div>
+
+      {/* How full the room is, above the sentence that says which tables
+          have the room in them. The words are what a party is seated by; the
+          bar is what says whether there is any point looking. */}
+      {event.tables.length > 0 && (
+        <div className="mt-2 max-w-md">
+          <CapacityBar
+            filled={live.length}
+            total={seatsTotal}
+            label={`${live.length} of ${seatsTotal} seats taken`}
+            marker="room"
+          />
+        </div>
+      )}
 
       {event.tables.length > 0 && (
         <p

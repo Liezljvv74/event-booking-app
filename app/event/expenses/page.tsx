@@ -9,6 +9,7 @@ import {
 } from "@/components/expense-row";
 import { NewExpenseRow } from "@/components/new-expense-row";
 import { StatusPill } from "@/components/status-pill";
+import { CapacityBar } from "@/components/capacity-bar";
 import { sumCents } from "@/lib/money";
 import { unusedExpenseTemplates } from "@/lib/repository";
 import type { Expense } from "@/lib/types";
@@ -169,6 +170,22 @@ export default function ExpensesScreen() {
           </button>
         </div>
       </div>
+
+      {/* How much of what has been spent has actually been settled. There is
+          no budget in this app to spend against - an event is costed by what
+          is written on this screen, not against a figure set beforehand - so
+          the total these lines come to is the only ceiling there is, and the
+          share of it paid is the ratio worth drawing. */}
+      {summary.allCents > 0 && (
+        <div className="mt-2 max-w-md">
+          <CapacityBar
+            filled={summary.paidCents}
+            total={summary.allCents}
+            label={`${money(summary.paidCents)} paid of ${money(summary.allCents)}`}
+            marker="expenses"
+          />
+        </div>
+      )}
 
       <p className="mt-1.5 max-w-prose text-xs text-ink-muted">
         A line needs a description and an amount. Provider, the paid tick and

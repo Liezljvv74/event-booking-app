@@ -174,6 +174,13 @@
   --accent-ink: var(--azure-800);
 
   /**
+   * The empty part of a capacity bar. The light blue doing the quietest job
+   * it has: a groove for the royal blue to fill, light enough that a bar
+   * with nothing in it still reads as a bar rather than as a rule.
+   */
+  --track: var(--azure-100);
+
+  /**
    * Orange, for the call to action and for attention. 700 rather than the
    * 600 it started as: a warning is text before it is anything else, and
    * 600 on white measures 3.7:1, which is under what small text needs.
@@ -237,6 +244,10 @@
     --accent-soft: #0c2438;
     --accent-ink: var(--azure-200);
 
+    /* Recessed rather than raised here: on a near-black panel a groove
+       darker than the panel is what reads as empty. */
+    --track: #12293f;
+
     --cta: var(--ember-400);
     --cta-hover: var(--ember-300);
     --cta-soft: #2a1608;
@@ -288,6 +299,7 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
+  --color-track: var(--track);
 
   --color-cta: var(--cta);
   --color-cta-hover: var(--cta-hover);

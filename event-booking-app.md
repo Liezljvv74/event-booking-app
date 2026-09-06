@@ -62,6 +62,20 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - Every text token clears WCAG AA against the surface it is used on, in both
   themes.
 
+### Capacity bars
+- Every filled-against-free quantity is drawn as the same small horizontal
+  bar: royal blue filling a light blue track.
+- Used for the dashboard's seats available, each table's seats in the seating
+  list, the room's seats on the bookings screen, and the share of the
+  expenses total that has been paid.
+- Booked past the total, the bar fills completely and turns the attention
+  orange rather than stopping at full.
+- The numbers stay beside the bar. The bar is how a screenful is read at a
+  glance; the numbers are what a party is seated by.
+- There is no budget in the app to spend against, so the expenses bar shows
+  what is paid of what is spent. Adding a budget would be a data-model
+  change.
+
 ### Status styling
 - Every status in the app is drawn as the same badge, and there are three
   tones and only three: royal blue for confirmed and paid, orange for
