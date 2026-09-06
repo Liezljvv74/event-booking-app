@@ -112,6 +112,8 @@ export interface UseEventsResult {
   saveExportFolder: (
     folder: FileSystemDirectoryHandle | null,
   ) => Promise<void>;
+  /** How long a closed event is kept before it is deleted. */
+  saveRetentionDays: (days: number) => Promise<void>;
   /**
    * Write a backup's events into the store and reload everything from it, so
    * the tabs and the screens show what arrived.
@@ -241,6 +243,10 @@ export function useEvents(): UseEventsResult {
     },
     [],
   );
+
+  const saveRetentionDays = useCallback(async (days: number) => {
+    setSettings(await saveSettings({ retentionDays: days }));
+  }, []);
 
   const addEvent = useCallback(async (input: NewEventInput) => {
     const created = await createEvent(input);
@@ -399,6 +405,7 @@ export function useEvents(): UseEventsResult {
     lastTimes,
     settings,
     saveExportFolder,
+    saveRetentionDays,
     importData,
     addEvent,
     editEventDetails,

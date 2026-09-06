@@ -99,7 +99,11 @@ Show all six of the following, always in this order:
 ### Auto-close & retention
 - An event auto-closes 48 hours after its event date has passed
 - Closed event data is kept for 2 weeks by default — a global setting,
-  changeable to a longer period in Settings
+  changeable to a longer period in Settings. Two weeks is the floor: a closed
+  event can be deleted sooner one at a time on Manage events, which is a
+  decision about that event rather than a rule applying to every event from
+  then on. Shortening the period says how many closed events it would delete
+  before it is saved.
 - After the retention window expires, that event's data is auto-deleted,
   with no prompt beforehand
 - On desktop, the user picks a save folder once (via the folder-picker);
@@ -143,6 +147,13 @@ Show all six of the following, always in this order:
   missing** by default, leaving anything already there untouched, or
   **replace everything**, which empties the store first and is confirmed
   before it runs.
+
+### Settings
+- One screen for the things that are true of the app rather than of an event:
+  how long a closed event is kept, and which folder exports are written to.
+- The export folder is shown and can be forgotten here, but is chosen on
+  Export/Import — the picker has to open inside the press that exports, or
+  the browser refuses it.
 
 ## Explicitly out of scope
 - Visual/drag-and-drop floor plan (tables are a numbered list only)

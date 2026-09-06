@@ -35,6 +35,9 @@ export const MANAGE_EVENTS_PATH = "/events/manage";
  */
 export const DATA_PATH = "/data";
 
+/** Settings: the handful of things that are true of the app, not an event. */
+export const SETTINGS_PATH = "/settings";
+
 export type NavItem =
   /** One screen of the event currently open. */
   | { kind: "event"; segment: EventSection; label: string }
@@ -74,6 +77,7 @@ export const SECTION_NAV: readonly NavItem[] = [
     label: "Export/Import your data",
     shortLabel: "Export/Import",
   },
+  { kind: "app", path: SETTINGS_PATH, label: "Settings", shortLabel: "Settings" },
 ];
 
 /** The path of a section, with no event attached to it yet. */

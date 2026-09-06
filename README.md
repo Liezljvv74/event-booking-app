@@ -127,6 +127,9 @@ app/
   data/
     layout.tsx                   the same chrome again
     page.tsx                     export on the left, import on the right
+  settings/
+    layout.tsx                   and again
+    page.tsx                     how long closed events are kept, and the export folder
   event/                         one event, chosen by ?id= in the URL
     layout.tsx                   the chrome, around one event's screens
     page.tsx                     dashboard
@@ -298,8 +301,8 @@ Seats — with a cross on each row, its per-table free-seat line and its party
 chips dropped; then removed outright, because at that width it listed what the
 dashboard's seating list already gives with the guests' names on it, and
 laying an event out had moved to Manage events. Losing it took the nav from
-five items to four, where it stayed until Export/Import made five of them
-again.
+five items to four, where it stayed until Export/Import and then Settings
+made six of them.
 
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
@@ -442,6 +445,28 @@ does. The whole import is one transaction, so a file that fails halfway
 leaves the store as it was. Reusable expense lines are merged either way,
 even by a restore: they belong to the app rather than to any event, and one
 the file does not know about is one this browser learned since.
+
+**Settings** (`/settings`) — two things, both of which were already stored
+and already read and neither of which could be changed from anywhere.
+
+*How long a closed event is kept.* An event closes 48 hours after its date
+and is deleted a fortnight after that; the fortnight is now a number on this
+screen. Fourteen days is the floor, because the spec's wording is that the
+two weeks are changeable *to a longer period* — being rid of one event sooner
+is still a matter of deleting it on Manage events, which is a decision about
+that event rather than a rule that quietly applies to every event afterwards.
+The screen says how many closed events it is holding and how far back they
+go, and — this is the part that matters — **shortening the period names the
+events it would destroy before it saves**. The sweep runs on the next app
+start rather than on Save, so without that warning those events would simply
+not be there the next time the app was opened, which is a trapdoor rather
+than a setting.
+
+*Which folder exports go to.* Shown here, and forgettable here, but chosen on
+Export/Import: the picker has to open inside the press that exports or the
+browser refuses it, so that screen owns the choosing and this one owns only
+the undoing. The whole block is absent in a browser that cannot remember a
+folder at all.
 
 ## Decisions worth remembering
 
@@ -639,9 +664,9 @@ The ones that were argued out and would otherwise be re-litigated:
 | Expenses: line items, reuse, permanent delete | Done, minus one thing below |
 | Dashboard | Done, minus the bookings total, removed on request |
 | Auto-close 48h after the event date | Done — sweep runs on every app start |
-| Retention window, then silent delete | Logic done; not changeable without Settings |
+| Retention window, then silent delete | Done — 14 days by default, changeable on Settings |
 | Desktop save folder | Done — chosen and re-confirmed on Export/Import, which is where it is used, rather than on a Settings screen; the spec amended to match |
-| **Settings screen** | **Not built** — the retention period is still fixed at 14 days |
+| **Settings screen** | Done — the retention period, and the export folder shown and forgettable. Two weeks is the floor the spec asks for, and shortening the period names the closed events it would delete before it saves |
 | Export All Data | Done as JSON and CSV, with import beside it, and a tables-and-guests door list added on request as an Excel workbook, a web page, or CSV. A real `.xlsx` is a zip archive and would mean a library, which the spec's own dependency rule forbids; SpreadsheetML needs none. Spec amended |
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |

@@ -150,3 +150,17 @@ export const DEFAULT_SEAT_COUNT = 10;
 
 /** Hours after an event's date that it auto-closes. */
 export const AUTO_CLOSE_AFTER_HOURS = 48;
+
+/**
+ * The shortest retention period Settings will accept.
+ *
+ * The spec's wording is that the two weeks are "changeable to a longer
+ * period", so two weeks is the floor rather than a default that can be dialled
+ * down. Deleting a closed event sooner than that is still possible one event
+ * at a time on Manage events, where it is a decision about that event rather
+ * than a rule that quietly applies to every event from then on.
+ */
+export const MIN_RETENTION_DAYS = 14;
+
+/** Ten years. Not a rule, just a guard against a typo becoming forever. */
+export const MAX_RETENTION_DAYS = 3650;

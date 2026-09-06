@@ -10,6 +10,8 @@
 import {
   AUTO_CLOSE_AFTER_HOURS,
   DEFAULT_SETTINGS,
+  MAX_RETENTION_DAYS,
+  MIN_RETENTION_DAYS,
   SEAT_OCCUPYING_STATUSES,
   type Attendee,
   type AttendeeStatus,
@@ -1455,6 +1457,23 @@ export async function getSettings(): Promise<Settings> {
  * and the permission does not.
  */
 export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
+  const days = patch.retentionDays;
+  if (days !== undefined) {
+    if (!Number.isInteger(days)) {
+      throw new Error("Enter a whole number of days.");
+    }
+    if (days < MIN_RETENTION_DAYS) {
+      throw new Error(
+        `Closed events are kept at least ${MIN_RETENTION_DAYS} days. To be rid of one sooner, delete it on Manage events.`,
+      );
+    }
+    if (days > MAX_RETENTION_DAYS) {
+      throw new Error(
+        `${MAX_RETENTION_DAYS} days is as long as they can be kept.`,
+      );
+    }
+  }
+
   return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
     const row = await getOne<SettingsRow>(
       transaction,
