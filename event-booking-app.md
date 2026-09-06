@@ -59,6 +59,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - A room is laid out as a plan, never as a list: table form, number of tables,
   seats per table. Twenty of the same table is three fields, not twenty rows.
   Nought tables is allowed and means the room is not laid out yet.
+- A venue with more than one kind of table says so on more than one line: add
+  another configuration for the round tables at the back, or for the bigger
+  ones at the front. The tables are made in the order the lines are written,
+  so line one takes the low numbers.
 - The same three fields on the New event form and on the event's own row on
   Manage events, which is the only place an event is laid out.
 - On an event that already exists the plan is reconciled rather than applied

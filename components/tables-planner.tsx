@@ -1,22 +1,28 @@
 "use client";
 
 /**
- * How a room is laid out, said as a plan: so many tables of such a shape with
- * so many seats each.
+ * How a room is laid out, said as a plan rather than as a list of tables.
  *
- * A room is laid out in twenty of the same table, not in twenty decisions.
- * Both screens that lay one out — the New event form and an event's own row on
- * Manage events — ask the same three questions, and neither keeps a line per
- * table any more.
+ * A room is laid out in twenty of the same table, not in twenty decisions —
+ * but not every room is twenty of one thing. A venue with long tables down the
+ * hall and round ones at the back is two decisions, not forty, so the plan is
+ * a list of configurations: so many tables of such a shape with so many seats,
+ * and then so many of another. One is the common case and costs one line.
+ *
+ * Both screens that lay a room out ask the same thing — the New event form and
+ * an event's own row on Manage events — and neither keeps a line per table.
  *
  * On an event that already exists the plan is reconciled rather than applied
  * from nothing, which is the whole difficulty of this file. The tables that
- * survive keep their identity, because a guest is seated by table number and
- * a table that quietly became a different table would take its guests with
- * it: the lowest-numbered tables are kept and re-seated to the plan, the
- * surplus above the count is dropped, and anything new is numbered past the
- * highest ever used. What that would cost is counted and said before it is
- * saved, never discovered afterwards.
+ * survive keep their identity, because a guest is seated by table number and a
+ * table that quietly became a different table would take its guests with it:
+ * the lowest-numbered tables are kept and matched to the plan in order, the
+ * surplus is dropped, and anything new is numbered past the highest ever used.
+ * What that would cost is counted and said before it is saved.
+ *
+ * The plan is read back out of the stored tables by grouping consecutive runs
+ * of the same shape and size, so a room laid out as two configurations opens
+ * as the same two rather than as an average of them.
  */
 
 import { useState } from "react";
@@ -39,6 +45,7 @@ export const TABLE_SHAPES: readonly { value: TableShape; label: string }[] = [
 const fieldClass =
   "h-11 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-base text-black disabled:opacity-50 sm:h-9 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 const labelClass = "text-xs text-zinc-600 dark:text-zinc-400";
+const ROW_GRID = "grid grid-cols-[minmax(5rem,1fr)_minmax(4rem,1fr)_minmax(4rem,1fr)_auto] items-center gap-1";
 
 /** What the tables are, in a form two layouts can be compared by. */
 export function signatureOfTables(tables: readonly Table[]): string {
@@ -49,165 +56,249 @@ export function signatureOfTables(tables: readonly Table[]): string {
   );
 }
 
-/** The value most of them have, for a plan that has to name one. */
-function commonest<T>(values: readonly T[], fallback: T): T {
-  const counts = new Map<T, number>();
-  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+/** One configuration as typed: so many tables of a shape and a size. */
+export interface TableGroup {
+  /** A React key and nothing else. */
+  key: number;
+  shape: TableShape;
+  count: string;
+  seats: string;
+}
 
-  let best = fallback;
-  let most = 0;
-  for (const [value, count] of counts) {
-    if (count > most) {
-      best = value;
-      most = count;
+/** A table the plan calls for, before it is matched to one that exists. */
+interface PlannedTable {
+  seatCount: number;
+  shape: TableShape;
+}
+
+/**
+ * The stored tables read back as configurations: consecutive runs of the same
+ * shape and size, in table-number order.
+ *
+ * Runs rather than a tally, so a room of ten long then four round then ten
+ * long more comes back as the three it was laid out as. Which also means the
+ * order of the configurations is the order of the table numbers, and reordering
+ * them is a real change to the room rather than a tidy-up.
+ */
+function groupsOf(
+  tables: readonly Table[],
+  firstKey: number,
+): TableGroup[] {
+  const groups: TableGroup[] = [];
+
+  for (const table of tables) {
+    const last = groups[groups.length - 1];
+    if (
+      last !== undefined &&
+      last.shape === table.shape &&
+      last.seats === String(table.seatCount)
+    ) {
+      last.count = String(Number(last.count) + 1);
+      continue;
     }
+    groups.push({
+      key: firstKey + groups.length,
+      shape: table.shape,
+      count: "1",
+      seats: String(table.seatCount),
+    });
   }
-  return best;
+
+  return groups;
 }
 
 export interface TablePlan {
-  shape: TableShape;
-  setShape: (shape: TableShape) => void;
-  count: string;
-  setCount: (count: string) => void;
-  seats: string;
-  setSeats: (seats: string) => void;
+  groups: readonly TableGroup[];
+  setShape: (key: number, shape: TableShape) => void;
+  setCount: (key: number, count: string) => void;
+  setSeats: (key: number, seats: string) => void;
+  add: () => void;
+  removeGroup: (key: number) => void;
   /** The tables the plan would leave, ready for the repository. */
   toInputs: () => { tables: TableInput[] } | { error: string };
-  /** Tables the count would drop, lowest numbers kept. */
+  /** Tables the plan would drop, lowest numbers kept. */
   removed: Table[];
-  /** Whether any surviving table's seats or shape would change. */
-  altered: boolean;
+  /** Surviving tables whose size or shape the plan would change. */
+  altered: Table[];
   /** The layout this plan describes, to compare with the one stored. */
   signature: string;
   /**
    * Start again from these tables — what Cancel does, and what happens when a
    * save lands and the stored event changes underneath. It moves the baseline
    * as well as the fields: what the plan is reconciled against has to be what
-   * is actually stored, or the next save would be measured from a room that
-   * no longer exists.
+   * is actually stored, or the next save would be measured from a room that no
+   * longer exists.
    */
   reset: (tables: readonly Table[]) => void;
 }
 
-/**
- * Hold the plan.
- *
- * The stored tables are read once, on the way in. They are what the fields
- * start from and what the plan is reconciled against, and re-reading them
- * while somebody is typing would move the ground under them.
- */
+interface State {
+  groups: TableGroup[];
+  nextKey: number;
+  /** The stored tables the plan is reconciled against, in number order. */
+  baseline: Table[];
+}
+
+function initialState(initial: readonly Table[], defaultSeats: number): State {
+  const baseline = [...initial].sort((a, b) => a.tableNumber - b.tableNumber);
+  const groups = groupsOf(baseline, 0);
+
+  return {
+    baseline,
+    // A new event opens on one table: a function needs somewhere to seat
+    // people, and nought is a decision rather than a default.
+    groups:
+      groups.length > 0
+        ? groups
+        : [
+            {
+              key: 0,
+              shape: DEFAULT_TABLE_SHAPE,
+              count: "1",
+              seats: String(defaultSeats),
+            },
+          ],
+    nextKey: Math.max(groups.length, 1),
+  };
+}
+
 export function useTablePlan(
   defaultSeats: number,
   initial: readonly Table[] = [],
 ): TablePlan {
-  const [tables, setTables] = useState(() =>
-    [...initial].sort((a, b) => a.tableNumber - b.tableNumber),
+  const [state, setState] = useState<State>(() =>
+    initialState(initial, defaultSeats),
   );
 
-  const [shape, setShape] = useState<TableShape>(() =>
-    commonest(
-      tables.map((table) => table.shape),
-      DEFAULT_TABLE_SHAPE,
-    ),
-  );
-  const [count, setCount] = useState(() =>
-    // A new event opens on one table: a function needs somewhere to seat
-    // people, and nought is a decision rather than a default.
-    String(tables.length === 0 ? 1 : tables.length),
-  );
-  const [seats, setSeats] = useState(() =>
-    String(
-      commonest(
-        tables.map((table) => table.seatCount),
-        defaultSeats,
+  const change = (key: number, apply: (group: TableGroup) => TableGroup) =>
+    setState((current) => ({
+      ...current,
+      groups: current.groups.map((group) =>
+        group.key === key ? apply(group) : group,
       ),
-    ),
-  );
+    }));
 
-  const howMany = count.trim() === "" ? Number.NaN : Number(count);
-  const each = seats.trim() === "" ? Number.NaN : Number(seats);
+  /** Every table the plan calls for, in order, or why it cannot be read. */
+  function planned(): { tables: PlannedTable[] } | { error: string } {
+    const tables: PlannedTable[] = [];
 
-  const keeping = Number.isInteger(howMany) ? Math.max(howMany, 0) : 0;
-  const removed = Number.isInteger(howMany) ? tables.slice(keeping) : [];
+    for (const [index, group] of state.groups.entries()) {
+      const named = state.groups.length === 1 ? "" : ` in line ${index + 1}`;
+
+      const howMany = group.count.trim() === "" ? Number.NaN : Number(group.count);
+      if (!Number.isInteger(howMany) || howMany < 0) {
+        return { error: `Enter how many tables${named}, as a whole number.` };
+      }
+
+      // Nought of a configuration is not an error: it is a line somebody has
+      // emptied rather than removed, and its seat count is then nobody's
+      // business.
+      if (howMany === 0) continue;
+
+      const each = group.seats.trim() === "" ? Number.NaN : Number(group.seats);
+      if (!Number.isInteger(each) || each < 1) {
+        return { error: `Enter how many seats a table has${named}, at least 1.` };
+      }
+      if (each > MAX_SEAT_COUNT) {
+        return { error: `${MAX_SEAT_COUNT} seats is as large as a table gets.` };
+      }
+
+      for (let made = 0; made < howMany; made++) {
+        tables.push({ seatCount: each, shape: group.shape });
+      }
+
+      if (tables.length > MAX_TABLES) {
+        return { error: `${MAX_TABLES} tables is as many as one event holds.` };
+      }
+    }
+
+    return { tables };
+  }
+
+  const wanted = planned();
+  const keeping = "error" in wanted ? 0 : wanted.tables.length;
+
+  const removed = "error" in wanted ? [] : state.baseline.slice(keeping);
   const altered =
-    Number.isInteger(each) &&
-    tables
-      .slice(0, keeping)
-      .some((table) => table.seatCount !== each || table.shape !== shape);
+    "error" in wanted
+      ? []
+      : state.baseline
+          .slice(0, keeping)
+          .filter(
+            (table, index) =>
+              table.seatCount !== wanted.tables[index].seatCount ||
+              table.shape !== wanted.tables[index].shape,
+          );
 
   function toInputs(): { tables: TableInput[] } | { error: string } {
-    if (!Number.isInteger(howMany) || howMany < 0) {
-      return { error: "Enter how many tables, as a whole number." };
-    }
-    if (howMany > MAX_TABLES) {
-      return { error: `${MAX_TABLES} tables is as many as one event holds.` };
-    }
-
-    // Nought tables means the room is not laid out yet, so how many seats a
-    // table has is not asked about: there is no table to have them.
-    if (howMany === 0) return { tables: [] };
-
-    if (!Number.isInteger(each) || each < 1) {
-      return { error: "Enter how many seats a table has, at least 1." };
-    }
-    if (each > MAX_SEAT_COUNT) {
-      return { error: `${MAX_SEAT_COUNT} seats is as large as a table gets.` };
-    }
+    if ("error" in wanted) return wanted;
 
     // The tables that survive are named by id, so they stay the tables their
     // guests are sitting at. The rest are new, and the repository numbers
     // them past the highest ever used.
     return {
-      tables: Array.from({ length: howMany }, (unused, index) => ({
-        id: index < tables.length ? tables[index].id : null,
-        seatCount: each,
-        shape,
+      tables: wanted.tables.map((table, index) => ({
+        id: index < state.baseline.length ? state.baseline[index].id : null,
+        seatCount: table.seatCount,
+        shape: table.shape,
       })),
     };
   }
 
-  const planned = toInputs();
+  const ready = toInputs();
 
   return {
-    shape,
-    setShape,
-    count,
-    setCount,
-    seats,
-    setSeats,
+    groups: state.groups,
+    setShape: (key, shape) => change(key, (group) => ({ ...group, shape })),
+    setCount: (key, count) => change(key, (group) => ({ ...group, count })),
+    setSeats: (key, seats) => change(key, (group) => ({ ...group, seats })),
+    add: () =>
+      setState((current) => {
+        const last = current.groups[current.groups.length - 1];
+        return {
+          ...current,
+          groups: [
+            ...current.groups,
+            {
+              key: current.nextKey,
+              // A second configuration is a second kind of table, so it opens
+              // on a different shape from the one above where it can.
+              shape:
+                last === undefined
+                  ? DEFAULT_TABLE_SHAPE
+                  : (TABLE_SHAPES.find(
+                      (option) => option.value !== last.shape,
+                    )?.value ?? DEFAULT_TABLE_SHAPE),
+              count: "1",
+              seats: last?.seats ?? String(defaultSeats),
+            },
+          ],
+          nextKey: current.nextKey + 1,
+        };
+      }),
+    removeGroup: (key) =>
+      setState((current) => ({
+        ...current,
+        groups: current.groups.filter((group) => group.key !== key),
+      })),
     toInputs,
     removed,
     altered,
-    reset: (from) => {
-      const sorted = [...from].sort((a, b) => a.tableNumber - b.tableNumber);
-      setTables(sorted);
-      setShape(
-        commonest(
-          sorted.map((table) => table.shape),
-          DEFAULT_TABLE_SHAPE,
-        ),
-      );
-      setCount(String(sorted.length));
-      setSeats(
-        String(
-          commonest(
-            sorted.map((table) => table.seatCount),
-            defaultSeats,
-          ),
-        ),
-      );
-    },
     signature:
-      "error" in planned
+      "error" in ready
         ? "invalid"
         : JSON.stringify(
-            planned.tables.map((table) => [
+            ready.tables.map((table) => [
               table.id,
               String(table.seatCount),
               table.shape,
             ]),
           ),
+    reset: (from) =>
+      setState((current) => {
+        const fresh = initialState(from, defaultSeats);
+        return { ...fresh, nextKey: current.nextKey + fresh.groups.length };
+      }),
   };
 }
 
@@ -216,11 +307,15 @@ interface Props {
   disabled?: boolean;
   /**
    * Guests at each table, by table number. Only used to say what dropping a
-   * table would cost, so the New event form — whose tables have nobody at
-   * them yet — leaves it out.
+   * table would cost, so the New event form — whose tables have nobody at them
+   * yet — leaves it out.
    */
   seated?: ReadonlyMap<number, number>;
-  /** Distinguishes one planner's fields from another's on a screen of events. */
+  /**
+   * Distinguishes one planner's fields from another's on a screen of events.
+   * Written out even when it is empty — an attribute that disappears on the
+   * one screen with a single planner is an attribute nothing can find there.
+   */
   scope?: string;
   /** Named in the accessible labels, so each field says which event it is. */
   ofWhat?: string;
@@ -241,70 +336,114 @@ export function TablesPlanner({
     0,
   );
 
+  /** "20 long of 10, 4 round of 8". */
+  const described = plan.groups
+    .filter((group) => Number(group.count) > 0)
+    .map(
+      (group) => `${group.count} ${group.shape} of ${group.seats || "?"}`,
+    )
+    .join(", ");
+
   return (
-    <div data-tables-plan={scope || undefined}>
+    <div data-tables-plan={scope}>
       <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
         Tables
       </div>
 
-      <div className="mt-1 grid gap-2 @lg:grid-cols-[minmax(6rem,1fr)_minmax(5rem,1fr)_minmax(5rem,1fr)]">
-        <label className="flex flex-col gap-1">
-          <span className={labelClass}>Table form</span>
-          <select
-            value={plan.shape}
-            disabled={disabled}
-            aria-label={`Table form${suffix}`}
-            data-table-shape={scope || undefined}
-            onChange={(changed) =>
-              plan.setShape(changed.target.value as TableShape)
-            }
-            className={fieldClass}
-          >
-            {TABLE_SHAPES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className={labelClass}>Number of tables</span>
-          <input
-            type="number"
-            min={0}
-            max={MAX_TABLES}
-            step={1}
-            inputMode="numeric"
-            value={plan.count}
-            disabled={disabled}
-            aria-label={`Number of tables${suffix}`}
-            data-table-count={scope || undefined}
-            onChange={(changed) => plan.setCount(changed.target.value)}
-            className={fieldClass}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className={labelClass}>Seats per table</span>
-          <input
-            type="number"
-            min={1}
-            max={MAX_SEAT_COUNT}
-            step={1}
-            inputMode="numeric"
-            value={plan.seats}
-            disabled={disabled}
-            aria-label={`Seats per table${suffix}`}
-            data-table-seats={scope || undefined}
-            onChange={(changed) => plan.setSeats(changed.target.value)}
-            className={fieldClass}
-          />
-        </label>
+      {/* Named once above the rows rather than beside every field: with three
+          configurations the labels would outnumber what they label. */}
+      <div className={`mt-1 ${ROW_GRID} ${labelClass}`}>
+        <span>Table form</span>
+        <span>Number</span>
+        <span>Seats each</span>
+        <span className="w-9" />
       </div>
 
-      {/* What the three fields add up to, so a room can be checked without
-          doing the multiplication. */}
+      <ul className="mt-0.5 flex flex-col gap-1">
+        {plan.groups.map((group, index) => (
+          <li key={group.key} className={ROW_GRID} data-table-group={index}>
+            <select
+              value={group.shape}
+              disabled={disabled}
+              aria-label={`Table form, line ${index + 1}${suffix}`}
+              data-table-shape={index}
+              onChange={(changed) =>
+                plan.setShape(group.key, changed.target.value as TableShape)
+              }
+              className={fieldClass}
+            >
+              {TABLE_SHAPES.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="number"
+              min={0}
+              max={MAX_TABLES}
+              step={1}
+              inputMode="numeric"
+              value={group.count}
+              disabled={disabled}
+              aria-label={`Number of tables, line ${index + 1}${suffix}`}
+              data-table-count={index}
+              onChange={(changed) =>
+                plan.setCount(group.key, changed.target.value)
+              }
+              className={fieldClass}
+            />
+
+            <input
+              type="number"
+              min={1}
+              max={MAX_SEAT_COUNT}
+              step={1}
+              inputMode="numeric"
+              value={group.seats}
+              disabled={disabled}
+              aria-label={`Seats per table, line ${index + 1}${suffix}`}
+              data-table-seats={index}
+              onChange={(changed) =>
+                plan.setSeats(group.key, changed.target.value)
+              }
+              className={fieldClass}
+            />
+
+            {/* Square, so it reads as a cross rather than a word. Only where
+                there is more than one line: the last one is the room. */}
+            {plan.groups.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => plan.removeGroup(group.key)}
+                disabled={disabled}
+                aria-label={`Remove table line ${index + 1}${suffix}`}
+                title="Remove this line"
+                data-table-group-remove={index}
+                className="h-11 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            ) : (
+              <span className="w-9" />
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={plan.add}
+        disabled={disabled}
+        data-add-table-group={scope}
+        className="mt-1.5 h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+      >
+        + Add another table size or shape
+      </button>
+
+      {/* What the lines add up to, so a room can be checked without doing the
+          arithmetic. */}
       <p
         data-tables-plan-summary
         className="mt-1 text-xs text-zinc-600 dark:text-zinc-400"
@@ -313,7 +452,7 @@ export function TablesPlanner({
           ? planned.error
           : planned.tables.length === 0
             ? "No tables. Nobody can be seated until there are some."
-            : `${planned.tables.length} ${plan.shape} table${planned.tables.length === 1 ? "" : "s"}, ${planned.tables.reduce((total, table) => total + table.seatCount, 0)} seats in all.`}
+            : `${described} — ${planned.tables.length} table${planned.tables.length === 1 ? "" : "s"}, ${planned.tables.reduce((total, table) => total + table.seatCount, 0)} seats in all.`}
       </p>
 
       {/* Saving is what does any of this, so what it would do is said before
@@ -334,13 +473,16 @@ export function TablesPlanner({
         </p>
       )}
 
-      {plan.altered && (
+      {plan.altered.length > 0 && (
         <p
           data-tables-altering
           className="mt-1 text-xs text-amber-700 dark:text-amber-500"
         >
-          The tables that stay are not all this size or shape yet. Saving makes
-          every one of them {plan.seats} seats, {plan.shape}.
+          Saving changes the size or shape of table
+          {plan.altered.length === 1
+            ? ` ${plan.altered[0].tableNumber}`
+            : `s ${plan.altered.map((table) => table.tableNumber).join(", ")}`}
+          .
         </p>
       )}
     </div>

@@ -236,13 +236,21 @@ underneath in their own section, collapsed the same way, and appear nowhere
 else in the app, so this is the only place one can be looked at or removed
 early. Deleting names what goes with it.
 
-Both columns lay a room out the same way, as a **plan**: *Table form: Long ·
-Number of tables: 20 · Seats per table: 10*, with a line underneath saying what
-the three add up to. A room is laid out in twenty of the same table, not in
-twenty decisions. Both screens used to ask for a line per table with a button
-to add another, which meant twenty presses and twenty identical rows to read
-back; the list is gone from both, on request. Nought tables is allowed and says
-so: the room can be laid out later.
+Both columns lay a room out the same way, as a **plan**: *Table form · Number ·
+Seats each*, with a line underneath saying what it all adds up to. A room is
+laid out in twenty of the same table, not in twenty decisions. Both screens
+used to ask for a line per table with a button to add another, which meant
+twenty presses and twenty identical rows to read back; the list is gone from
+both, on request. Nought tables is allowed and says so: the room can be laid
+out later.
+
+Not every room is twenty of one thing, though, so the plan is a **list of
+configurations** rather than a single one: twenty long of ten down the hall,
+and then four round of eight at the back, is two lines. One line is still the
+common case and still costs one line. The tables are made in the order the
+lines are written, so the first line takes the low numbers — which means
+reordering the lines is a real change to the room rather than a tidy-up, and
+is reported as one.
 
 On an event that already exists the plan is **reconciled** rather than applied
 from nothing, and that is the whole difficulty of it. A guest is seated by
@@ -254,12 +262,18 @@ pressed — which tables would be dropped and how many guests that would unseat,
 and, when the tables are not all alike yet, that saving makes every one of them
 this size and shape. Cancel puts the stored room back.
 
-Which leaves one thing the plan cannot say: a room of tables that are not all
-the same. The three fields start from the commonest shape and the commonest
-seat count, and saving makes the rest match. A venue that seats twelve at the
-top table and ten everywhere else can no longer describe that here — the price
-of three fields instead of twenty rows, and worth naming rather than
-discovering.
+An event that already exists is read back into lines the same way it was
+written: consecutive runs of the same shape and size become one line each. A
+room of ten long, four round and ten long again opens as those three, not as
+an average of them — and a room laid out as one thing opens as one line with
+Save asleep, because nothing has changed.
+
+Which leaves one thing the plan still cannot say: a single odd table among its
+neighbours costs a line of its own. Twelve at the top table and ten everywhere
+else is *1 long of 12* and then *19 long of 10*, which is exactly right but
+puts the top table first, at number one. That is the price of describing a room
+rather than listing it, and it is a much smaller price than it was when the
+plan had only one line.
 
 New events open on **Long**, on request: the venue this was built for lays out
 long tables, and typing the same answer into every event is what a default is
