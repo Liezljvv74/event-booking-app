@@ -547,7 +547,7 @@ export function doorListHtml(event: Event): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Door list — ${htmlText(event.name)} — ${htmlText(event.eventDate)}</title>
+<title>Door list - ${htmlText(event.name)} - ${htmlText(event.eventDate)}</title>
 <style>
   :root { color-scheme: light; }
   body {

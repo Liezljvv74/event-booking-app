@@ -36,5 +36,5 @@ export function describeTicketPrice(
   currency = "",
 ): string {
   const amount = formatAmount(price.amountCents, currency);
-  return price.includes === "" ? amount : `${amount} — ${price.includes}`;
+  return price.includes === "" ? amount : `${amount} - ${price.includes}`;
 }

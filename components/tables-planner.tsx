@@ -452,7 +452,7 @@ export function TablesPlanner({
           ? planned.error
           : planned.tables.length === 0
             ? "No tables. Nobody can be seated until there are some."
-            : `${described} — ${planned.tables.length} table${planned.tables.length === 1 ? "" : "s"}, ${planned.tables.reduce((total, table) => total + table.seatCount, 0)} seats in all.`}
+            : `${described} - ${planned.tables.length} table${planned.tables.length === 1 ? "" : "s"}, ${planned.tables.reduce((total, table) => total + table.seatCount, 0)} seats in all.`}
       </p>
 
       {/* Saving is what does any of this, so what it would do is said before

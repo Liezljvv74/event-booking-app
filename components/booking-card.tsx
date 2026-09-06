@@ -384,7 +384,7 @@ export function BookingCard({
                     disabled={!room}
                   >
                     {`Table ${entry.tableNumber} · ${entry.free} free`}
-                    {room ? "" : " — too few"}
+                    {room ? "" : " - too few"}
                   </option>
                 );
               })}

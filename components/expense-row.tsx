@@ -176,7 +176,7 @@ export function ExpenseRow({
           type="text"
           value={provider}
           disabled={busy}
-          placeholder="—"
+          placeholder="-"
           aria-label={`Provider for ${expense.description}`}
           data-expense-provider={expense.id}
           data-list-field="provider"
@@ -221,7 +221,7 @@ export function ExpenseRow({
           type="text"
           value={notes}
           disabled={busy}
-          placeholder="—"
+          placeholder="-"
           aria-label={`Notes on ${expense.description}`}
           data-expense-notes={expense.id}
           data-list-field="notes"

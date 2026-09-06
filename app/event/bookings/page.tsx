@@ -237,7 +237,7 @@ export default function BookingsScreen() {
               <span className="font-medium text-zinc-700 dark:text-zinc-300">
                 Free seats
               </span>
-              {" — "}
+              {" - "}
               {listed
                 .map((entry) => `table ${entry.tableNumber}: ${entry.free}`)
                 .join(", ")}

@@ -464,7 +464,7 @@ export default function SettingsScreen() {
             >
               {formatAmount(EXAMPLE_CENTS, currency)}
             </span>
-            . On screen only — exports keep writing bare numbers, because a
+            . On screen only - exports keep writing bare numbers, because a
             symbol in a spreadsheet cell makes it text and a spreadsheet cannot
             add up text.
           </p>

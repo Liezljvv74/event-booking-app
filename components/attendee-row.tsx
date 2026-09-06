@@ -196,7 +196,7 @@ export function AttendeeRow({
           }
           className={controlClass}
         >
-          <option value="">—</option>
+          <option value="">-</option>
           {seating.map((entry) => {
             const current = entry.tableNumber === attendee.assignedTableNumber;
             // Offered but unselectable beats accepted then refused. Never the
