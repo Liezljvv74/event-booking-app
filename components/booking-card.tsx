@@ -11,6 +11,7 @@ import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
 import { describeError } from "@/lib/errors";
 import { useMoney } from "@/components/event-provider";
+import { StatusPill } from "@/components/status-pill";
 
 interface Props {
   event: Event;
@@ -134,17 +135,18 @@ export function BookingCard({
   ).length;
 
   // Collapsed, the party line is all the manager sees, so it has to say where
-  // the party is sitting and whether anyone still needs a seat.
-  // Pluralised on the number of tables alone. Tying it to the unseated count
-  // as well read "tables 2 · 7 unseated" for a party sitting at one table
-  // with the rest still to place — now the ordinary way a shared table fills.
+  // the party is sitting. Pluralised on the number of tables alone: tying it
+  // to the unseated count as well read "tables 2 · 7 unseated" for a party
+  // sitting at one table with the rest still to place — now the ordinary way
+  // a shared table fills.
+  //
+  // Who still needs a seat used to be folded in here as more grey words. It
+  // is a pill beside this now, in the same orange the bookings heading and
+  // the dashboard use for the same fact.
   const seating =
     tables.length === 0
-      ? live.length > 0
-        ? "unseated"
-        : ""
-      : `${tables.length === 1 ? "table" : "tables"} ${tables.join(", ")}` +
-        (unseated > 0 ? ` · ${unseated} unseated` : "");
+      ? ""
+      : `${tables.length === 1 ? "table" : "tables"} ${tables.join(", ")}`;
 
   // A cancelled guest cannot be picked, so everyone travelling needs a seat.
   const seatsNeeded = live.filter((attendee) => selected.has(attendee.id))
@@ -270,14 +272,38 @@ export function BookingCard({
           <span className="truncate text-sm font-semibold text-ink">
             {booking.partyName}
           </span>
+          {/* The counts stay plain text and the two states become pills: what
+              is owed, and who is off the list. A party with everybody paid
+              says so in the blue rather than saying nothing, because "no due
+              pill" is not something a reader notices. */}
           <span
             data-booking-summary={booking.id}
-            className="truncate text-xs font-normal text-ink-muted"
+            className="flex min-w-0 items-center gap-1.5 text-xs font-normal text-ink-muted"
           >
-            {live.length}/{booking.attendees.length} guests
-            {seating === "" ? "" : ` · ${seating}`}
-            {cancelledCount > 0 ? ` · ${cancelledCount} cancelled` : ""}
-            {dueCents > 0 ? ` · ${money(dueCents)} due` : ""}
+            <span className="truncate">
+              {live.length}/{booking.attendees.length} guests
+              {seating === "" ? "" : ` · ${seating}`}
+            </span>
+            {unseated > 0 && !allCancelled && (
+              <StatusPill tone="due" marker={`unseated-${booking.id}`}>
+                {unseated} unseated
+              </StatusPill>
+            )}
+            {cancelledCount > 0 && (
+              <StatusPill tone="cancelled" marker={`cancelled-${booking.id}`}>
+                {cancelledCount} cancelled
+              </StatusPill>
+            )}
+            {dueCents > 0 && (
+              <StatusPill tone="due" marker={`due-${booking.id}`}>
+                {money(dueCents)} due
+              </StatusPill>
+            )}
+            {dueCents === 0 && !allCancelled && live.length > 0 && (
+              <StatusPill tone="confirmed" marker={`paid-${booking.id}`}>
+                paid
+              </StatusPill>
+            )}
           </span>
         </button>
 
@@ -300,9 +326,9 @@ export function BookingCard({
           </button>
 
           {allCancelled ? (
-            <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-ink-soft">
+            <StatusPill tone="cancelled" marker={`party-${booking.id}`}>
               Party cancelled
-            </span>
+            </StatusPill>
           ) : confirming ? (
             <>
               <span className="text-xs text-ink-muted">

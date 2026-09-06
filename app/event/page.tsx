@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEventContext, useMoney } from "@/components/event-provider";
+import { StatusPill, type StatusTone } from "@/components/status-pill";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import { sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
@@ -85,6 +86,13 @@ interface Figure {
   value: string;
   /** Named when a card carries two numbers, so neither can be misread. */
   unit?: string;
+  /**
+   * When the unit is a status rather than a noun - confirmed, cancelled,
+   * due, short - it is drawn as the pill for that status instead of as
+   * small grey words. The number keeps its own size and weight: the pill
+   * says what kind of number it is, not how big.
+   */
+  tone?: StatusTone;
 }
 
 function Stat({
@@ -147,11 +155,16 @@ function Stat({
             >
               {figure.value}
             </span>
-            {figure.unit !== undefined && (
-              <span className="text-xs text-ink-muted">
-                {figure.unit}
-              </span>
-            )}
+            {figure.unit !== undefined &&
+              (figure.tone === undefined ? (
+                <span className="text-xs text-ink-muted">
+                  {figure.unit}
+                </span>
+              ) : (
+                <StatusPill tone={figure.tone} marker={label}>
+                  {figure.unit}
+                </StatusPill>
+              ))}
           </span>
         ))}
       </div>
@@ -243,8 +256,16 @@ export default function EventDashboard() {
         <Stat
           label="Guests"
           figures={[
-            { value: String(summary.guestsConfirmed), unit: "confirmed" },
-            { value: String(summary.guestsCancelled), unit: "cancelled" },
+            {
+              value: String(summary.guestsConfirmed),
+              unit: "confirmed",
+              tone: "confirmed",
+            },
+            {
+              value: String(summary.guestsCancelled),
+              unit: "cancelled",
+              tone: "cancelled",
+            },
           ]}
         />
         <Stat
@@ -254,14 +275,28 @@ export default function EventDashboard() {
             // Only when the bookings have gone past the room, where a bare
             // nought would look like a room that is merely full.
             ...(summary.seatsShort > 0
-              ? [{ value: String(summary.seatsShort), unit: "short" }]
+              ? [
+                  {
+                    value: String(summary.seatsShort),
+                    unit: "short",
+                    tone: "due" as const,
+                  },
+                ]
               : []),
           ]}
           negative={summary.seatsShort > 0}
         />
         <Stat
           label="Amount due at the venue"
-          figures={[{ value: money(summary.dueCents) }]}
+          /* Nought owed is a settled event, not an absence, so it says so in
+             the blue rather than leaving the figure to be read twice. */
+          figures={[
+            {
+              value: money(summary.dueCents),
+              unit: summary.dueCents > 0 ? "due" : "settled",
+              tone: summary.dueCents > 0 ? "due" : "confirmed",
+            },
+          ]}
         />
         <Stat
           label="Expenses"
@@ -321,15 +356,15 @@ export default function EventDashboard() {
                     {table.taken} of {table.seatCount} seat
                     {table.seatCount === 1 ? "" : "s"}
                   </span>
-                  <span
-                    className={`text-xs ${
-                      table.free === 0
-                        ? "text-ink-faint"
-                        : "font-medium text-positive"
-                    }`}
+                  {/* A table with room is a confirmed thing; a full one is
+                      closed rather than wrong, so it takes the quiet tone
+                      rather than the orange. */}
+                  <StatusPill
+                    tone={table.free === 0 ? "cancelled" : "confirmed"}
+                    marker={`table-${table.tableNumber}`}
                   >
                     {table.free === 0 ? "full" : `${table.free} free`}
-                  </span>
+                  </StatusPill>
                 </div>
                 <Seated table={table} />
               </li>

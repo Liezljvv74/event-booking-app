@@ -153,10 +153,19 @@
   --ink-faint: var(--steel-500);
   --ink-inverse: #ffffff;
 
-  /* Primary: royal blue, and the white that goes on top of it. */
+  /**
+   * Primary: royal blue, and the white that goes on top of it.
+   *
+   * `--primary-soft` is the tint a status pill is filled with, `--primary-line`
+   * its edge, and `--on-primary-soft` the text that sits on it - a deeper
+   * shade than `--primary`, because the same blue that reads well on white is
+   * too close to its own tint to be read on it.
+   */
   --primary: var(--royal-600);
   --primary-hover: var(--royal-700);
   --primary-soft: var(--royal-50);
+  --primary-line: var(--royal-200);
+  --on-primary-soft: var(--royal-700);
   --primary-ink: #ffffff;
 
   /* Accent: the light blue. */
@@ -173,6 +182,7 @@
   --cta-hover: var(--ember-800);
   --cta-soft: var(--ember-50);
   --cta-line: var(--ember-400);
+  --on-cta-soft: var(--ember-800);
   --cta-ink: #ffffff;
 
   /* Red, for what does not come back. */
@@ -219,6 +229,8 @@
     --primary: var(--royal-500);
     --primary-hover: var(--royal-400);
     --primary-soft: #1c2749;
+    --primary-line: var(--royal-800);
+    --on-primary-soft: var(--royal-200);
     --primary-ink: #ffffff;
 
     --accent: var(--azure-400);
@@ -229,6 +241,7 @@
     --cta-hover: var(--ember-300);
     --cta-soft: #2a1608;
     --cta-line: var(--ember-700);
+    --on-cta-soft: var(--ember-200);
     --cta-ink: #1b0d02;
 
     --danger: var(--alarm-400);
@@ -268,6 +281,8 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-line: var(--primary-line);
+  --color-on-primary-soft: var(--on-primary-soft);
   --color-primary-ink: var(--primary-ink);
 
   --color-accent: var(--accent);
@@ -278,6 +293,7 @@
   --color-cta-hover: var(--cta-hover);
   --color-cta-soft: var(--cta-soft);
   --color-cta-line: var(--cta-line);
+  --color-on-cta-soft: var(--on-cta-soft);
   --color-cta-ink: var(--cta-ink);
 
   --color-danger: var(--danger);

@@ -1,5 +1,6 @@
 "use client";
 
+import { StatusPill } from "@/components/status-pill";
 import type { Event } from "@/lib/types";
 
 /**
@@ -34,11 +35,10 @@ export function CancelledGuests({ event }: { event: Event }) {
         <h2 className="text-base font-semibold text-ink">
           Cancelled guests
         </h2>
-        <p
-          data-cancelled-count
-          className="text-xs text-ink-muted"
-        >
-          {cancelled.length} guest{cancelled.length === 1 ? "" : "s"}
+        <p data-cancelled-count>
+          <StatusPill tone="cancelled" marker="cancelled-guests">
+            {cancelled.length} guest{cancelled.length === 1 ? "" : "s"}
+          </StatusPill>
         </p>
       </div>
 

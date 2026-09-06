@@ -140,6 +140,7 @@ components/                      the pieces those screens are built from
   app-chrome.tsx                 the event rail + section nav, under all three layouts
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
   tables-editor.tsx              an event's tables, and the rows behind them
+  status-pill.tsx                one badge, and what colour each status is
   form-styles.ts                 one definition of what a form field looks like
   list-keys.ts                   Enter, moving down a list of fields
 lib/
@@ -244,6 +245,47 @@ had to move: the faintest grey and the orange both came in under 4.5:1 on
 white at the size they are used, so `--steel-500` was darkened to `#647691`
 and the call to action taken from `--ember-600` to `--ember-700`. Every
 text token now clears AA against the surface it sits on in both themes.
+
+### Statuses
+
+Every status in the app is the same badge, from `components/status-pill.tsx`,
+and there are three tones and only three.
+
+**Confirmed** is royal blue: paid, settled, a seat held, a table with room.
+**Due** is orange: money still to collect, a guest still to seat, a room
+booked past its seats. **Cancelled** is the muted grey: off the list, closed,
+full, gone - present so it can be counted, quiet so it is not read first.
+
+There is deliberately no fourth. Red belongs to destruction and failure, and
+a status is neither; a status pill that could be red would end up red for
+"unpaid", which is the ordinary state of most guests until the night. A check
+asserts no status is ever painted in the danger colour.
+
+All three are drawn the same way - the tone's tint behind, its line around,
+and a deeper shade for the words. The deeper shade is what `--on-primary-soft`
+and `--on-cta-soft` are for: the blue that reads on white is too near its own
+tint to be read on it. All six pairings clear AA and four clear AAA.
+
+It is used on the bookings screen (what a party owes, who is still to seat,
+who has cancelled, a party gone entirely, and a settled party saying **paid**
+rather than saying nothing), on the dashboard (guests confirmed and cancelled,
+the amount due at the venue and whether it is settled, seats short, and each
+table's **full** or **N free**), on the expenses screen (paid, outstanding, and
+the footer's **all paid**), and in the cancelled-guests count.
+
+The one status that is not a pill is the payment dropdown on a guest's row,
+because that is where a payment state is *changed* and a dropdown is how you
+change one. It takes its colour from the same table through `attendeeTone()`,
+so a guest reading **Pay at venue** in orange matches the orange on their
+party's own due pill in the line above. `not_paying` counts as confirmed
+there: a guest on the house is coming and holds a seat, and the only thing
+settled about them is that no money is owed.
+
+Doing that turned up a real trap. The dropdown first took `controlClass` plus
+a tone colour, which put two text colours on one element and left the winner
+to whichever Tailwind emitted last - the blue won and the orange lost, on the
+same line of code. The base class has no colour on it now, and the tone is
+the only one there.
 
 ## What each screen does
 
@@ -983,6 +1025,18 @@ stood in for one.
 **Everything is typechecked, linted and built.** `npx tsc --noEmit`, `npx
 eslint .` and `npm run build` are run against every change, and the build is a
 real static export of all nine routes rather than a compile.
+
+**Statuses are checked for being identical rather than merely correct.** The
+pass drives a seeded event through the dashboard, bookings and expenses in
+both themes, finds every `[data-status-pill]`, and asserts that all the pills
+of one tone are painted in exactly the same three colours wherever they
+appear - 15 pills across three screens collapsing to three signatures. On top
+of that it checks each tone is the hue it claims, that no status is ever the
+danger red, that they are pills rather than boxes, and that the specific
+things the app has to say are being said: what is owed is orange, a settled
+party is blue, a cancelled party is grey, a full table is grey and one with
+room is blue. 39 assertions, and it caught the dropdown's colour losing to
+the base class.
 
 **The palette is checked by walking the rendered page.** The audit resolves
 every semantic token to the colour the browser actually paints, then reads

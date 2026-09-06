@@ -7,6 +7,7 @@ import { describeTicketPrice } from "@/lib/ticket-prices";
 import type { Attendee, AttendeeStatus, Event } from "@/lib/types";
 import { describeError } from "@/lib/errors";
 import { enterMovesDown } from "@/components/list-keys";
+import { attendeeTone, TONE_TEXT } from "@/components/status-pill";
 
 const STATUS_LABELS: Record<AttendeeStatus, string> = {
   paid: "Paid",
@@ -66,8 +67,16 @@ interface Props {
   onAddGuest: () => Promise<unknown>;
 }
 
-const controlClass =
-  "h-9 w-full min-w-0 rounded-md border border-line bg-field px-2 text-sm text-ink disabled:opacity-50";
+/**
+ * A control on a guest's row, without a text colour on it. The status
+ * dropdown sets its own from the tone table, and two colour utilities on one
+ * element would leave the winner to whichever Tailwind happened to emit
+ * last - which is how the orange lost to the black the first time.
+ */
+const CONTROL_BASE =
+  "h-9 w-full min-w-0 rounded-md border border-line bg-field px-2 text-sm disabled:opacity-50";
+
+const controlClass = `${CONTROL_BASE} text-ink`;
 
 export function AttendeeRow({
   event,
@@ -251,16 +260,22 @@ export function AttendeeRow({
           })}
         </select>
 
+        {/* The one status in the app that is not a pill, because this is
+            where a status is changed and a dropdown is how you change one.
+            It takes its colour from the same table the pills use, so a guest
+            reading "Pay at venue" in orange matches the party's own due pill
+            in the line above them. */}
         <select
           value={attendee.status}
           disabled={busy}
           aria-label={`Status of guest ${position}`}
           data-attendee-status={attendee.id}
+          data-status-tone={attendeeTone(attendee.status)}
           data-list-field="status"
           onChange={(changed) =>
             void apply({ status: changed.target.value as AttendeeStatus })
           }
-          className={controlClass}
+          className={`${CONTROL_BASE} font-medium ${TONE_TEXT[attendeeTone(attendee.status)]}`}
         >
           {LIVE_STATUSES.map((status) => (
             <option key={status} value={status}>

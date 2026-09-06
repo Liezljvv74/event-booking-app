@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BookingCard } from "@/components/booking-card";
 import { CancelledGuests } from "@/components/cancelled-guests";
+import { StatusPill } from "@/components/status-pill";
 import { useEventContext } from "@/components/event-provider";
 import { NewBookingForm } from "@/components/new-booking-form";
 import { tableOccupancy, type SeatingShare } from "@/lib/repository";
@@ -205,12 +206,18 @@ export default function BookingsScreen() {
         </h1>
         <p
           data-bookings-summary
-          className="text-xs text-ink-muted"
+          className="flex items-center gap-1.5 text-xs text-ink-muted"
         >
-          {event.bookings.length} booking
-          {event.bookings.length === 1 ? "" : "s"} · {live.length} guest
-          {live.length === 1 ? "" : "s"}
-          {unseated > 0 ? ` · ${unseated} unseated` : ""}
+          <span>
+            {event.bookings.length} booking
+            {event.bookings.length === 1 ? "" : "s"} · {live.length} guest
+            {live.length === 1 ? "" : "s"}
+          </span>
+          {unseated > 0 && (
+            <StatusPill tone="due" marker="unseated">
+              {unseated} unseated
+            </StatusPill>
+          )}
         </p>
         {!creating && (
           <button

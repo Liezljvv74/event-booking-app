@@ -8,6 +8,7 @@ import {
   ExpenseRow,
 } from "@/components/expense-row";
 import { NewExpenseRow } from "@/components/new-expense-row";
+import { StatusPill } from "@/components/status-pill";
 import { sumCents } from "@/lib/money";
 import { unusedExpenseTemplates } from "@/lib/repository";
 import type { Expense } from "@/lib/types";
@@ -95,14 +96,26 @@ export default function ExpensesScreen() {
         </h1>
         <p
           data-expense-summary
-          className="text-xs text-ink-muted"
+          className="flex flex-wrap items-center gap-1.5 text-xs text-ink-muted"
         >
-          {event.expenses.length} line
-          {event.expenses.length === 1 ? "" : "s"} ·{" "}
-          {money(summary.allCents)} total
-          {summary.paidCount > 0
-            ? ` · ${money(summary.paidCents)} paid · ${money(summary.outstandingCents)} outstanding`
-            : ""}
+          <span>
+            {event.expenses.length} line
+            {event.expenses.length === 1 ? "" : "s"} ·{" "}
+            {money(summary.allCents)} total
+          </span>
+          {summary.paidCount > 0 && (
+            <>
+              <StatusPill tone="confirmed" marker="expenses-paid">
+                {money(summary.paidCents)} paid
+              </StatusPill>
+              <StatusPill
+                tone={summary.outstandingCents > 0 ? "due" : "confirmed"}
+                marker="expenses-outstanding"
+              >
+                {money(summary.outstandingCents)} outstanding
+              </StatusPill>
+            </>
+          )}
         </p>
 
         <div className="ml-auto flex items-center gap-2">
@@ -228,13 +241,16 @@ export default function ExpensesScreen() {
                 {money(summary.allCents)}
               </span>
               <span />
-              <span
-                data-expense-outstanding
-                className="text-xs text-ink-muted"
-              >
-                {summary.outstandingCents === 0
-                  ? "all paid"
-                  : `${money(summary.outstandingCents)} outstanding`}
+              <span data-expense-outstanding>
+                {summary.outstandingCents === 0 ? (
+                  <StatusPill tone="confirmed" marker="expenses-total">
+                    all paid
+                  </StatusPill>
+                ) : (
+                  <StatusPill tone="due" marker="expenses-total">
+                    {money(summary.outstandingCents)} outstanding
+                  </StatusPill>
+                )}
               </span>
               <span />
             </div>

@@ -62,6 +62,21 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - Every text token clears WCAG AA against the surface it is used on, in both
   themes.
 
+### Status styling
+- Every status in the app is drawn as the same badge, and there are three
+  tones and only three: royal blue for confirmed and paid, orange for
+  anything due or wanting attention, and the muted grey for cancelled,
+  closed and full.
+- Red is not a status tone. It belongs to destruction and failure, so that
+  an unpaid guest - the ordinary state of most guests until the night - is
+  never coloured as an error.
+- Used wherever a status or an amount due is shown: the bookings screen, the
+  dashboard summaries and table cards, the expenses screen and its totals,
+  and the cancelled-guests count.
+- The exception is the payment dropdown on a guest's row, which stays a
+  dropdown because that is where the status is changed. It takes its colour
+  from the same three tones.
+
 ### Events
 - Any number of active events at a time, listed down the left-hand side of
   the page and switched by picking one. Each shows its name and its date
