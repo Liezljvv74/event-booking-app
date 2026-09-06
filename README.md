@@ -235,28 +235,30 @@ underneath in their own section, collapsed the same way, and appear nowhere
 else in the app, so this is the only place one can be looked at or removed
 early. Deleting names what goes with it.
 
-The two columns carry the tables differently, on request, because they are
-two different jobs.
+Both columns lay a room out the same way, as a **plan**: *Table form: Long ·
+Number of tables: 20 · Seats per table: 10*, with a line underneath saying what
+the three add up to. A room is laid out in twenty of the same table, not in
+twenty decisions. Both screens used to ask for a line per table with a button
+to add another, which meant twenty presses and twenty identical rows to read
+back; the list is gone from both, on request. Nought tables is allowed and says
+so: the room can be laid out later.
 
-On the right, laying a room out is a **plan**: *Table form: Long · Number of
-tables: 20 · Seats per table: 10*, with a line underneath saying what the
-three add up to. A room is laid out in twenty of the same table, not in twenty
-decisions, and the form used to ask for a line per table with a button to add
-another — twenty presses and twenty identical rows to read back before the
-event existed. Nought tables is allowed and says so: the room can be laid out
-later.
+On an event that already exists the plan is **reconciled** rather than applied
+from nothing, and that is the whole difficulty of it. A guest is seated by
+table number, so a surviving table has to stay the table it was: the
+lowest-numbered tables are kept and named by id in what is saved, the surplus
+above the count is dropped, and anything new is numbered past the highest ever
+used rather than into a gap. Two lines say what saving would do before it is
+pressed — which tables would be dropped and how many guests that would unseat,
+and, when the tables are not all alike yet, that saving makes every one of them
+this size and shape. Cancel puts the stored room back.
 
-On the left, an event that exists has a **list**, because by then its tables
-differ from one another: this one has been made bigger, that one has gone. A
-line per table with its number, its seats, its shape and a cross, and a button
-to add another, which copies the line above it — shape included, since a room
-gains another of what it already has far more often than the odd one out. The
-numbers are read-only and a table keeps the number its guests are seated by,
-so removing the first of four leaves the other three where they were and the
-next table added is numbered past the highest ever used, never into the gap. A
-cross on a table with guests at it says in its tooltip how many would be
-unseated, and unseats them only when Save is pressed — Cancel puts the table
-back.
+Which leaves one thing the plan cannot say: a room of tables that are not all
+the same. The three fields start from the commonest shape and the commonest
+seat count, and saving makes the rest match. A venue that seats twelve at the
+top table and ten everywhere else can no longer describe that here — the price
+of three fields instead of twenty rows, and worth naming rather than
+discovering.
 
 The shape — long, round or square — is descriptive and nothing depends on it:
 the spec keeps a floor plan out of scope and tables a numbered list, so nobody

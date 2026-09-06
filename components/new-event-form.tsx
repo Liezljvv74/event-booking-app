@@ -8,7 +8,7 @@ import {
   TicketPricesEditor,
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
-import { TablesPlanner, useTablePlan } from "@/components/tables-editor";
+import { TablesPlanner, useTablePlan } from "@/components/tables-planner";
 import { useEventContext } from "@/components/event-provider";
 import { describeError } from "@/lib/errors";
 import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";

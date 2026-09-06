@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { tableOccupancy, type EventDetailsPatch } from "@/lib/repository";
+import { useEventContext } from "@/components/event-provider";
 import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
 import { eventHref } from "@/lib/event-routes";
 import { formatEventDate } from "@/lib/event-time";
@@ -13,10 +14,10 @@ import {
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
 import {
-  TablesEditor,
+  TablesPlanner,
   signatureOfTables,
-  useTableRows,
-} from "@/components/tables-editor";
+  useTablePlan,
+} from "@/components/tables-planner";
 import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";
 
 interface Props {
@@ -74,16 +75,20 @@ function contents(event: Event) {
  * stray click while reading down the list.
  */
 export function EventEditor({ event, onSave, onRemove }: Props) {
+  // Only for the seat count a room with no tables starts from; an event that
+  // has tables is measured against its own.
+  const { settings } = useEventContext();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(event.name);
   const [eventDate, setEventDate] = useState(event.eventDate);
   const [startTime, setStartTime] = useState(event.startTime ?? "");
   const [endTime, setEndTime] = useState(event.endTime ?? "");
   const prices = useTicketPriceRows(event.ticketPrices);
-  // Tables are edited here too, and saved with the rest of the row: this is
-  // the only screen that lays an event out, so the event's own screens have
-  // no second way of doing it.
-  const tables = useTableRows(event.tables);
+  // The room, as a plan rather than a list: this is the only screen that lays
+  // an event out, and it asks the same three questions the New event form
+  // does. Reconciled against the tables the event already has, so the ones
+  // that survive keep the numbers their guests are seated by.
+  const tables = useTablePlan(settings.defaultSeatCount, event.tables);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -308,8 +313,8 @@ export function EventEditor({ event, onSave, onRemove }: Props) {
               unseats whoever is at it, so the crosses say how many that
               would be, and nothing is written until Save. */}
           <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
-            <TablesEditor
-              control={tables}
+            <TablesPlanner
+              plan={tables}
               disabled={busy}
               seated={seated}
               scope={event.id}

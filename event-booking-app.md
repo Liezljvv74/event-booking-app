@@ -56,13 +56,17 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ### Tables
 - Simple numbered list, no visual floor plan yet.  
 - Default 10 seats per table; editable per table, per event
-- A new event is laid out as a plan rather than a list: table form, number of
-  tables, seats per table. Twenty of the same table is three fields, not
-  twenty rows. Nought tables is allowed and means the room is not laid out yet.
-- Afterwards, on the event's own row on Manage events, the tables are a list
-  again — by then they differ from one another — and each can have its seats
-  or its shape changed, or be removed, and more can be added. That is the only
-  place an event is laid out.
+- A room is laid out as a plan, never as a list: table form, number of tables,
+  seats per table. Twenty of the same table is three fields, not twenty rows.
+  Nought tables is allowed and means the room is not laid out yet.
+- The same three fields on the New event form and on the event's own row on
+  Manage events, which is the only place an event is laid out.
+- On an event that already exists the plan is reconciled rather than applied
+  from nothing. The lowest-numbered tables are kept — a guest is seated by
+  table number, so a surviving table has to stay the table it was — the
+  surplus above the count is dropped and whoever sat there is unseated, and
+  anything new is numbered past the highest ever used. What saving would drop,
+  and how many guests it would unseat, is said before it is saved.
 - The shape is descriptive: nothing seats anybody differently for being round.
   It is on the tables export so the venue knows what to carry in.
 - No Tables screen of its own. The dashboard's seating list is where the
