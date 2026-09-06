@@ -345,10 +345,17 @@ laying an event out had moved to Manage events. Losing it took the nav from
 five items to four, where it stayed until Export/Import and then Settings
 made six of them.
 
-On a party's own line, **Cancel party is a cross** too, on request. It only
-asks the question: the red button that answers it keeps its words, because a
-cross beside *Keep* is read as "never mind" by half the people who press it,
-and cancelling a party is the one thing in this app that cannot be undone.
+**Cancelling is a cross** on both counts, on request. On a guest's own row —
+one of these sits on every guest of every party, and the word said the same
+thing a dozen times down a column — and on the party's line beside Edit. The
+guest's cross names the guest rather than their position, which is what a
+cross has instead of a face: "Cancel Ann Jones", falling back to "Cancel guest
+2" for someone not named yet.
+
+The red button that answers *Cancel all 3?* keeps its words. A cross beside
+*Keep* is read as "never mind" by half the people who press it, and
+un-cancelling is not possible: a party cancelled by a misread cross does not
+come back.
 
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the

@@ -33,7 +33,7 @@ const LIVE_STATUSES: readonly AttendeeStatus[] = [
  * rules out per-field labels; the header carries them once instead.
  */
 export const ATTENDEE_GRID =
-  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_5rem_8rem_7rem_5rem] items-center gap-2";
+  "grid grid-cols-[1.25rem_minmax(7rem,1fr)_5rem_8rem_7rem_2.5rem] items-center gap-2";
 
 /** Narrower than a phone, so the columns scroll sideways instead of wrapping. */
 export const ATTENDEE_MIN_WIDTH = "min-w-[36rem]";
@@ -320,15 +320,28 @@ export function AttendeeRow({
           />
         )}
 
+        {/* Square, so it reads as a cross rather than a word: one of these
+            sits on every guest of every party, and the word said the same
+            thing a dozen times down a column.
+
+            It names the guest rather than their position now. The word it
+            replaced said "Cancel" and the accessible name said "Cancel guest
+            3", neither of which is a person; a cross has nothing but its
+            name, so the name should be the one thing that tells them apart. */}
         <button
           type="button"
           onClick={() => void onCancel()}
           disabled={busy}
-          aria-label={`Cancel guest ${position}`}
+          aria-label={
+            name.trim() === ""
+              ? `Cancel guest ${position}`
+              : `Cancel ${name.trim()}`
+          }
+          title="Cancel this guest"
           data-cancel-attendee={attendee.id}
-          className="h-9 rounded-md border border-zinc-300 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
+          className="h-9 w-9 justify-self-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
         >
-          Cancel
+          <span aria-hidden="true">×</span>
         </button>
       </div>
 
