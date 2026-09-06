@@ -645,6 +645,24 @@ The ones that were argued out and would otherwise be re-litigated:
   building with `NEXT_PUBLIC_BASE_PATH` set and reading the `src` back out of
   `out/index.html`, which is the only way to see it — every local check
   passes either way.
+- **A layout that only wraps does not need `"use client"`.** Three of them —
+  Settings, Export/Import and Manage events — carried the directive while
+  containing nothing but `<AppScreen>{children}</AppScreen>`: no state, no
+  handler, nothing needing a browser. They are Server Components now.
+  `AppScreen` is where the client boundary starts, and the page arrives as
+  `children`, passed through rather than imported, so it is rendered on its
+  own terms and pulls nothing into the layout's module graph. Context still
+  reaches the page, because context follows the React tree rather than the
+  module graph and the page is still rendered inside the provider.
+
+  Worth measuring rather than assuming: it took **139 bytes** off each of
+  those three routes, on a first load of about 619 KB, and **8.5 KB** off the
+  total JavaScript written to `out/` — three route modules that no longer
+  need chunks of their own. The routes themselves are dominated by the
+  framework: of `/settings`'s 619 KB, three React and Next chunks are 496 KB
+  of it. So this is the right shape rather than a saving anybody will feel,
+  and the reason to keep it is that the next thing added to one of those
+  layouts should have to justify crossing the boundary.
 - **Nothing to open means Manage events.** The entry screen is a signpost: to
   the first active event, or, when there is none, to the one screen that can
   create one.
