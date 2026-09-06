@@ -345,6 +345,11 @@ laying an event out had moved to Manage events. Losing it took the nav from
 five items to four, where it stayed until Export/Import and then Settings
 made six of them.
 
+On a party's own line, **Cancel party is a cross** too, on request. It only
+asks the question: the red button that answers it keeps its words, because a
+cross beside *Keep* is read as "never mind" by half the people who press it,
+and cancelling a party is the one thing in this app that cannot be undone.
+
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
 list runs two abreast on a wide screen so two of them can be read side by

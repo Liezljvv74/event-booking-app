@@ -308,13 +308,20 @@ export function BookingCard({
               </button>
             </>
           ) : (
+            /* Square, so it reads as a cross rather than a word. It only
+               asks the question — the red button that answers it keeps its
+               words, because a cross beside "Keep" would be read as "never
+               mind" by half the people who pressed it, and cancelling a
+               party is the one thing in this app that cannot be undone. */
             <button
               type="button"
               onClick={() => setConfirming(true)}
+              aria-label={`Cancel the whole of ${booking.partyName}`}
+              title="Cancel this whole party"
               data-cancel-booking={booking.id}
-              className="h-9 rounded-md border border-zinc-300 px-2 text-xs font-medium text-black dark:border-zinc-700 dark:text-zinc-50"
+              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
             >
-              Cancel party
+              <span aria-hidden="true">×</span>
             </button>
           )}
         </div>
