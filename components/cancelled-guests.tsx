@@ -1,7 +1,9 @@
 "use client";
 
 import { StatusPill } from "@/components/status-pill";
-import type { Event } from "@/lib/types";
+import { useMoney } from "@/components/event-provider";
+import { amountPaidCents, type Event } from "@/lib/types";
+import { sumCents } from "@/lib/money";
 
 /**
  * Every cancellation on the event, in one list below the bookings.
@@ -17,6 +19,8 @@ import type { Event } from "@/lib/types";
  * called the same thing are told apart by whose booking they were on.
  */
 export function CancelledGuests({ event }: { event: Event }) {
+  const money = useMoney();
+
   const cancelled = event.bookings.flatMap((booking) =>
     booking.attendees
       .filter((attendee) => attendee.status === "cancelled")
@@ -24,10 +28,21 @@ export function CancelledGuests({ event }: { event: Event }) {
         id: attendee.id,
         name: attendee.name.trim(),
         partyName: booking.partyName,
+        paidCents: amountPaidCents(attendee),
       })),
   );
 
   if (cancelled.length === 0) return null;
+
+  /**
+   * Money taken from people who are no longer coming.
+   *
+   * It counts towards the event's income, because it was taken and has not
+   * been given back, so it has to be readable somewhere or the dashboard has
+   * a figure in it with nothing behind it. This list is where those guests
+   * already are, so it is where the amount belongs.
+   */
+  const keptCents = sumCents(cancelled.map((guest) => guest.paidCents));
 
   return (
     <section data-cancelled-section className="mt-6">
@@ -40,6 +55,14 @@ export function CancelledGuests({ event }: { event: Event }) {
             {cancelled.length} guest{cancelled.length === 1 ? "" : "s"}
           </StatusPill>
         </p>
+
+        {keptCents > 0 && (
+          <p data-cancelled-kept>
+            <StatusPill tone="confirmed" marker="cancelled-kept">
+              {money(keptCents)} already paid
+            </StatusPill>
+          </p>
+        )}
       </div>
 
       {/* Names run in columns rather than down a single line each: they are
@@ -56,6 +79,17 @@ export function CancelledGuests({ event }: { event: Event }) {
             <span className="text-ink-faint">
               ({guest.partyName})
             </span>
+            {guest.paidCents > 0 && (
+              <>
+                {" "}
+                <span
+                  data-cancelled-paid={guest.id}
+                  className="text-primary tabular-nums"
+                >
+                  {money(guest.paidCents)} paid
+                </span>
+              </>
+            )}
           </li>
         ))}
       </ul>

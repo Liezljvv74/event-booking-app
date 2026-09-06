@@ -38,8 +38,14 @@ export function amountDueCents(attendee: Attendee): number {
   return attendee.status === "pay_at_venue" ? attendee.ticketPriceCents : 0;
 }
 
+/**
+ * What has already been taken, whatever has happened since. A guest who paid
+ * and then cancelled is still money in the till, so this asks the record
+ * rather than the status - which is the whole reason `paidCents` is written
+ * down separately from the price.
+ */
 export function amountPaidCents(attendee: Attendee): number {
-  return attendee.status === "paid" ? attendee.ticketPriceCents : 0;
+  return attendee.paidCents;
 }
 
 /** An event is active until 48 hours after its date, then closed. */
@@ -116,6 +122,17 @@ export interface Attendee {
   /** Optional per attendee; the booking's telephone is the required one. */
   telephone?: string;
   ticketPriceCents: number;
+  /**
+   * Money actually taken from this guest, in cents.
+   *
+   * Kept apart from `ticketPriceCents`, which is what they were asked for.
+   * The two agree while somebody is marked paid and part company the moment
+   * they cancel: the ticket is no longer owed, but the money has changed
+   * hands and does not change back. A cancellation is not a refund, and if
+   * one is given it is a decision somebody makes rather than something the
+   * app does on their behalf.
+   */
+  paidCents: number;
   /**
    * Somebody who comes to everything: a regular.
    *

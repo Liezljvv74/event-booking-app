@@ -205,7 +205,16 @@ function rows(header: readonly string[], body: readonly string[][]): string {
   return [header, ...body].map((row) => row.map(cell).join(",")).join("\r\n") + "\r\n";
 }
 
-/** One row per guest, cancelled ones included: who is coming, and on what terms. */
+/**
+ * One row per guest, cancelled ones included: who is coming, and on what
+ * terms.
+ *
+ * Price and paid are two columns rather than one because a cancellation
+ * separates them: nothing more is owed for somebody who is not coming, but
+ * what they had already handed over is still money the event took. A
+ * cancelled guest therefore reads 0.00 under price and whatever they paid
+ * under paid.
+ */
 export function guestsCsv(events: readonly Event[]): string {
   const body: string[][] = [];
 
@@ -224,6 +233,7 @@ export function guestsCsv(events: readonly Event[]): string {
             : String(attendee.assignedTableNumber),
           attendee.status,
           formatCents(attendee.ticketPriceCents),
+          formatCents(attendee.paidCents),
         ]);
       }
     }
@@ -240,6 +250,7 @@ export function guestsCsv(events: readonly Event[]): string {
       "table",
       "status",
       "price",
+      "paid",
     ],
     body,
   );

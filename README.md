@@ -181,11 +181,29 @@ the crosses on Manage events that say what removing a table would unseat all
 read it, so they cannot disagree. Anything that needs a
 scalar goes through `freeSeatsAtTable()`, which counts the same way.
 
-**What is owed is decided by the status, not by the price on the record.**
-`amountDueCents()` and `amountPaidCents()` in `lib/types.ts` return nought for
-anybody who is not paying at the door or has not paid, so a cancelled guest
-owes nothing by construction. Both the dashboard's totals and a party's own
-line go through them, which is also what stops the two disagreeing.
+**What is owed is decided by the status; what has been paid is decided by the
+record.** `amountDueCents()` in `lib/types.ts` returns nought for anybody not
+paying at the door, so a cancelled guest owes nothing by construction. Both
+the dashboard's totals and a party's own line go through it, which is what
+stops those two disagreeing.
+
+Money that has been handed over is a different question, and it has a field
+of its own. `Attendee.paidCents` is what was taken, beside `ticketPriceCents`
+which is what was asked for. They agree while somebody is marked paid and
+part company the moment that guest cancels: nothing more is owed, but the
+money does not come back on its own, because a cancellation is not a refund
+and giving one is a decision somebody makes rather than something the app
+does on their behalf. `amountPaidCents()` reads the field rather than the
+status, which is the whole reason the field exists.
+
+Marking somebody paid sets it, and moving them back to paying at the door or
+on to the house clears it - which is how a payment entered by mistake is
+undone, since there is nothing else on the row to undo it with.
+
+A guest who paid and then cancelled under the older rule cannot be recovered:
+cancelling zeroed the only figure there was. They read as nought, which is
+what the app has always shown for them. Only cancellations made from here on
+keep their money.
 
 Cancelling still zeroes the price where it happens, and `withStoredDefaults()`
 zeroes it again on the way out of the store. That second one is not
@@ -1081,6 +1099,16 @@ stood in for one.
 **Everything is typechecked, linted and built.** `npx tsc --noEmit`, `npx
 eslint .` and `npm run build` are run against every change, and the build is a
 real static export of all nine routes rather than a compile.
+
+**Money already taken survives a cancellation, and that is checked too.** One
+guest who has paid is cancelled off a party and a whole party who have both
+paid is called off, through the buttons. Nothing is owed for any of the three
+afterwards and their prices are nought in the store, but expected income has
+to be unmoved at 1,800.00, their `paidCents` has to be intact, the cancelled
+list has to show **1,350.00 already paid** and 450.00 against each of them,
+and the guest report has to read 0.00 under price and 450.00 under paid for
+each. A guest is then marked paid and put back to paying at the door, where
+the payment has to come off again. 13 assertions.
 
 **Nothing cancelled is owed for, and that is checked in the file as well as
 on the screen.** A seeded event carries two guests cancelled but still priced

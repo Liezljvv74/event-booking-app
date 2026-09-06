@@ -173,8 +173,18 @@ event manager for now. (The app may evolve into a bigger app, with more function
   a cancelled guest's price is forced to nought when an event is read out of
   the store - so no screen, report or export can charge for somebody who is
   not coming, whatever the record says.
+- Money already handed over is kept when a guest or a party cancels. Nothing
+  more is owed for them, but what was taken stays in the event's income: a
+  cancellation is not a refund, and giving one is a decision for whoever took
+  the money.
+- The amount taken is recorded separately from the price asked. Marking a
+  guest paid records it; putting them back to paying at the door, or on to
+  the house, clears it, which is how a payment entered by mistake is undone.
+- Kept money is readable rather than only summed: the cancelled-guests list
+  shows the total already paid and the amount against each guest, and the
+  guest report has price and paid as separate columns.
 - Expected income is what has been paid plus what is still due, so a
-  cancellation leaves both figures.
+  cancellation leaves the paid half standing and takes the due half away.
 
 ### Expenses
 - Add line items (description + amount) per event. The blank line to type

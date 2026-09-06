@@ -62,9 +62,12 @@ type StoredExpense = Omit<Expense, "provider" | "paid" | "notes"> &
 /** Tables gained a shape after the store was first written. */
 type StoredTable = Omit<Table, "shape"> & Partial<Pick<Table, "shape">>;
 
-/** Attendees gained the regular mark after the store was first written. */
-type StoredAttendee = Omit<Attendee, "regularId"> &
-  Partial<Pick<Attendee, "regularId">> & { regular?: boolean };
+/**
+ * Attendees gained the regular mark, and later the record of what has
+ * actually been taken from them, after the store was first written.
+ */
+type StoredAttendee = Omit<Attendee, "regularId" | "paidCents"> &
+  Partial<Pick<Attendee, "regularId" | "paidCents">> & { regular?: boolean };
 
 type StoredBooking = Omit<Booking, "attendees"> & {
   attendees: StoredAttendee[];
@@ -109,6 +112,20 @@ function withStoredDefaults(event: StoredEvent): Event {
          */
         ticketPriceCents:
           attendee.status === "cancelled" ? 0 : attendee.ticketPriceCents,
+        /**
+         * What has been taken, for a record written before the app kept that
+         * separately: a guest marked paid has handed over their ticket price,
+         * and nobody else has handed over anything.
+         *
+         * A guest who paid and then cancelled under the older rule cannot be
+         * recovered here - cancelling zeroed the only figure there was, so
+         * there is nothing left to read. They come through at nought, which
+         * is what the app has always shown for them. Only cancellations made
+         * from here on keep their money.
+         */
+        paidCents:
+          attendee.paidCents ??
+          (attendee.status === "paid" ? attendee.ticketPriceCents : 0),
       })),
     })),
     expenses: event.expenses.map((expense) => ({
@@ -248,6 +265,8 @@ function carriedRegulars(
       assignedTableNumber: keepsSeat ? wanted : null,
       status: "pay_at_venue" as AttendeeStatus,
       ticketPriceCents: cheapest ?? 0,
+      // Nobody arrives having paid: it is a different event.
+      paidCents: 0,
     };
   });
 
@@ -990,6 +1009,7 @@ export async function createBooking(
         assignedTableNumber: seats[index] ?? null,
         status: "pay_at_venue" as AttendeeStatus,
         ticketPriceCents: input.ticketPriceCents,
+        paidCents: 0,
       }),
     );
 
@@ -1148,7 +1168,17 @@ export function updateAttendee(
       throw new Error("Use Cancel on the guest's row to cancel them.");
     }
 
-    const next: Attendee = { ...current, ...patch };
+    /**
+     * Money follows the status. Marking somebody paid records what was taken
+     * from them; putting them back to paying at the door, or on to the
+     * house, says it never was - which is how a payment entered by mistake
+     * is undone, since there is nothing else on the row to undo it with.
+     */
+    const edited: Attendee = { ...current, ...patch };
+    const next: Attendee = {
+      ...edited,
+      paidCents: edited.status === "paid" ? edited.ticketPriceCents : 0,
+    };
 
     const takesSeat = SEAT_OCCUPYING_STATUSES.includes(next.status);
     const table = next.assignedTableNumber;
@@ -1329,6 +1359,7 @@ export function addAttendee(
       assignedTableNumber: partyTables[0]?.tableNumber ?? null,
       status: "pay_at_venue",
       ticketPriceCents: booking.ticketPriceCents,
+      paidCents: 0,
     };
 
     return {
@@ -1367,7 +1398,11 @@ export function cancelAttendee(
                   ? {
                       ...attendee,
                       status: "cancelled" as AttendeeStatus,
-                      // Nobody is charged for a seat they gave up.
+                      // Nobody is charged for a seat they gave up. What they
+                      // had already handed over stays where it is: money that
+                      // has changed hands does not change back because
+                      // somebody stopped coming, and refunding it is a
+                      // decision for whoever took it.
                       ticketPriceCents: 0,
                     }
                   : attendee,
@@ -1396,6 +1431,9 @@ export function cancelBooking(
             ...booking,
             // No replacements: the booking is off, not reshuffled. Nothing
             // is charged for it either.
+            // Nothing more is owed by any of them; what any of them had
+            // already paid stays on the books, exactly as for one guest
+            // dropping out.
             attendees: booking.attendees.map((attendee) => ({
               ...attendee,
               status: "cancelled" as AttendeeStatus,
