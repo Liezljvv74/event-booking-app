@@ -322,7 +322,20 @@ time was asked for off. Nothing there is editable: an event's own details are
 set when it is created and changed on Manage events, which is one page owning
 the lot rather than three screens each owning a piece of it. Then six figures on one line (guests confirmed and cancelled,
 seats available, amount due at the venue, expenses, expected income, expected
-profit). Each is a small card read by its heading: the heading is bold at
+profit). **Seats available** is the room less every confirmed guest, seated or
+not — it used to be the seats nobody was sitting in, summed off the tables,
+which counts a guest who has not been given a chair yet as no guest at all. A
+room of 30 with 17 confirmed and 5 of them unplaced reported 18 available, and
+18 is not a number anybody can act on: take 18 more bookings and 5 people
+stand. It reads 13 now, and where the bookings have gone past the room it
+reads 0 with the shortfall beside it in red.
+
+The seating list below keeps its own count — *30 seats · 18 unfilled* — because
+that is a different question: not how many more can be taken, but where there
+is room to put the ones already coming. The two agree exactly when everybody
+has a chair.
+
+Each card is read by its heading: the heading is bold at
 13px and the number 14px beside it, where the heading was 12px and the number
 20px. Both were asked for twice, in that direction — the row is scanned across
 for the label you want, not for the biggest number on the screen, and the

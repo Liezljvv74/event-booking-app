@@ -34,6 +34,11 @@ function summarise(event: Event, seating: readonly TableOccupancy[]) {
 
   // Only what will be collected at the door. A guest marked not paying owes
   // nothing and never counts towards either figure.
+  const seatsTotal = event.tables.reduce(
+    (total, table) => total + table.seatCount,
+    0,
+  );
+
   const dueCents = priceOf("pay_at_venue");
   const incomeCents = priceOf("paid") + dueCents;
   const expensesCents = sumCents(
@@ -43,10 +48,27 @@ function summarise(event: Event, seating: readonly TableOccupancy[]) {
   return {
     guestsConfirmed: confirmed.length,
     guestsCancelled: attendees.length - confirmed.length,
-    seatsTotal: event.tables.reduce((total, table) => total + table.seatCount, 0),
-    // Summed from the tables themselves, so this is the same "free seat" the
-    // seating dropdowns and the bookings screen count.
-    seatsFree: seating.reduce((total, table) => total + table.free, 0),
+    seatsTotal,
+    /**
+     * Seats nobody has been promised: the room, less every guest coming to
+     * it, whether or not they have been given a chair yet.
+     *
+     * This used to be the seats not currently sat in, summed off the tables —
+     * which counts an unseated guest as no guest at all. A room of 30 with 17
+     * confirmed and 5 of them unplaced reported 18 seats available, and 18 is
+     * not a number anybody can act on: take 18 more bookings and 5 people
+     * stand. The question this figure answers is "how many more can I take",
+     * and the answer is 13.
+     */
+    seatsAvailable: Math.max(0, seatsTotal - confirmed.length),
+    /** How far past the room the bookings have gone, or nought. */
+    seatsShort: Math.max(0, confirmed.length - seatsTotal),
+    /**
+     * Seats with nobody in them, summed off the tables. A different question
+     * — where is there room to put somebody — and the one the seating list
+     * below is about, so it keeps its own name.
+     */
+    seatsUnfilled: seating.reduce((total, table) => total + table.free, 0),
     unseated: confirmed.filter(
       (attendee) => attendee.assignedTableNumber === null,
     ).length,
@@ -227,8 +249,14 @@ export default function EventDashboard() {
         <Stat
           label="Seats available"
           figures={[
-            { value: `${summary.seatsFree} of ${summary.seatsTotal}` },
+            { value: `${summary.seatsAvailable} of ${summary.seatsTotal}` },
+            // Only when the bookings have gone past the room, where a bare
+            // nought would look like a room that is merely full.
+            ...(summary.seatsShort > 0
+              ? [{ value: String(summary.seatsShort), unit: "short" }]
+              : []),
           ]}
+          negative={summary.seatsShort > 0}
         />
         <Stat
           label="Amount due at the venue"
@@ -261,7 +289,7 @@ export default function EventDashboard() {
           >
             {event.tables.length} table{event.tables.length === 1 ? "" : "s"} ·{" "}
             {summary.seatsTotal} seat{summary.seatsTotal === 1 ? "" : "s"} ·{" "}
-            {summary.seatsFree} free
+            {summary.seatsUnfilled} unfilled
           </p>
         </div>
 
