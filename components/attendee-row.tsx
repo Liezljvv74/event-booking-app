@@ -298,7 +298,12 @@ export function AttendeeRow({
             autoFocus={typing}
             aria-label={`Ticket price for guest ${position}`}
             data-attendee-price={attendee.id}
-            data-list-field="ticket-amount"
+            /* The same column name as the dropdown beside it. The ticket
+               column is one column whichever control is standing in it, and
+               naming them apart meant Enter from the typed box looked for a
+               box the row below has not got — found nothing below it, and
+               added a guest instead of moving down. */
+            data-list-field="ticket"
             onChange={(changed) => setPrice(changed.target.value)}
             onBlur={() => {
               commitPrice();

@@ -710,6 +710,13 @@ The ones that were argued out and would otherwise be re-litigated:
   the tick as well as the text boxes — and a field's own handler gets on with
   saving what was typed without also having to know where the cursor goes.
 
+  A column is one column whichever control is standing in it. The ticket
+  column shows a dropdown of the event's prices, or a box to type an amount
+  into, depending on the guest — and while those two carried different column
+  names, Enter from the typed box looked for a box the row below has not got,
+  found nothing below it, and added a guest instead of moving down. Reading
+  the code did not catch that; the first pass in a real browser did.
+
   Tab needed nothing: it already moves to the next field to the right, because
   it follows the order the fields are written in. Nothing anywhere in the app
   reorders itself visually with `order-*` or a reversed flex direction, which
@@ -810,15 +817,28 @@ console. The last such pass was 187 assertions across nine scripted scenarios
 (cancellations, guest moves, shared tables, the dashboard figures, expenses,
 the saved-line library, carried-over times, event management).
 
-That browser work stopped part-way through. Everything from the tables moving
-onto Manage events onwards — the event rail down the left, the app header and
-its logo, the whole Export/Import screen, and the three door lists — has been
-typechecked, linted, built and, where it is file-format code, asserted over;
-none of it has been driven in a browser. So the folder picker, the permission
-prompt a remembered folder asks for on a new session, and whether Excel is
-happy with the workbook are all unverified here. The log below records the
-passes that were done, as they were done: some of them describe screens and a
-nav order that have since changed.
+That browser work stopped for a stretch — the event rail, the app header and
+its logo, the Export/Import screen and the door lists were all typechecked,
+linted, built and asserted over, but never driven — and it has started again,
+because a bug report about the keyboard could not be settled by reading the
+code. Chrome is launched headless with its own `--user-data-dir`, spoken to
+over the DevTools Protocol through the `WebSocket` Node has built in, and
+stopped afterwards by its own process id. Never by image name: that would
+close every Chrome window on the machine, which is a mistake this project has
+made before.
+
+Eleven assertions over Enter, against the running app: it moves down each of
+the four guest columns without adding anything, moves down from a typed
+ticket amount, adds a guest at the foot of a party and lands the cursor on
+it, adds to the right party when two are open, moves down the expense lines,
+and opens the blank expense line from the last of them. That pass found a
+fault reading the code had not: see the note on the ticket column below.
+
+Still unverified: the folder picker, the permission prompt a remembered folder
+asks for on a new session, and whether Excel is happy with the workbook — all
+three need a person to answer a dialog. The log below records the older
+passes as they were done: some describe screens and a nav order that have
+since changed.
 
 Those scripts are **not** checked in. They need `playwright-core`, and the
 spec asks for a minimal dependency list, so adding them was not assumed. If
