@@ -556,17 +556,6 @@ The ones that were argued out and would otherwise be re-litigated:
   cancelled, with its telephone number still reachable, but with no table of
   guest columns and no **+**: the booking is off, and a live guest on it
   would be an un-cancellation by the side door.
-- **A guest is not added to a full table.** Adding one to a party whose
-  tables are all taken used to make the line anyway and leave it unseated,
-  which meant a full room quietly grew a guest nobody had anywhere to put.
-  The line is refused now, at the moment it is asked for, and the refusal
-  names the tables that could take them with their open seats and offers
-  them: pick one and the guest is added there. Both ways of asking are
-  refused the same way, the + and Enter at the foot of the party.
-
-  A party sitting nowhere yet is a different case and still gets its guest,
-  unseated — there is no full table to complain about. And when no table
-  anywhere has a seat, the message says so instead of offering an empty list.
 - **A guest added with + sits with their party, or nowhere.** They take a
   free seat at a table the party is already at, tightest first. If the
   party's tables are full they arrive unseated rather than being sent to

@@ -304,9 +304,7 @@ export default function BookingsScreen() {
               onCancelAttendee={(attendeeId) =>
                 cancelOneAttendee(event.id, booking.id, attendeeId)
               }
-              onAddGuest={(tableNumber) =>
-                addGuest(event.id, booking.id, tableNumber)
-              }
+              onAddGuest={() => addGuest(event.id, booking.id)}
               onCancelBooking={() => cancelWholeBooking(event.id, booking.id)}
             />
           ))}

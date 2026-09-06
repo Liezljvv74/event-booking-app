@@ -7,11 +7,7 @@ import {
   AttendeeRow,
 } from "@/components/attendee-row";
 
-import {
-  PartyTablesFullError,
-  tableOccupancy,
-  type AttendeePatch,
-} from "@/lib/repository";
+import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
 import { describeError } from "@/lib/errors";
 import { useMoney } from "@/components/event-provider";
@@ -29,11 +25,7 @@ interface Props {
   ) => Promise<unknown>;
   onCancelAttendee: (attendeeId: string) => Promise<unknown>;
   /** One more guest on this party, at the party's own price. */
-  /**
-   * One more guest on the party. Given a table number when the party's own
-   * tables were full and one was picked instead.
-   */
-  onAddGuest: (tableNumber?: number) => Promise<unknown>;
+  onAddGuest: () => Promise<unknown>;
   onCancelBooking: () => Promise<unknown>;
   onSaveDetails: (details: {
     partyName: string;
@@ -66,14 +58,6 @@ export function BookingCard({
   const [confirming, setConfirming] = useState(false);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  /**
-   * Set when a guest was refused because the party's tables are full. Holds
-   * the tables that could take them, which is what the message offers.
-   */
-  const [tablesFull, setTablesFull] = useState<PartyTablesFullError | null>(
-    null,
-  );
-  const [chosenTable, setChosenTable] = useState("");
   const [error, setError] = useState("");
   const guestsId = useId();
 
@@ -89,29 +73,13 @@ export function BookingCard({
     setEditing(true);
   }
 
-  /**
-   * Add a guest, or say why not.
-   *
-   * A party whose tables are all full is refused rather than given an
-   * unseated guest, and the refusal carries the tables that do have room —
-   * which become the dropdown below, so the answer is a press away rather
-   * than a trip to another screen and back.
-   */
-  async function addGuest(tableNumber?: number) {
+  async function addGuest() {
     setBusy(true);
     setError("");
     try {
-      await onAddGuest(tableNumber);
-      setTablesFull(null);
+      await onAddGuest();
     } catch (caught) {
-      if (caught instanceof PartyTablesFullError) {
-        setTablesFull(caught);
-        setChosenTable(
-          caught.free.length > 0 ? String(caught.free[0].tableNumber) : "",
-        );
-      } else {
-        setError(describeError(caught));
-      }
+      setError(describeError(caught));
     } finally {
       setBusy(false);
     }
@@ -459,7 +427,7 @@ export function BookingCard({
                   onSelect={(wanted) => toggleSelected(attendee.id, wanted)}
                   onPatch={(patch) => onPatchAttendee(attendee.id, patch)}
                   onCancel={() => onCancelAttendee(attendee.id)}
-                  onAddGuest={() => addGuest()}
+                  onAddGuest={onAddGuest}
                 />
               ))}
             </ul>
@@ -472,79 +440,11 @@ export function BookingCard({
             added to. Left off a wholly cancelled party — that booking is
             off, and a live guest on it would be an un-cancellation by the
             side door, which this app does not have. */}
-        {/* The refusal, and the way out of it. A guest was not added because
-            every table this party sits at is full; these are the tables that
-            could take them, and picking one adds the guest there. */}
-        {tablesFull !== null && (
-          <div
-            data-tables-full={booking.id}
-            className="mt-1.5 rounded-md border border-amber-300 p-2 dark:border-amber-900"
-          >
-            <p
-              role="alert"
-              className="text-xs text-amber-800 dark:text-amber-400"
-            >
-              {tablesFull.free.length === 0
-                ? "This table is full, and no other table has an open seat. Add a table or free a seat first."
-                : "This table is full. The following tables have open seats. Please select the new table you would like to add the guest to."}
-            </p>
-
-            {tablesFull.free.length > 0 && (
-              <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                <select
-                  value={chosenTable}
-                  disabled={busy}
-                  aria-label={`Table to seat the new guest of ${booking.partyName} at`}
-                  data-full-table-choice={booking.id}
-                  onChange={(changed) => setChosenTable(changed.target.value)}
-                  className="h-8 min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-xs text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-                >
-                  {tablesFull.free.map((table) => (
-                    <option key={table.tableNumber} value={table.tableNumber}>
-                      Table {table.tableNumber} — {table.free} open seat
-                      {table.free === 1 ? "" : "s"}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  onClick={() => void addGuest(Number(chosenTable))}
-                  disabled={busy || chosenTable === ""}
-                  data-add-guest-there={booking.id}
-                  className="h-8 rounded-md bg-black px-3 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
-                >
-                  {busy ? "Adding…" : "Add guest there"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTablesFull(null)}
-                  disabled={busy}
-                  className="h-8 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-
-            {tablesFull.free.length === 0 && (
-              <button
-                type="button"
-                onClick={() => setTablesFull(null)}
-                className="mt-1.5 h-8 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black dark:border-zinc-700 dark:text-zinc-50"
-              >
-                Close
-              </button>
-            )}
-          </div>
-        )}
-
         {!allCancelled && (
           <div className="mt-1.5 flex justify-end">
             <button
               type="button"
-              onClick={() => void addGuest()}
+              onClick={addGuest}
               disabled={busy}
               data-add-guest={booking.id}
               aria-label={`Add a guest to ${booking.partyName}`}

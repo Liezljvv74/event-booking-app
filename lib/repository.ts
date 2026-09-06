@@ -1136,56 +1136,9 @@ export function moveAttendees(
  * joining the people, and putting them across the room without being asked
  * would be a stranger decision than leaving the table for the manager.
  */
-/** A table with room, for a guest who cannot sit where their party is. */
-export interface FreeTable {
-  tableNumber: number;
-  free: number;
-}
-
-/**
- * Every table the party cannot be given a seat at, because every table the
- * party is already at is full.
- *
- * Carries the tables that do have room, so the screen can offer them rather
- * than leaving the person to go and look. The message is written here as well,
- * because an error that only a screen knows how to read is an error the next
- * caller will show as "[object Object]".
- */
-export class PartyTablesFullError extends Error {
-  readonly free: readonly FreeTable[];
-
-  constructor(free: readonly FreeTable[]) {
-    super(
-      free.length === 0
-        ? "This table is full, and no other table has an open seat. Add a table or free a seat first."
-        : `This table is full. The following tables have open seats: ${free
-            .map((table) => `table ${table.tableNumber} (${table.free})`)
-            .join(", ")}. Please select the new table you would like to add the guest to.`,
-    );
-    this.name = "PartyTablesFullError";
-    this.free = free;
-  }
-}
-
-/** Tables with a seat going, lowest number first. */
-function tablesWithRoom(event: Event): FreeTable[] {
-  return event.tables
-    .map((table) => ({
-      tableNumber: table.tableNumber,
-      free: freeSeatsAtTable(event, table.tableNumber),
-    }))
-    .filter((table) => table.free > 0)
-    .sort((a, b) => a.tableNumber - b.tableNumber);
-}
-
 export function addAttendee(
   eventId: string,
   bookingId: string,
-  /**
-   * Where to seat them, when the party's own tables are full and a table has
-   * been picked instead. Left out, they sit with their party.
-   */
-  tableNumber?: number,
 ): Promise<Event> {
   return mutateEvent(eventId, (event) => {
     const booking = event.bookings.find(
@@ -1218,48 +1171,10 @@ export function addAttendee(
       .filter((table) => table.free >= 1)
       .sort((a, b) => a.free - b.free || a.tableNumber - b.tableNumber);
 
-    /**
-     * Where the guest goes.
-     *
-     * A party already sitting somewhere gets one more seat at one of its own
-     * tables, and if there is not one, the line is refused rather than made.
-     * It used to be made and left unseated, which meant a full room quietly
-     * grew a guest nobody had anywhere to put; refusing says so at the moment
-     * it is asked, and names the tables that could take them.
-     *
-     * A party sitting nowhere yet is a different case and not an error: there
-     * is no full table to complain about, so the guest joins them unseated.
-     */
-    let seat: number | null;
-
-    if (tableNumber !== undefined) {
-      const wanted = event.tables.find(
-        (table) => table.tableNumber === tableNumber,
-      );
-      if (!wanted) throw new Error(`There is no table ${tableNumber}.`);
-      if (freeSeatsAtTable(event, tableNumber) < 1) {
-        throw new PartyTablesFullError(tablesWithRoom(event));
-      }
-      seat = tableNumber;
-    } else if (partyTables.length > 0) {
-      seat = partyTables[0].tableNumber;
-    } else if (
-      booking.attendees.some(
-        (attendee) =>
-          SEAT_OCCUPYING_STATUSES.includes(attendee.status) &&
-          attendee.assignedTableNumber !== null,
-      )
-    ) {
-      // The party is seated, and every table it sits at is full.
-      throw new PartyTablesFullError(tablesWithRoom(event));
-    } else {
-      seat = null;
-    }
-
     const added: Attendee = {
       id: newId(),
       name: "",
-      assignedTableNumber: seat,
+      assignedTableNumber: partyTables[0]?.tableNumber ?? null,
       status: "pay_at_venue",
       ticketPriceCents: booking.ticketPriceCents,
     };

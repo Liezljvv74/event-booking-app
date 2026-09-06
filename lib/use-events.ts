@@ -160,18 +160,8 @@ export interface UseEventsResult {
     bookingId: string,
     attendeeId: string,
   ) => Promise<Event>;
-  /**
-   * One more guest on a party already booked, at the party's own price.
-   *
-   * Refused with a `PartyTablesFullError` when the party is seated and every
-   * table it sits at is full; that error names the tables that do have room.
-   * Pass one of those as `tableNumber` to seat the guest there instead.
-   */
-  addGuest: (
-    eventId: string,
-    bookingId: string,
-    tableNumber?: number,
-  ) => Promise<Event>;
+  /** One more guest on a party already booked, at the party's own price. */
+  addGuest: (eventId: string, bookingId: string) => Promise<Event>;
   addExpenseLine: (eventId: string, input: ExpenseInput) => Promise<Event>;
   editExpense: (
     eventId: string,
@@ -343,8 +333,8 @@ export function useEvents(): UseEventsResult {
   );
 
   const addGuest = useCallback(
-    (eventId: string, bookingId: string, tableNumber?: number) =>
-      applyChange(() => addAttendee(eventId, bookingId, tableNumber)),
+    (eventId: string, bookingId: string) =>
+      applyChange(() => addAttendee(eventId, bookingId)),
     [applyChange],
   );
 
