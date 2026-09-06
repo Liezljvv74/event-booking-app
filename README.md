@@ -416,14 +416,21 @@ of the party they came from. Not tidiness: a booking cannot be saved without
 one, so a party carried over with the field blank could never have been
 renamed at all, which is the one thing this feature had to allow.
 
-They come from **the most recently created event that has any regulars on
-it**, which is not the same as the most recent event and was the bug in the
-first version of this. Regulars get marked on whichever event happens to be
-open, and events are created in whatever order suits: tick two on a February
-function, then create a March one from a blank form, and the most recent
-event has none — so nobody came through. The mark says "this person comes to
-everything", and it has to keep meaning that however many events without
-regulars are made in between.
+They come from a **standing list**, kept with the settings and read on
+**Settings > Regulars**, which is where they are pruned. Taking somebody off
+there is the only thing that stops them being added to new events, and it
+unticks them wherever they are ticked, so the two can never disagree.
+
+That list is the second design, and the first is worth recording because it
+failed in two ways. It kept the mark only on a guest's row and worked out who
+the regulars were by looking at whichever event was written most recently.
+That made the answer depend on the order events happened to be created in:
+tick two on a February function, create a March one from a blank form, and
+the most recent event has none, so nobody comes through. And it would have
+lost the lot the day that event was deleted or swept away by the retention
+period, which for a venue running monthly functions is a real prospect, since
+the previous event can be purged before the next is made. A list of its own is
+answerable at any time and survives every event being deleted.
 
 They are seated at **the same table number, always**, so long as the new room
 has that table — they are placed before anybody else, into an empty room, so

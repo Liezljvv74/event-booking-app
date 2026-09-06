@@ -99,12 +99,13 @@ event manager for now. (The app may evolve into a bigger app, with more function
   name and the table. A guest ticked there is written into the next event as
   it is created, at the same table, and stays ticked so it happens again.
   They arrive as one party called "Regular", which can be renamed like any
-  other — and the new name carries on from then, because the event after that
-  finds them already gathered in a party of their own.
-  - They come from the most recently created event that has any regulars on
-    it, not simply the most recent event. Marking somebody a regular says
-    they come to everything, and it keeps meaning that however many events
-    without regulars are created in between.
+  other, and the new name carries on from then.
+  - Ticking puts the guest on a **standing list of regulars**, kept with the
+    settings rather than with any event, along with the table they sit at.
+    Every new event is built from that list.
+  - **Settings > Regulars** is where the list is read and pruned. Taking
+    somebody off there is the only thing that stops them being added to new
+    events, and it unticks them wherever they are ticked.
   - They are seated at the same table number, always, so long as the new room
     has that table. A room laid out without it leaves them unseated, and the
     party is tinted amber until they are placed.
