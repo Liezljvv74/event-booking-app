@@ -181,6 +181,21 @@ the crosses on Manage events that say what removing a table would unseat all
 read it, so they cannot disagree. Anything that needs a
 scalar goes through `freeSeatsAtTable()`, which counts the same way.
 
+**What is owed is decided by the status, not by the price on the record.**
+`amountDueCents()` and `amountPaidCents()` in `lib/types.ts` return nought for
+anybody who is not paying at the door or has not paid, so a cancelled guest
+owes nothing by construction. Both the dashboard's totals and a party's own
+line go through them, which is also what stops the two disagreeing.
+
+Cancelling still zeroes the price where it happens, and `withStoredDefaults()`
+zeroes it again on the way out of the store. That second one is not
+belt-and-braces: the screens all filtered on the status and so were right, but
+the exports print the price they find, and a guest cancelled by an older
+version of this app - or restored out of a backup taken before cancelling
+zeroed prices - left with a charge against their name in `guests.csv`. Fixing
+it on the read path fixes it for every reader at once, screens and files
+alike.
+
 **The repository holds the rules, not the screens.** Seat capacity, what may
 be edited, what a cancellation does — all of it is enforced in
 `lib/repository.ts` and surfaced as typed errors (`TableFullError`,
@@ -1066,6 +1081,19 @@ stood in for one.
 **Everything is typechecked, linted and built.** `npx tsc --noEmit`, `npx
 eslint .` and `npm run build` are run against every change, and the build is a
 real static export of all nine routes rather than a compile.
+
+**Nothing cancelled is owed for, and that is checked in the file as well as
+on the screen.** A seeded event carries two guests cancelled but still priced
+on the record, a party called off with both of its guests still priced, one
+guest paying at the door and one who has paid. The dashboard has to show
+450.00 due and 900.00 expected, the called-off party's line has to carry no
+money at all, and the app's own CSV export - run through the screen with the
+download intercepted, so what is read is the file a manager would open - has
+to price every cancellation at 0.00 while leaving the two live guests at
+450.00. Then the last guest who owed anything is cancelled through the button
+on their row, and the dashboard has to fall to nothing due. 14 assertions.
+Disabling the normalising line makes exactly one of them fail, which is how
+the leak it closes was confirmed rather than assumed.
 
 **The capacity bars are checked by measuring them.** A seeded event with a
 quarter-full table, a full table, a half-full room and 120 paid of 420 spent

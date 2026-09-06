@@ -94,6 +94,21 @@ function withStoredDefaults(event: StoredEvent): Event {
       attendees: booking.attendees.map((attendee) => ({
         ...attendee,
         regularId: attendee.regularId ?? null,
+        /**
+         * A cancelled guest is charged nothing, whatever the record says.
+         *
+         * Cancelling zeroes the price where it happens, so a guest cancelled
+         * in this app arrives here at nought already. A guest cancelled in an
+         * older one, or restored out of a backup taken before that rule, does
+         * not - and the exports print the price they find rather than asking
+         * the status, so a party that had called off was leaving with a
+         * charge against its name in guests.csv.
+         *
+         * Doing it on the way out of the store fixes it for every reader at
+         * once, including the ones that are not screens.
+         */
+        ticketPriceCents:
+          attendee.status === "cancelled" ? 0 : attendee.ticketPriceCents,
       })),
     })),
     expenses: event.expenses.map((expense) => ({

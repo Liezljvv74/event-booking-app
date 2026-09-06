@@ -8,7 +8,12 @@ import {
 } from "@/components/attendee-row";
 
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
-import { SEAT_OCCUPYING_STATUSES, type Booking, type Event } from "@/lib/types";
+import {
+  amountDueCents,
+  SEAT_OCCUPYING_STATUSES,
+  type Booking,
+  type Event,
+} from "@/lib/types";
 import { describeError } from "@/lib/errors";
 import { useMoney } from "@/components/event-provider";
 import { StatusPill } from "@/components/status-pill";
@@ -125,9 +130,13 @@ export function BookingCard({
   );
   const cancelledCount = booking.attendees.length - live.length;
   const allCancelled = live.length === 0;
-  const dueCents = booking.attendees
-    .filter((attendee) => attendee.status === "pay_at_venue")
-    .reduce((total, attendee) => total + attendee.ticketPriceCents, 0);
+  // The same rule the dashboard totals with, so a party's own line and the
+  // figure at the top of the app cannot come to different answers about what
+  // is owed for it.
+  const dueCents = booking.attendees.reduce(
+    (total, attendee) => total + amountDueCents(attendee),
+    0,
+  );
 
   const tables = tablesInUse(booking);
   const unseated = live.filter(

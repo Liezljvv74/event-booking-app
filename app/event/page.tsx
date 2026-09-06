@@ -7,7 +7,12 @@ import { CapacityBar } from "@/components/capacity-bar";
 import { formatEventDate, formatTimeRange } from "@/lib/event-time";
 import { sumCents } from "@/lib/money";
 import { tableOccupancy, type TableOccupancy } from "@/lib/repository";
-import { SEAT_OCCUPYING_STATUSES, type Event } from "@/lib/types";
+import {
+  amountDueCents,
+  amountPaidCents,
+  SEAT_OCCUPYING_STATUSES,
+  type Event,
+} from "@/lib/types";
 import {
   MANAGE_EVENTS_PATH,
   eventHref,
@@ -28,22 +33,17 @@ function summarise(event: Event, seating: readonly TableOccupancy[]) {
     SEAT_OCCUPYING_STATUSES.includes(attendee.status),
   );
 
-  const priceOf = (status: string) =>
-    sumCents(
-      attendees
-        .filter((attendee) => attendee.status === status)
-        .map((attendee) => attendee.ticketPriceCents),
-    );
-
-  // Only what will be collected at the door. A guest marked not paying owes
-  // nothing and never counts towards either figure.
   const seatsTotal = event.tables.reduce(
     (total, table) => total + table.seatCount,
     0,
   );
 
-  const dueCents = priceOf("pay_at_venue");
-  const incomeCents = priceOf("paid") + dueCents;
+  // Only what will be collected at the door, and only from the guests who
+  // are coming. A guest marked not paying owes nothing; a cancelled guest
+  // owes nothing either, and `amountDueCents` is where both of those are
+  // decided rather than here.
+  const dueCents = sumCents(attendees.map(amountDueCents));
+  const incomeCents = sumCents(attendees.map(amountPaidCents)) + dueCents;
   const expensesCents = sumCents(
     event.expenses.map((expense) => expense.amountCents),
   );

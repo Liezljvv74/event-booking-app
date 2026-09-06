@@ -165,6 +165,17 @@ event manager for now. (The app may evolve into a bigger app, with more function
   screen, so it can be found while scrolling. A wholly cancelled party is
   not: nobody in it has a seat and nobody in it is coming.
 
+### Amounts due
+- What a guest owes is decided by their status, not by the price stored on
+  their record: a cancelled guest owes nothing, and so does one marked not
+  paying.
+- Cancelling a guest or a whole party zeroes the price on the record too, and
+  a cancelled guest's price is forced to nought when an event is read out of
+  the store - so no screen, report or export can charge for somebody who is
+  not coming, whatever the record says.
+- Expected income is what has been paid plus what is still due, so a
+  cancellation leaves both figures.
+
 ### Expenses
 - Add line items (description + amount) per event. The blank line to type
   into appears when Add, at the top right of the screen, is pressed, and goes

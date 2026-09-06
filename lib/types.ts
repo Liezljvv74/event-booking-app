@@ -20,6 +20,28 @@ export const SEAT_OCCUPYING_STATUSES: readonly AttendeeStatus[] = [
   "not_paying",
 ];
 
+/**
+ * What a guest still owes at the door, and what one has already handed over.
+ *
+ * Both are decided by the status and not by the price on the record, which is
+ * the whole point of them. Cancelling zeroes the price where it is written,
+ * and every screen filtered on the status besides - two habits that had to
+ * agree, in two files, with nothing keeping them honest. A third way of
+ * cancelling, or a record that arrived by some other road, and a party that
+ * is not coming would have been owing money.
+ *
+ * A cancelled guest owes nothing and has paid nothing. So does a guest on the
+ * house: `not_paying` is exactly the status of somebody who is coming and
+ * settles nothing either way.
+ */
+export function amountDueCents(attendee: Attendee): number {
+  return attendee.status === "pay_at_venue" ? attendee.ticketPriceCents : 0;
+}
+
+export function amountPaidCents(attendee: Attendee): number {
+  return attendee.status === "paid" ? attendee.ticketPriceCents : 0;
+}
+
 /** An event is active until 48 hours after its date, then closed. */
 export type EventStatus = "active" | "closed";
 
