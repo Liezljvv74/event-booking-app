@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { todayIso } from "@/lib/event-time";
+import { addDays, formatEventDate, todayIso } from "@/lib/event-time";
 import type { EventTimes } from "@/lib/repository";
 import type { NewEventInput } from "@/lib/use-events";
+import { MAX_REPEATS } from "@/lib/types";
 import {
   TicketPricesEditor,
   useTicketPriceRows,
@@ -20,7 +21,14 @@ interface Props {
    * to leave them as they are.
    */
   lastTimes: EventTimes;
-  onCreate: (input: NewEventInput) => Promise<unknown>;
+  /**
+   * Every event the form was asked for, in date order — one, or one and its
+   * repeats. The whole list rather than one call per event, because the
+   * screen clears this form once the lot has been saved, and a form that
+   * cleared itself between the third and the fourth would take the rest of
+   * the list with it.
+   */
+  onCreate: (inputs: readonly NewEventInput[]) => Promise<unknown>;
 }
 
 const fieldClass = FIELD_CLASS;
@@ -28,7 +36,18 @@ const labelClass = FIELD_LABEL_CLASS;
 
 export function NewEventForm({ lastTimes, onCreate }: Props) {
   const [name, setName] = useState("");
-  const [eventDate, setEventDate] = useState(todayIso());
+  /**
+   * A week after the event saved most recently, on request — a venue's
+   * functions tend to run to a rhythm, and the same weekday next week is the
+   * likeliest next one. Today, when there is no event to count from.
+   *
+   * Read once at mount, like the times beside it: what remounts this form is
+   * the caller handing it a new key after a save, which is what re-reads all
+   * three from the event just written.
+   */
+  const [eventDate, setEventDate] = useState(
+    lastTimes.eventDate === null ? todayIso() : addDays(lastTimes.eventDate, 7),
+  );
   // Read once, at mount. The form sits on the screen permanently now, so
   // what remounts it is the caller giving it a new key after each event is
   // created — which both clears the fields and re-reads these times from the
@@ -44,6 +63,38 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   const tables = useTablePlan(settings.defaultSeatCount);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  /**
+   * Whether to make more than one of this event, and how many more.
+   *
+   * "Repeat 3 times" means three more after the first, a week apart — which
+   * is the same week the date above is defaulted by, so a rhythm entered once
+   * carries through the lot. The line under the button spells the dates out
+   * rather than leaving the counting to be done twice.
+   */
+  const [repeat, setRepeat] = useState<"no" | "yes">("no");
+  const [times, setTimes] = useState("1");
+
+  /**
+   * Every date this form would create, the first and then its repeats, a week
+   * apart. Just the one when it is not repeating.
+   */
+  function repeatedDates(): { dates: string[] } | { error: string } {
+    if (repeat === "no") return { dates: [eventDate] };
+
+    const more = times.trim() === "" ? Number.NaN : Number(times);
+    if (!Number.isInteger(more) || more < 1) {
+      return { error: "Enter how many times to repeat it, at least once." };
+    }
+    if (more > MAX_REPEATS) {
+      return { error: `${MAX_REPEATS} repeats is as many as one press makes.` };
+    }
+
+    return {
+      dates: Array.from({ length: more + 1 }, (unused, index) =>
+        addDays(eventDate, index * 7),
+      ),
+    };
+  }
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
@@ -68,22 +119,35 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       return;
     }
 
+    const dates = repeatedDates();
+    if ("error" in dates) {
+      setError(dates.error);
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
-      await onCreate({
-        name: trimmed,
-        eventDate,
-        startTime: startTime === "" ? null : startTime,
-        endTime: endTime === "" ? null : endTime,
-        ticketPrices: priced.prices,
-        tables: seated.tables,
-      });
+      await onCreate(
+        dates.dates.map((date) => ({
+          name: trimmed,
+          eventDate: date,
+          startTime: startTime === "" ? null : startTime,
+          endTime: endTime === "" ? null : endTime,
+          ticketPrices: priced.prices,
+          tables: seated.tables,
+        })),
+      );
     } catch (caught) {
       setError(describeError(caught));
       setSaving(false);
     }
   }
+
+  // What the button is about to make, worked out once for the label and the
+  // line beneath it.
+  const planned = repeatedDates();
+  const made = "error" in planned ? 1 : planned.dates.length;
 
   return (
     <form
@@ -164,14 +228,71 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
 
       {/* No Cancel beside it: there is nothing to cancel back to now that
           the form is always on the screen. */}
-      <button
-        type="submit"
-        disabled={saving}
-        data-create-event
-        className="mt-4 h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
-      >
-        {saving ? "Creating…" : "Create event"}
-      </button>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          type="submit"
+          disabled={saving}
+          data-create-event
+          className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+        >
+          {saving ? "Creating…" : made === 1 ? "Create event" : `Create ${made} events`}
+        </button>
+
+        <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
+          Repeat event
+          <select
+            value={repeat}
+            disabled={saving}
+            aria-label="Repeat this event"
+            data-repeat
+            onChange={(changed) => {
+              setRepeat(changed.target.value as "no" | "yes");
+              setError("");
+            }}
+            className="h-11 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+          >
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </label>
+
+        {repeat === "yes" && (
+          <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
+            times
+            <input
+              type="number"
+              min={1}
+              max={MAX_REPEATS}
+              step={1}
+              inputMode="numeric"
+              value={times}
+              disabled={saving}
+              aria-label="How many times to repeat the event"
+              data-repeat-times
+              onChange={(changed) => {
+                setTimes(changed.target.value);
+                setError("");
+              }}
+              className="h-11 w-20 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+            />
+          </label>
+        )}
+      </div>
+
+      {/* The dates spelled out, so "repeat 3 times" does not have to be read
+          twice to work out whether it means three events or four. */}
+      {repeat === "yes" && (
+        <p
+          data-repeat-summary
+          className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-400"
+        >
+          {"error" in planned
+            ? planned.error
+            : `${planned.dates.length} events, a week apart: ${planned.dates
+                .map((date) => formatEventDate(date))
+                .join(", ")}.`}
+        </p>
+      )}
     </form>
   );
 }

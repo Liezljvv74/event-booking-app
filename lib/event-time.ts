@@ -16,6 +16,22 @@ export function formatEventDate(iso: string): string {
   });
 }
 
+/**
+ * A date so many days on, as "YYYY-MM-DD".
+ *
+ * Built through the Date constructor's own overflow — day 32 of March is the
+ * 1st of April — rather than by adding milliseconds, which goes wrong twice a
+ * year: a week of 7 × 24 hours across a daylight-saving change lands an hour
+ * out, and an hour out at midnight is a different day.
+ */
+export function addDays(iso: string, days: number): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const moved = new Date(year, month - 1, day + days);
+  const paddedMonth = String(moved.getMonth() + 1).padStart(2, "0");
+  const paddedDay = String(moved.getDate()).padStart(2, "0");
+  return `${moved.getFullYear()}-${paddedMonth}-${paddedDay}`;
+}
+
 /** Today as "YYYY-MM-DD" in local time. */
 export function todayIso(): string {
   const now = new Date();

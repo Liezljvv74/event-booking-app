@@ -44,6 +44,15 @@ export type TableShape = "long" | "round" | "square";
  */
 export const DEFAULT_TABLE_SHAPE: TableShape = "long";
 
+/**
+ * How many times a new event may be repeated in one go.
+ *
+ * A year of weeks. Not a rule about how often a venue may hold a function,
+ * only a limit on how many a single press may create — fifty-two rows
+ * appearing at once is already more than anybody meant to type by accident.
+ */
+export const MAX_REPEATS = 52;
+
 /** The most tables one event can be laid out with. A guard against a typo. */
 export const MAX_TABLES = 200;
 

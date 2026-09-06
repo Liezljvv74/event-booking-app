@@ -288,6 +288,21 @@ deliberately absent from the other two. Tables stored before shapes existed
 read back as long, the same default and the same guess: the app never asked,
 and nothing turns on the answer.
 
+The New event form opens **dated a week on** from the event saved most
+recently, on request, and on that event's times: a venue's functions run to a
+rhythm, and the same weekday next week is the likeliest next one. Today's
+date where there is no event to count from.
+
+Beside Create event is **Repeat event** — no or yes, and how many times. Three
+repeats makes four events a week apart, which is the sort of thing that has to
+be said rather than inferred, so the button reads *Create 4 events* and the
+dates are listed under it before it is pressed. The whole list is handed over
+in one call rather than one call per event: the form clears itself once the
+lot has been saved, and a form that cleared itself between the third and the
+fourth would take the rest of the list with it. They are written one at a
+time and in order, so each starts from the one before it — which is what
+carries the times and the expenses down the run.
+
 On the right, the New event form, permanently. It used to be behind a
 `+ New event` button that swapped itself for the form; with the form given a
 column of its own the button had nothing left to open, so it is gone, and so

@@ -52,6 +52,13 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - Each event has its own tables, bookings and expenses
 - "New Event" duplicates the previous event's expense list as a starting
   point (still editable/removable)
+- A new event opens dated a week after the event saved most recently, and on
+  that event's times — a venue's functions run to a rhythm, and the same
+  weekday next week is the likeliest next one. Today's date where there is no
+  event to count from.
+- **Repeat event**, beside Create event: yes or no, and how many times. Three
+  repeats makes four events a week apart, and the dates are listed under the
+  button before it is pressed rather than left to be counted.
 
 ### Tables
 - Simple numbered list, no visual floor plan yet.  

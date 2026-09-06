@@ -124,12 +124,17 @@ export default function ManageEventsScreen() {
           <NewEventForm
             key={created}
             lastTimes={lastTimes}
-            onCreate={async (input) => {
-              const event = await addEvent(input);
-              // Staying put: the new event appears in the list beside this
-              // one, and the point of being here is to work on the set.
+            onCreate={async (inputs) => {
+              // One at a time and in order, so each is created after the one
+              // before it: the times and the expenses a new event starts from
+              // are the most recently saved event's, and a repeat should
+              // start from its own predecessor rather than all of them
+              // racing the same one.
+              for (const input of inputs) await addEvent(input);
+              // Staying put: the new events appear in the list beside this
+              // one, and the point of being here is to work on the set. The
+              // form is cleared once, after the lot.
               setCreated((count) => count + 1);
-              return event;
             }}
           />
         </div>

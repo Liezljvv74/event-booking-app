@@ -201,6 +201,7 @@ export function useEvents(): UseEventsResult {
   const [lastTimes, setLastTimes] = useState<EventTimes>({
     startTime: null,
     endTime: null,
+    eventDate: null,
   });
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 

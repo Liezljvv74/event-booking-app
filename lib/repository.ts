@@ -230,6 +230,11 @@ function mostRecentEvent(events: readonly Event[]): Event | null {
 export interface EventTimes {
   startTime: string | null;
   endTime: string | null;
+  /**
+   * The date of the event saved most recently, for the next one to be dated
+   * from. Null when there is no event to copy.
+   */
+  eventDate: string | null;
 }
 
 /**
@@ -249,6 +254,7 @@ export async function lastSavedTimes(): Promise<EventTimes> {
   return {
     startTime: latest?.startTime ?? null,
     endTime: latest?.endTime ?? null,
+    eventDate: latest?.eventDate ?? null,
   };
 }
 
