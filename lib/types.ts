@@ -136,15 +136,6 @@ export const DEFAULT_SEAT_COUNT = 10;
 /** As many seats as one table may be given. A guard against a stray key. */
 export const MAX_SEAT_COUNT = 100;
 
-/**
- * How long a currency symbol may be.
- *
- * Three characters covers everything anyone writes in front of an amount —
- * R, £, kr, US$ — and stops the field from becoming somewhere to type a
- * sentence that then appears in front of every figure on the dashboard.
- */
-export const MAX_CURRENCY_SYMBOL = 3;
-
 export interface Settings {
   /** Days a closed event is kept before auto-deletion. Spec default: 14. */
   retentionDays: number;
@@ -155,14 +146,19 @@ export interface Settings {
    */
   defaultSeatCount: number;
   /**
-   * What goes in front of an amount on screen — "R", "£", or nothing, which
-   * is what the app did before this existed and remains the default. The spec
-   * names no currency, so neither does the app until it is told one.
+   * The currency amounts are shown in, as an ISO 4217 code — "ZAR", "GBP" —
+   * or empty for none, which is what the app did before this existed and
+   * remains the default. The spec names no currency, so neither does the app
+   * until it is told one.
+   *
+   * A code rather than a symbol: it says which currency the money is in and
+   * lets the browser write it the way that currency and the reader's locale
+   * are written, rather than pinning one character in front of a number.
    *
    * On screen only. Exports keep writing bare numbers: a symbol in a CSV cell
    * makes it text, and a spreadsheet cannot add up text.
    */
-  currencySymbol: string;
+  currency: string;
   /**
    * Remembered export folder, persisted as a live handle. Desktop Chromium
    * only; null everywhere else, where exports fall back to a download.
@@ -173,7 +169,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   retentionDays: 14,
   defaultSeatCount: DEFAULT_SEAT_COUNT,
-  currencySymbol: "",
+  currency: "",
   exportDirectory: null,
 };
 

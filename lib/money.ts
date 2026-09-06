@@ -38,15 +38,40 @@ export function formatCents(cents: number): string {
  * Format integer cents for display using the viewer's locale.
  * No currency symbol: the spec never names a currency.
  */
-export function formatAmount(cents: number, symbol = ""): string {
-  const amount = (Math.round(cents) / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+export function formatAmount(cents: number, currency = ""): string {
+  const value = Math.round(cents) / 100;
 
-  // A non-breaking space, so a figure never wraps away from its symbol at the
-  // end of a line and leaves an R sitting on its own.
-  return symbol === "" ? amount : `${symbol}\u00a0${amount}`;
+  // Always two decimals, currency or no currency. The store holds hundredths
+  // of a unit whatever the currency is called, and `Intl` would round a yen
+  // figure to whole yen — showing a number that is not the number that was
+  // typed. Faithful beats conventional here.
+  const digits = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+
+  if (currency === "") return value.toLocaleString(undefined, digits);
+
+  // Which symbol, which side of the figure it sits and what separates the
+  // thousands all differ by currency and by the reader's own locale, and this
+  // knows all of it. `narrowSymbol` prefers "R" to "ZAR"; it is missing from
+  // some engines, and an unknown code throws, so both fall back rather than
+  // break a screen over a number's decoration.
+  try {
+    return value.toLocaleString(undefined, {
+      ...digits,
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+    });
+  } catch {
+    try {
+      return value.toLocaleString(undefined, {
+        ...digits,
+        style: "currency",
+        currency,
+      });
+    } catch {
+      return value.toLocaleString(undefined, digits);
+    }
+  }
 }
 
 /** Sum integer cents. Exact by construction, unlike summing floats. */

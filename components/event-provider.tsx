@@ -38,10 +38,10 @@ export function useEventContext(): UseEventsResult {
  */
 export function useMoney(): (cents: number) => string {
   const { settings } = useEventContext();
-  const { currencySymbol } = settings;
+  const { currency } = settings;
 
   return useCallback(
-    (cents: number) => formatAmount(cents, currencySymbol),
-    [currencySymbol],
+    (cents: number) => formatAmount(cents, currency),
+    [currency],
   );
 }

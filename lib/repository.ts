@@ -10,7 +10,6 @@
 import {
   AUTO_CLOSE_AFTER_HOURS,
   DEFAULT_SETTINGS,
-  MAX_CURRENCY_SYMBOL,
   MAX_RETENTION_DAYS,
   MAX_SEAT_COUNT,
   MIN_RETENTION_DAYS,
@@ -25,6 +24,7 @@ import {
   type Table,
   type TicketPrice,
 } from "./types";
+import { isKnownCurrency } from "./currency";
 import {
   STORE_EVENTS,
   STORE_EXPENSE_TEMPLATES,
@@ -1484,13 +1484,8 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
     }
   }
 
-  if (
-    patch.currencySymbol !== undefined &&
-    patch.currencySymbol.trim().length > MAX_CURRENCY_SYMBOL
-  ) {
-    throw new Error(
-      `A currency symbol is ${MAX_CURRENCY_SYMBOL} characters at most.`,
-    );
+  if (patch.currency !== undefined && !isKnownCurrency(patch.currency)) {
+    throw new Error(`"${patch.currency}" is not a currency this app offers.`);
   }
 
   return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
@@ -1499,15 +1494,15 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
       STORE_SETTINGS,
       SETTINGS_KEY,
     );
+    // Written field by field rather than spread wholesale, so a key left
+    // behind by an older shape of the settings — there has been one already —
+    // is dropped by the next save rather than carried forever.
+    const merged = { ...DEFAULT_SETTINGS, ...row?.value, ...patch };
     const value: Settings = {
-      ...DEFAULT_SETTINGS,
-      ...row?.value,
-      ...patch,
-      // Trimmed on the way in rather than on the way out, so every screen
-      // reading it gets the same answer without each remembering to.
-      ...(patch.currencySymbol === undefined
-        ? {}
-        : { currencySymbol: patch.currencySymbol.trim() }),
+      retentionDays: merged.retentionDays,
+      defaultSeatCount: merged.defaultSeatCount,
+      currency: merged.currency,
+      exportDirectory: merged.exportDirectory,
     };
     await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });
     return value;
