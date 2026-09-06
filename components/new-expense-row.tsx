@@ -177,6 +177,7 @@ export function NewExpenseRow({
           aria-required="true"
           aria-label="New expense description"
           name="description"
+          data-list-field="description"
           ref={descriptionField}
           onChange={(changed) => changeDescription(changed.target.value)}
           className={expenseFieldClass}
@@ -189,6 +190,7 @@ export function NewExpenseRow({
           placeholder="Optional"
           aria-label="New expense provider"
           name="provider"
+          data-list-field="provider"
           onChange={(changed) => setProvider(changed.target.value)}
           className={expenseFieldClass}
         />
@@ -202,6 +204,7 @@ export function NewExpenseRow({
           placeholder="0.00"
           aria-label="New expense amount"
           name="amount"
+          data-list-field="amount"
           onChange={(changed) => setAmount(changed.target.value)}
           className={`${expenseFieldClass} text-right`}
         />
@@ -212,6 +215,7 @@ export function NewExpenseRow({
           disabled={saving}
           aria-label="New expense is already paid"
           name="paid"
+          data-list-field="paid"
           onChange={(changed) => setPaid(changed.target.checked)}
           className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
         />
@@ -223,6 +227,7 @@ export function NewExpenseRow({
           placeholder="Optional"
           aria-label="New expense notes"
           name="notes"
+          data-list-field="notes"
           onChange={(changed) => setNotes(changed.target.value)}
           className={expenseFieldClass}
         />

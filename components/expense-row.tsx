@@ -5,6 +5,7 @@ import { formatCents, parseCents } from "@/lib/money";
 import type { ExpensePatch } from "@/lib/repository";
 import type { Expense, ExpenseTemplate } from "@/lib/types";
 import { describeError } from "@/lib/errors";
+import { enterMovesDown } from "@/components/list-keys";
 import { useMoney } from "@/components/event-provider";
 
 /**
@@ -130,25 +131,32 @@ export function ExpenseRow({
   }
 
   /**
-   * Commit on blur and on Enter, the way every other row in the app does —
-   * and on Enter, carry on to the next line.
+   * Commit on blur and on Enter, the way every other row in the app does.
+   *
+   * Only the saving. Where the cursor goes next is handled once for the whole
+   * row, below, so that every field moves down the list the same way without
+   * each of them having to know how.
    *
    * The commit is fired and not waited for. Enter is a typing key: the cursor
    * has to move at the speed of the keystroke rather than at the speed of a
    * write to IndexedDB, and a refused edit still puts itself right in this
-   * row, which stays on screen behind the new one.
+   * row, which the cursor has by then left.
    */
   function keyCommit(commit: () => void) {
     return (pressed: React.KeyboardEvent) => {
       if (pressed.key !== "Enter") return;
-      pressed.preventDefault();
       commit();
-      onEnter();
     };
   }
 
   return (
-    <li data-expense={expense.id} className={paid ? "opacity-70" : ""}>
+    <li
+      data-expense={expense.id}
+      data-list-row
+      // Enter moves down the column; every field in the row bubbles to here.
+      onKeyDown={enterMovesDown(onEnter)}
+      className={paid ? "opacity-70" : ""}
+    >
       <div className={EXPENSE_GRID}>
         <input
           type="text"
@@ -157,6 +165,7 @@ export function ExpenseRow({
           disabled={busy}
           aria-label={`Description of ${expense.description}`}
           data-expense-description={expense.id}
+          data-list-field="description"
           onChange={(changed) => setDescription(changed.target.value)}
           onBlur={commitDescription}
           onKeyDown={keyCommit(commitDescription)}
@@ -170,6 +179,7 @@ export function ExpenseRow({
           placeholder="—"
           aria-label={`Provider for ${expense.description}`}
           data-expense-provider={expense.id}
+          data-list-field="provider"
           onChange={(changed) => setProvider(changed.target.value)}
           onBlur={() => commitText("provider", provider, setProvider)}
           onKeyDown={keyCommit(() =>
@@ -185,6 +195,7 @@ export function ExpenseRow({
           disabled={busy}
           aria-label={`Amount of ${expense.description}`}
           data-expense-amount={expense.id}
+          data-list-field="amount"
           onChange={(changed) => setAmount(changed.target.value)}
           onBlur={commitAmount}
           onKeyDown={keyCommit(commitAmount)}
@@ -197,6 +208,7 @@ export function ExpenseRow({
           disabled={busy}
           aria-label={`${expense.description} is paid`}
           data-expense-paid={expense.id}
+          data-list-field="paid"
           onChange={(changed) => {
             const wanted = changed.target.checked;
             setPaid(wanted);
@@ -212,6 +224,7 @@ export function ExpenseRow({
           placeholder="—"
           aria-label={`Notes on ${expense.description}`}
           data-expense-notes={expense.id}
+          data-list-field="notes"
           onChange={(changed) => setNotes(changed.target.value)}
           onBlur={() => commitText("notes", notes, setNotes)}
           onKeyDown={keyCommit(() => commitText("notes", notes, setNotes))}

@@ -182,6 +182,17 @@ Show all six of the following, always in this order:
   Export/Import — the picker has to open inside the press that exports, or
   the browser refuses it.
 
+### Typing a list
+- **Enter** goes to the same field on the line below. At the bottom of the
+  list it makes the next line and goes to that: another expense line, or
+  another guest on the party.
+- **Tab** goes to the next field to the right, which is the browser's own
+  behaviour and is left to it. Nothing on any screen reorders itself visually
+  away from the order its fields are written in, which is the one thing that
+  would put Tab out of step with the eye.
+- The lists this applies to are the ones with fields in them: the expense
+  lines, and the guests of a party.
+
 ## Explicitly out of scope
 - Visual/drag-and-drop floor plan (tables are a numbered list only)
 - Multi-user support, roles, or permissions

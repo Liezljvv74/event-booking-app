@@ -414,7 +414,9 @@ export function BookingCard({
               <span />
             </div>
 
-            <ul className="flex flex-col gap-0.5">
+            {/* The rows Enter walks down, one list per party: Enter on the
+                last guest adds another and goes to it. */}
+            <ul data-list className="flex flex-col gap-0.5">
               {live.map((attendee, index) => (
                 <AttendeeRow
                   key={attendee.id}
@@ -425,6 +427,7 @@ export function BookingCard({
                   onSelect={(wanted) => toggleSelected(attendee.id, wanted)}
                   onPatch={(patch) => onPatchAttendee(attendee.id, patch)}
                   onCancel={() => onCancelAttendee(attendee.id)}
+                  onAddGuest={onAddGuest}
                 />
               ))}
             </ul>

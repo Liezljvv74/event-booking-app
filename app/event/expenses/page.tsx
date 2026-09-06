@@ -173,7 +173,12 @@ export default function ExpensesScreen() {
       {/* Six columns are wider than a phone, so they scroll sideways here
           rather than wrapping each line onto several rows. */}
       <div className="mt-3 overflow-x-auto">
-        <div className={EXPENSE_MIN_WIDTH}>
+        {/* The rows Enter walks down: every expense line, and then the blank
+            one when it is open. They are marked from here rather than from
+            the <ul>, because the blank line is that list's last row and sits
+            outside it — the two have to be one list for Enter on the last
+            expense to step into the blank rather than open a second one. */}
+        <div data-list className={EXPENSE_MIN_WIDTH}>
           {/* Only where there is something under them to label. With no
               lines and nothing being added they were six words above an
               empty space. */}
@@ -236,7 +241,7 @@ export default function ExpensesScreen() {
           )}
 
           {adding && (
-            <div className="mt-3">
+            <div data-list-row className="mt-3">
               <NewExpenseRow
                 templates={available}
                 onAdd={(input) => addExpenseLine(event.id, input)}

@@ -141,6 +141,7 @@ components/                      the pieces those screens are built from
   ticket-prices-editor.tsx       an event's prices, and the rows behind them
   tables-editor.tsx              an event's tables, and the rows behind them
   form-styles.ts                 one definition of what a form field looks like
+  list-keys.ts                   Enter, moving down a list of fields
 lib/
   db.ts                          IndexedDB plumbing: stores, transactions
   data-transfer.ts               the file formats — backup, reports, door list — no DOM
@@ -398,16 +399,15 @@ with no way to tell which Save belonged to which. The column headings come
 and go with the table, having been six words above an empty space on an event
 with no expenses yet.
 
-**Enter carries on to the next line**, which is how a list of costs is
-actually typed: description, amount, Enter, description, amount, Enter. In
-the blank line it saves what is there and leaves another blank line behind it
-with the cursor already in the description; the Save button is the one that
-stops, closing the row. Enter on a line already in the list commits the field
-being edited, the way Enter has always done there, and then opens a blank
-line below and takes the cursor to it — so a list can be carried on from
-anywhere in it without going back up to the button.
+**Enter goes down the column**, which is how a list is actually typed: every
+description, then every amount, rather than every field of one line and then
+every field of the next. It commits the field it leaves and moves to the same
+field on the line below; at the bottom of the list it makes the next line and
+goes to that. In the blank line it saves what is there and leaves another
+blank line behind it with the cursor in the description, and the Save button
+is the one that stops, closing the row.
 
-The focusing is asked for through state rather than done where the fields are
+That focusing is asked for through state rather than done where the fields are
 cleared. Every field is disabled while a save is in flight; at the moment the
 fields are emptied, the render that re-enables them has not happened yet, and
 focusing a disabled input does nothing at all.
@@ -699,6 +699,22 @@ The ones that were argued out and would otherwise be re-litigated:
   otherwise never reaches Excel at all. A true `.xlsx` would avoid the dialog
   and needs a zip writer — about two hundred lines of one, or the library the
   spec forbids.
+- **Which line is below which is a question the document already answers.**
+  Enter moving down a list is done by reading the DOM — three attributes,
+  `data-list` on what holds the rows, `data-list-row` on each row and
+  `data-list-field` on each field naming its column — rather than by keeping
+  a model of the list in React state. A second answer to a question the
+  document answers is a second answer that can disagree, and it would, the
+  first time a row was filtered, sorted or removed. The handler sits on the
+  row rather than on each field, so every field is covered — the selects and
+  the tick as well as the text boxes — and a field's own handler gets on with
+  saving what was typed without also having to know where the cursor goes.
+
+  Tab needed nothing: it already moves to the next field to the right, because
+  it follows the order the fields are written in. Nothing anywhere in the app
+  reorders itself visually with `order-*` or a reversed flex direction, which
+  is the one thing that would put Tab out of step with the eye — so the right
+  amount of code for Tab was none.
 - **The logo is imported, not linked, because of the base path.** A project
   page on GitHub Pages is served out of a subdirectory, so every asset URL
   needs that prefix. `next/image` adds it in its loader — but a static export

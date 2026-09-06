@@ -6,6 +6,7 @@ import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
 import { describeTicketPrice } from "@/lib/ticket-prices";
 import type { Attendee, AttendeeStatus, Event } from "@/lib/types";
 import { describeError } from "@/lib/errors";
+import { enterMovesDown } from "@/components/list-keys";
 
 const STATUS_LABELS: Record<AttendeeStatus, string> = {
   paid: "Paid",
@@ -55,6 +56,12 @@ interface Props {
   onSelect: (selected: boolean) => void;
   onPatch: (patch: AttendeePatch) => Promise<unknown>;
   onCancel: () => Promise<unknown>;
+  /**
+   * Enter was pressed on the last guest of the party. Adds another and, once
+   * it is on the screen, takes the cursor to the same column of it — so a
+   * party is typed straight down without reaching for the + between guests.
+   */
+  onAddGuest: () => Promise<unknown>;
 }
 
 const controlClass =
@@ -68,6 +75,7 @@ export function AttendeeRow({
   onSelect,
   onPatch,
   onCancel,
+  onAddGuest,
 }: Props) {
   const [name, setName] = useState(attendee.name);
   const [price, setPrice] = useState(formatCents(attendee.ticketPriceCents));
@@ -138,7 +146,12 @@ export function AttendeeRow({
   }
 
   return (
-    <li data-attendee={attendee.id}>
+    <li
+      data-attendee={attendee.id}
+      data-list-row
+      // Enter moves down the column; every field in the row bubbles to here.
+      onKeyDown={enterMovesDown(onAddGuest)}
+    >
       <div className={ATTENDEE_GRID}>
         <input
           type="checkbox"
@@ -157,6 +170,7 @@ export function AttendeeRow({
           placeholder={`Guest ${position}`}
           aria-label={`Name of guest ${position}`}
           data-attendee-name={attendee.id}
+          data-list-field="name"
           onChange={(changed) => setName(changed.target.value)}
           onBlur={commitName}
           onKeyDown={(pressed) => {
@@ -173,6 +187,7 @@ export function AttendeeRow({
           disabled={busy}
           aria-label={`Table for guest ${position}`}
           data-attendee-table={attendee.id}
+          data-list-field="table"
           onChange={(changed) =>
             void apply({
               assignedTableNumber:
@@ -212,6 +227,7 @@ export function AttendeeRow({
           disabled={busy}
           aria-label={`Status of guest ${position}`}
           data-attendee-status={attendee.id}
+          data-list-field="status"
           onChange={(changed) =>
             void apply({ status: changed.target.value as AttendeeStatus })
           }
@@ -234,6 +250,7 @@ export function AttendeeRow({
             disabled={busy}
             aria-label={`Ticket price for guest ${position}`}
             data-attendee-price-choice={attendee.id}
+            data-list-field="ticket"
             onChange={(changed) => {
               const picked = changed.target.value;
               if (picked === CUSTOM) {
@@ -281,6 +298,7 @@ export function AttendeeRow({
             autoFocus={typing}
             aria-label={`Ticket price for guest ${position}`}
             data-attendee-price={attendee.id}
+            data-list-field="ticket-amount"
             onChange={(changed) => setPrice(changed.target.value)}
             onBlur={() => {
               commitPrice();
