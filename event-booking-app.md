@@ -83,6 +83,12 @@ event manager for now. (The app may evolve into a bigger app, with more function
   frees their seats
 - **Cancel part of a booking**: cancel individual attendees within a party
   without touching the rest
+- A guest cannot be added to a party whose tables are all full. The line is
+  refused rather than made, with: *This table is full. The following tables
+  have open seats: [tables and their open seats]. Please select the new table
+  you would like to add the guest to.* Picking one seats the guest there.
+- A party sitting nowhere yet is not refused: there is no full table to
+  complain about, so the guest joins them unseated.
 
 ### Expenses
 - Add line items (description + amount) per event. The blank line to type
