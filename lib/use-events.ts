@@ -22,6 +22,8 @@ import {
   clearExpenses,
   createBooking,
   deleteEverything,
+  removeRegular,
+  setAttendeeRegular,
   getSettings,
   importBackup,
   createEvent,
@@ -149,6 +151,18 @@ export interface UseEventsResult {
     attendeeId: string,
     patch: AttendeePatch,
   ) => Promise<Event>;
+  /**
+   * Tick or untick a guest as a regular: on the standing list, at the table
+   * they are sitting at now, or off it.
+   */
+  setRegular: (
+    eventId: string,
+    bookingId: string,
+    attendeeId: string,
+    regular: boolean,
+  ) => Promise<Event>;
+  /** Take somebody off the standing list, and off every guest row with it. */
+  dropRegular: (regularId: string) => Promise<void>;
   /** Move named guests to a table, or off their tables with null. */
   moveGuests: (
     eventId: string,
@@ -318,6 +332,35 @@ export function useEvents(): UseEventsResult {
     [applyChange],
   );
 
+  const setRegular = useCallback(
+    (
+      eventId: string,
+      bookingId: string,
+      attendeeId: string,
+      regular: boolean,
+    ) =>
+      applyChange(async () => {
+        const updated = await setAttendeeRegular(
+          eventId,
+          bookingId,
+          attendeeId,
+          regular,
+        );
+        setSettings(await getSettings());
+        return updated;
+      }),
+    [applyChange],
+  );
+
+  // Every event may have been touched, so everything is read again.
+  const dropRegular = useCallback(
+    async (regularId: string) => {
+      setSettings(await removeRegular(regularId));
+      await refreshEvents();
+    },
+    [refreshEvents],
+  );
+
   const moveGuests = useCallback(
     (
       eventId: string,
@@ -424,6 +467,8 @@ export function useEvents(): UseEventsResult {
     editBookingDetails,
     editAttendee,
     moveGuests,
+    setRegular,
+    dropRegular,
     cancelOneAttendee,
     addGuest,
     cancelWholeBooking,

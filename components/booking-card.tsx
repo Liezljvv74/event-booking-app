@@ -18,6 +18,8 @@ interface Props {
   expanded: boolean;
   onToggle: () => void;
   onPatchAttendee: (attendeeId: string, patch: AttendeePatch) => Promise<unknown>;
+  /** Put a guest on the standing list of regulars, or take them off it. */
+  onSetRegular: (attendeeId: string, regular: boolean) => Promise<unknown>;
   /** Moves exactly these guests, leaving the rest of the party where it is. */
   onMoveGuests: (
     attendeeIds: readonly string[],
@@ -48,6 +50,7 @@ export function BookingCard({
   expanded,
   onToggle,
   onPatchAttendee,
+  onSetRegular,
   onMoveGuests,
   onCancelAttendee,
   onAddGuest,
@@ -452,6 +455,9 @@ export function BookingCard({
                   selected={selected.has(attendee.id)}
                   onSelect={(wanted) => toggleSelected(attendee.id, wanted)}
                   onPatch={(patch) => onPatchAttendee(attendee.id, patch)}
+                  onSetRegular={(regular) =>
+                    onSetRegular(attendee.id, regular)
+                  }
                   onCancel={() => onCancelAttendee(attendee.id)}
                   onAddGuest={onAddGuest}
                 />

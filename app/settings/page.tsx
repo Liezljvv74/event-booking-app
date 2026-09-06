@@ -32,7 +32,13 @@ import {
 } from "@/lib/types";
 import { DATA_PATH } from "@/lib/event-routes";
 
-type Section = "retention" | "seats" | "currency" | "folder" | "wipe";
+type Section =
+  | "regulars"
+  | "retention"
+  | "seats"
+  | "currency"
+  | "folder"
+  | "wipe";
 
 const numberFieldClass =
   "h-9 w-20 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
@@ -127,7 +133,8 @@ function Setting({
 }
 
 export default function SettingsScreen() {
-  const { allEvents, settings, saveSetting, deleteAllData } = useEventContext();
+  const { allEvents, settings, saveSetting, deleteAllData, dropRegular } =
+    useEventContext();
 
   const [open, setOpen] = useState<Section | null>(null);
   const [days, setDays] = useState(String(settings.retentionDays));
@@ -280,6 +287,68 @@ export default function SettingsScreen() {
       </h1>
 
       <div className="mt-3 flex flex-col gap-2">
+        {/* ----------------------------------------------------- regulars */}
+
+        <Setting
+          name="Regulars"
+          value={
+            settings.regulars.length === 0
+              ? "Nobody yet"
+              : `${settings.regulars.length} guest${settings.regulars.length === 1 ? "" : "s"}`
+          }
+          open={open === "regulars"}
+          onToggle={() => show("regulars")}
+        >
+          {settings.regulars.length === 0 ? (
+            <p className={FIELD_LABEL_CLASS}>
+              Nobody yet. Tick Regular beside a guest on the Bookings screen to
+              put them here.
+            </p>
+          ) : (
+            <>
+              <ul className="flex flex-col gap-1">
+                {settings.regulars.map((regular) => (
+                  <li
+                    key={regular.id}
+                    data-regular={regular.id}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-sm text-black dark:text-zinc-50">
+                      {regular.name.trim() === "" ? "Not named yet" : regular.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-zinc-600 dark:text-zinc-400">
+                      {regular.tableNumber === null
+                        ? "no table"
+                        : `table ${regular.tableNumber}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void dropRegular(regular.id)}
+                      aria-label={`Take ${regular.name.trim() === "" ? "this guest" : regular.name} off the regulars`}
+                      title="Take them off the regulars"
+                      data-drop-regular={regular.id}
+                      className="h-8 w-8 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <p className={FIELD_LABEL_CLASS}>
+                Written into every new event as it is created, each at their own
+                table, as a party called{" "}
+                <span className="font-medium">
+                  {settings.regularsPartyName}
+                </span>
+                . Taking somebody off here is what stops that, and it unticks
+                them wherever they are ticked. Events already made keep the
+                guests they have.
+              </p>
+            </>
+          )}
+        </Setting>
+
         {/* ---------------------------------------------------- retention */}
 
         <Setting

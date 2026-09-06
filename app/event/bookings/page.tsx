@@ -88,6 +88,7 @@ export default function BookingsScreen() {
     cancelOneAttendee,
     addGuest,
     cancelWholeBooking,
+    setRegular,
   } = useEventContext();
   const eventId = useEventId();
   const [creating, setCreating] = useState(false);
@@ -351,6 +352,9 @@ export default function BookingsScreen() {
               }
               onPatchAttendee={(attendeeId, patch) =>
                 editAttendee(event.id, booking.id, attendeeId, patch)
+              }
+              onSetRegular={(attendeeId, regular) =>
+                setRegular(event.id, booking.id, attendeeId, regular)
               }
               onMoveGuests={(attendeeIds, tableNumber) =>
                 moveGuests(

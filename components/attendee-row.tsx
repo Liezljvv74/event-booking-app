@@ -55,6 +55,8 @@ interface Props {
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onPatch: (patch: AttendeePatch) => Promise<unknown>;
+  /** Put this guest on the standing list of regulars, or take them off it. */
+  onSetRegular: (regular: boolean) => Promise<unknown>;
   onCancel: () => Promise<unknown>;
   /**
    * Enter was pressed on the last guest of the party. Adds another and, once
@@ -74,6 +76,7 @@ export function AttendeeRow({
   selected,
   onSelect,
   onPatch,
+  onSetRegular,
   onCancel,
   onAddGuest,
 }: Props) {
@@ -187,19 +190,24 @@ export function AttendeeRow({
             event at the same table when it is created. */}
         <input
           type="checkbox"
-          checked={attendee.regular}
+          checked={attendee.regularId !== null}
           disabled={busy}
           aria-label={
             name.trim() === ""
               ? `Guest ${position} is a regular`
               : `${name.trim()} is a regular`
           }
-          title="A regular: carried into the next event, at this table"
+          title="A regular: on the standing list, carried into every new event at this table"
           data-attendee-regular={attendee.id}
           data-list-field="regular"
-          // No revert: the tick is drawn from the stored guest, so a refused
-          // change simply leaves it where it was.
-          onChange={(changed) => void apply({ regular: changed.target.checked })}
+          onChange={(changed) => {
+            const wanted = changed.target.checked;
+            setBusy(true);
+            setError("");
+            void onSetRegular(wanted)
+              .catch((caught: unknown) => setError(describeError(caught)))
+              .finally(() => setBusy(false));
+          }}
           className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
         />
 

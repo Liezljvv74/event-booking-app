@@ -97,16 +97,39 @@ export interface Attendee {
   /**
    * Somebody who comes to everything: a regular.
    *
-   * A guest ticked here is written into the next event when it is created,
-   * at the same table, so a standing crowd is not retyped every month. The
-   * mark travels with the copy, which is what makes it carry on rather than
-   * only once. Guests stored before regulars existed read back as false.
+   * The tick on a guest's row. What it actually does is put them on the
+   * standing list of regulars, which is what new events are built from; this
+   * says which entry, so unticking here removes the right one and removing
+   * them on Settings can untick them here.
+   *
+   * Null for everybody else. Guests stored before regulars existed read back
+   * as null too.
    */
-  regular: boolean;
+  regularId: string | null;
 }
 
 /** What a party of carried-over regulars is called until it is renamed. */
 export const REGULARS_PARTY = "Regular";
+
+/**
+ * Somebody on the standing list of regulars.
+ *
+ * The list is the app's, not any event's, and that is the point of it. The
+ * mark used to live only on a guest's row, so "who are the regulars" could
+ * only be answered by looking at whichever event was written most recently —
+ * which made the answer depend on the order events happened to be created in,
+ * and would have lost the lot the day that event was deleted or swept away by
+ * the retention period. A list of its own is answerable at any time, survives
+ * every event being deleted, and can be read and pruned on one screen.
+ */
+export interface RegularGuest {
+  id: string;
+  name: string;
+  /** Their own number, where the party they came from had one for them. */
+  telephone: string;
+  /** The table they always sit at, or null if they have never had one. */
+  tableNumber: number | null;
+}
 
 export interface Booking {
   id: string;
@@ -197,6 +220,21 @@ export interface Settings {
    */
   defaultSeatCount: number;
   /**
+   * Everybody who comes to everything, in the order they were added.
+   *
+   * Kept with the settings rather than with any event, because that is what
+   * they are: a standing fact about the venue rather than a fact about one
+   * night. Emptying this is what stops somebody being written into new
+   * events, and it is the only thing that does.
+   */
+  regulars: RegularGuest[];
+  /**
+   * What their party is called on each new event. "Regular" until renamed on
+   * a party's own row, which then renames it for every event after — the name
+   * is kept here rather than read back off whichever event was last.
+   */
+  regularsPartyName: string;
+  /**
    * The currency amounts are shown in, as an ISO 4217 code — "ZAR", "GBP" —
    * or empty for none, which is what the app did before this existed and
    * remains the default. The spec names no currency, so neither does the app
@@ -221,6 +259,8 @@ export const DEFAULT_SETTINGS: Settings = {
   retentionDays: 14,
   defaultSeatCount: DEFAULT_SEAT_COUNT,
   currency: "",
+  regulars: [],
+  regularsPartyName: REGULARS_PARTY,
   exportDirectory: null,
 };
 
