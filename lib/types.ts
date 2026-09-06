@@ -32,8 +32,17 @@ export type EventStatus = "active" | "closed";
  */
 export type TableShape = "long" | "round" | "square";
 
-/** What a table is when nobody has said. Round is the usual banquet table. */
-export const DEFAULT_TABLE_SHAPE: TableShape = "round";
+/**
+ * What a table is when nobody has said, on request: long.
+ *
+ * Two things read this, and they are the same question asked at two moments.
+ * A new event's plan opens on it, because the venue this was built for lays
+ * out long tables and typing the same answer into every event is what a
+ * default is for. And a table stored before shapes existed is read back as it,
+ * because the app never asked and something has to be said — the same guess,
+ * made about the same room.
+ */
+export const DEFAULT_TABLE_SHAPE: TableShape = "long";
 
 /** The most tables one event can be laid out with. A guard against a typo. */
 export const MAX_TABLES = 200;

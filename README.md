@@ -260,13 +260,18 @@ top table and ten everywhere else can no longer describe that here — the price
 of three fields instead of twenty rows, and worth naming rather than
 discovering.
 
+New events open on **Long**, on request: the venue this was built for lays out
+long tables, and typing the same answer into every event is what a default is
+for. An event that already has tables starts from the commonest shape among
+them instead.
+
 The shape — long, round or square — is descriptive and nothing depends on it:
 the spec keeps a floor plan out of scope and tables a numbered list, so nobody
 is seated differently for being round. It is on the tables export, which is
 the one report a venue reads before the night rather than during it, and it is
 deliberately absent from the other two. Tables stored before shapes existed
-read back as round, which is a guess: the app never asked, and nothing turns
-on the answer.
+read back as long, the same default and the same guess: the app never asked,
+and nothing turns on the answer.
 
 On the right, the New event form, permanently. It used to be behind a
 `+ New event` button that swapped itself for the form; with the form given a

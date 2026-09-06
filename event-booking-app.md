@@ -28,7 +28,7 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - **Event**: id, name, event date, list of tables, list of bookings, list
   of expenses
 - **Table**: id, table number, seat count (default 10), shape (long, round
-  or square)
+  or square; default long)
 - **Booking**: id, party name, list of attendees, telephone manditory
 - **Attendee**: id, name, assigned table Number (nullable), status, telephone optional
   (`paid` | `pay_at_venue` | `not_paying` | `cancelled`), ticket price
