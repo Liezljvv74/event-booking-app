@@ -311,7 +311,8 @@ export default function SettingsScreen() {
           </label>
 
           <p className={FIELD_LABEL_CLASS}>
-            An event closes 48 hours after its date. {closed.length} closed
+            An event closes 48 hours after its scheduled date. {closed.length}{" "}
+            closed
             event{closed.length === 1 ? "" : "s"} kept
             {closed.length > 0
               ? `, oldest ${formatEventDate(

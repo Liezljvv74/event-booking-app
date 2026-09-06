@@ -553,7 +553,8 @@ check what something is, not to make it something else — so the answer is on
 the line and the controls are behind it, which was asked for and is also what
 keeps a screen of unrelated forms from being a screen of unrelated forms.
 
-*How long a closed event is kept.* An event closes 48 hours after its date
+*How long a closed event is kept.* An event closes 48 hours after its
+scheduled date
 and is deleted a fortnight after that; the fortnight is now a number on this
 screen, and it goes down as well as up. It had a floor of fourteen days at
 first, taken from the spec's "changeable to a longer period", and the floor
