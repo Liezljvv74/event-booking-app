@@ -601,7 +601,11 @@ the formatter directly, so choosing a currency changes all twelve of them and
 not eleven.
 
 *Delete everything.* Last on the screen, ruled off in red, disabled when there
-is nothing to delete, and it names what goes — so many events, so many
+is nothing to delete. Its wording is the manager's own — *"This will delete
+every event and all expense lines. There is no undo. It is suggested that you
+use Export/Import to create a backup in case you need to restore the data
+later."* — with Export/Import left as a link inside it, since a suggestion
+worth making is worth being one press. It names what goes — so many events, so many
 bookings, so many guests — before a second press does it. Settings survive it,
 the export folder included: that is where the backup was written, and it is
 the last thing to take from someone who has just emptied the store.

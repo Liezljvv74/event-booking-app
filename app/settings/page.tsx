@@ -539,14 +539,16 @@ export default function SettingsScreen() {
           onToggle={() => show("wipe")}
           danger
         >
+          {/* The wording is the manager's own. Export/Import stays a link
+              inside it: the sentence suggests going there, and a suggestion
+              worth making is worth being one press. */}
           <p className={FIELD_LABEL_CLASS}>
-            Every event and every saved expense line, gone from this browser.
-            There is no undo and nothing is kept anywhere else — take a backup
-            on{" "}
+            This will delete every event and all expense lines. There is no
+            undo. It is suggested that you use{" "}
             <Link href={DATA_PATH} className="underline">
               Export/Import
             </Link>{" "}
-            first if there is any doubt. Your settings stay as they are.
+            to create a backup in case you need to restore the data later.
           </p>
 
           {wiped !== "" && (
