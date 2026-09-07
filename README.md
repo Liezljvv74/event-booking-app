@@ -563,9 +563,23 @@ list measures itself**, a container query at 40rem of its own width, the way a
 party measures itself on Bookings: the list is the window less the event rail
 and the page padding, about 224px, so a tablet that `sm:` called wide gave the
 six columns 416 to 544px and hid the last of them behind a sideways scroll.
-Stacked, it reads: the description, then the provider, the amount and the paid
-tick across one line, then the notes, then **Clear line** set apart at the
-foot. That last one is grey rather than red, unlike cancelling a guest —
+Narrow, it is **one compact line**: the description, the amount, the paid tick,
+a pencil for the two fields the line does not carry, and a cross. Four things
+can be done from it — retype or re-pick the description, retype the amount,
+tick it paid, clear it — and the pencil opens **provider and notes** over the
+screen. A pencil rather than a star, which reads as a favourite; whether
+anything is written in those two fields is said by the button's border and ink
+instead.
+
+The notes are **one editable block**, because an expense carries a single
+`notes` value: the panel is a taller box for the same string, never a new box
+per note. Both fields commit as they are left, as they do in the table, so
+**Done** only closes the panel.
+
+The narrow header carries **the total and what is still to pay**, and the total
+row at the foot goes with the columns, so no figure is printed twice on one
+short screen. **Add** becomes a **+**; **Clear all lines** keeps its words. A
+heading row names the compact columns once for the list. That last one is grey rather than red, unlike cancelling a guest —
 the line goes to the saved lines and can be picked back out, so it is not the
 one-way door a cancellation is. The blank line being written follows the same
 shape, and the running total, which sits under the amount column in the
@@ -1018,6 +1032,14 @@ The ones that were argued out and would otherwise be re-litigated:
   Capping a party at 54rem is the third part: without it a single party below
   the split stretched its `1fr` name column to 640px, with the cross that
   cancels a guest at the far end of the window.
+- **Enter must step to a field that is on the screen.** A row can hold the
+  same column twice now — the expense lines carry a compact field for a narrow
+  list and a table cell for a wide one, and CSS decides which is shown.
+  `stepDown()` used `querySelector`, which hands back whichever comes first in
+  the markup either way, so half the time Enter focused a `display: none`
+  field. Focusing a hidden input does nothing at all: no error, no move, the
+  cursor simply stays put and the key looks broken. It now takes the first
+  candidate with client rects.
 - **A modal cannot live inside a container query.** `container-type:
   inline-size` gives an element layout containment, which makes it a
   containing block for `position: fixed` descendants — so the guest detail,
@@ -1203,6 +1225,25 @@ guest fields and all six expense fields sit on one line each; the columns run
 in the written order and the headings stand over the fields they name; the
 card's own field names are gone; both crosses are 36 by 36 and grey; and the
 running total's right edge still lines up with the amount column's.
+
+**The compact expense line has a pass of its own: 42 assertions, in both
+themes, 84 in all.** At 390px: two lines of 54px; the description typeable and
+still carrying its dropdown of lines used before; the amount and the paid tick
+on the line; the pencil and the cross; and none of the six inline fields a
+control there. The heading row names the columns and *Amount* stands within a
+pixel of the field it names. The header reads `Total 7,700.00 · 3,200.00
+outstanding`, the long reckoning and the foot total are gone, Add measures 40px
+and reads `+`, and Clear all lines stays.
+
+Then the arithmetic, driven rather than read: retyping an amount to 4,800.00
+moves the header total to 8,000.00, and unticking paid moves what is
+outstanding to 8,000.00 as well. The panel opens from the pencil, is confirmed
+a child of `<body>` and confirmed painted, and holds the provider and the
+existing note as a single `<textarea>` — one block, counted, not one per note.
+Adding a second line to that note leaves one block holding both, Done closes
+it, and reopening shows the note came back from the store rather than having
+been held on screen. The cross clears that line alone. At 1280px all six fields
+are back on the row with the long reckoning, the foot total and the word *Add*.
 
 Enter was checked at both widths, since the whole arrangement turns on the
 markup order it reads: it still steps down the name column in the table, and

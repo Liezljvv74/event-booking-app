@@ -185,14 +185,25 @@ event manager for now. (The app may evolve into a bigger app, with more function
   it, and Enter on a line already in the list does the same, so a list of
   costs is typed straight down. The Save button saves without opening
   another.
-- **A line is a row of columns where the list is wide enough for them, and a
-  vertical group of labelled fields where it is not.** The columns need 624px;
-  the list measures itself and shows them above 40rem of its own width. As a
-  stack the fields keep the order they are written in: description; then
-  provider, amount and the paid tick across one line; then notes; then
-  clearing the line, set apart at the foot. Clearing is grey rather than red,
-  unlike cancelling a guest: the line goes to the saved lines and can be
-  picked back out, so it is not a one-way door.
+- **A line is a row of columns where the list is wide enough for them, and one
+  compact line where it is not.** The columns need 624px; the list measures
+  itself and shows them above 40rem of its own width.
+  - **The compact line** is the description, the amount, the paid tick, a
+    button for the two fields it does not carry, and a cross. Four things can
+    be done from it: retype or re-pick the description, retype the amount,
+    tick it paid, or clear it — and the button opens the rest.
+  - **Provider and notes open over the screen.** The notes are one editable
+    block holding everything written about that cost, because an expense
+    carries a single notes value; the panel is a taller box for it, never a
+    new box per note.
+  - Clearing is grey rather than red, unlike cancelling a guest: the line goes
+    to the saved lines and can be picked back out, so it is not a one-way
+    door.
+  - One **heading row** names the compact columns for the whole list.
+- **The header on a narrow Expenses screen is the total and what is still to
+  pay**, and the total at the foot of the list goes with the columns, so a
+  figure is never printed twice on one short screen. Add is a **+** there,
+  Clear all lines keeps its words.
 - Auto-copied forward whenever a new event is created
 - When a line item is removed, keep it in memory to be selected from a dropdown for a next event
 - Option to permanently delete line items that will not be used again in the future

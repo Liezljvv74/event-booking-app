@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FIELD_LABEL_CLASS,
   FIELD_SHAPE,
@@ -11,6 +12,7 @@ import type { ExpensePatch } from "@/lib/repository";
 import type { Expense, ExpenseTemplate } from "@/lib/types";
 import { describeError } from "@/lib/errors";
 import { enterMovesDown } from "@/components/list-keys";
+import { useDismiss } from "@/components/use-dismiss";
 import { useMoney } from "@/components/event-provider";
 
 /**
@@ -129,6 +131,8 @@ export function ExpenseRow({
   const [paid, setPaid] = useState(expense.paid);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  /** Whether the provider-and-notes panel is over the screen. */
+  const [open, setOpen] = useState(false);
 
   // The stored values win when they change underneath, so a refused edit
   // never leaves a field showing something that was never saved. Adjusted
@@ -222,20 +226,114 @@ export function ExpenseRow({
 
   return (
     /**
-     * A card on a phone, a bare row from `sm` up. The border is what tells
-     * one line from the next once the fields are stacked; in the grid the
-     * columns lining up already do it.
+     * One compact line where the list is narrow, a row of six columns where
+     * it is wide. The border is what tells one line from the next in the
+     * compact list; in the grid the columns lining up already do it.
      */
     <li
       data-expense={expense.id}
       data-list-row
       // Enter moves down the column; every field in the row bubbles to here.
       onKeyDown={enterMovesDown(onEnter)}
-      className={`rounded-md border border-zinc-200 p-2 @min-[40rem]/lines:rounded-none @min-[40rem]/lines:border-0 @min-[40rem]/lines:p-0 dark:border-zinc-800 ${
+      className={`rounded-md border border-zinc-200 @min-[40rem]/lines:rounded-none @min-[40rem]/lines:border-0 dark:border-zinc-800 ${
         paid ? "opacity-70" : ""
       }`}
     >
-      <div className={EXPENSE_GRID}>
+      {/* --------------------------------------- narrow: one compact line
+
+          What a cost was and what it came to, which is what a list of
+          expenses is read for, plus the tick that says whether it has gone
+          out. Provider and notes are behind the note button: they are written
+          once and looked at rarely, and on a phone they cost two of the four
+          lines a card had.
+
+          Every field here is a control, so there is no spare part of the row
+          to tap — which is why the notes have a button of their own rather
+          than the whole line being the way in, as it is for a guest. It fills
+          in when there is something written, so the list also says which
+          lines carry a note. */}
+      <div
+        data-expense-line={expense.id}
+        className="flex items-center gap-1.5 p-1 @min-[40rem]/lines:hidden"
+      >
+        <input
+          type="text"
+          list={savedLinesId}
+          value={description}
+          disabled={busy}
+          aria-label={`Description of ${expense.description}`}
+          data-expense-description-quick={expense.id}
+          data-list-field="description"
+          onChange={(changed) => setDescription(changed.target.value)}
+          onBlur={commitDescription}
+          onKeyDown={keyCommit(commitDescription)}
+          className={`h-11 min-w-0 flex-1 text-base ${FIELD_SHAPE}`}
+        />
+
+        <input
+          type="text"
+          inputMode="decimal"
+          value={amount}
+          disabled={busy}
+          aria-label={`Amount of ${expense.description}`}
+          data-expense-amount-quick={expense.id}
+          data-list-field="amount"
+          onChange={(changed) => setAmount(changed.target.value)}
+          onBlur={commitAmount}
+          onKeyDown={keyCommit(commitAmount)}
+          className={`h-11 w-[4.75rem] shrink-0 text-right text-base ${FIELD_SHAPE}`}
+        />
+
+        <input
+          type="checkbox"
+          checked={paid}
+          disabled={busy}
+          aria-label={`${expense.description} is paid`}
+          data-expense-paid-quick={expense.id}
+          onChange={(changed) => {
+            const wanted = changed.target.checked;
+            setPaid(wanted);
+            void apply({ paid: wanted }, () => setPaid(expense.paid));
+          }}
+          className={`h-5 w-5 shrink-0 ${TICK_SHAPE}`}
+        />
+
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={`Provider and notes for ${expense.description}`}
+          title="Provider and notes"
+          data-expense-more={expense.id}
+          data-has-notes={notes.trim() === "" ? undefined : ""}
+          className={`h-11 w-10 shrink-0 rounded-md border text-base leading-none ${
+            notes.trim() === "" || provider.trim() === ""
+              ? "border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-500"
+              : "border-zinc-400 text-zinc-800 dark:border-zinc-600 dark:text-zinc-200"
+          }`}
+        >
+          {/* A pencil, not a star: a star reads as a favourite, and this is
+              the way in to two more fields. Whether anything is written in
+              them is said by the border and the ink instead. */}
+          <span aria-hidden="true">✎</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void onClear()}
+          disabled={busy}
+          aria-label={`Clear ${expense.description}`}
+          title="Clear this line, keeping it in the saved lines"
+          data-expense-clear-quick={expense.id}
+          className="h-11 w-10 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+
+      {/* ------------------------------------- wide: the row of six columns */}
+      <div className={`${EXPENSE_GRID} hidden`}>
         {/* What the cost was, which is the line's name. First on the card and
             first in the row.
 
@@ -385,11 +483,139 @@ export function ExpenseRow({
       {error !== "" && (
         <p
           role="alert"
-          className="mt-1 mb-1 text-xs text-red-600 dark:text-red-400"
+          className="mt-1 mb-1 px-1 text-xs text-red-600 dark:text-red-400"
         >
           {error}
         </p>
       )}
+
+      {open && (
+        <LineDetail
+          expense={expense}
+          description={description}
+          onClose={() => setOpen(false)}
+        >
+          <label className="block">
+            <span className={FIELD_LABEL_CLASS}>Provider</span>
+            <input
+              type="text"
+              value={provider}
+              disabled={busy}
+              placeholder="-"
+              data-expense-provider={expense.id}
+              onChange={(changed) => setProvider(changed.target.value)}
+              onBlur={() => commitText("provider", provider, setProvider)}
+              className={`mt-0.5 h-11 w-full text-base ${FIELD_SHAPE}`}
+            />
+          </label>
+
+          {/* One field holding everything written about this line, not one
+              per note. An expense carries a single `notes` string, so what is
+              already there and whatever is added to it are the same value —
+              this is a taller box for it, nothing more. */}
+          <label className="mt-3 block">
+            <span className={FIELD_LABEL_CLASS}>Notes</span>
+            <textarea
+              value={notes}
+              disabled={busy}
+              rows={5}
+              placeholder="Anything worth remembering about this cost"
+              data-expense-notes={expense.id}
+              onChange={(changed) => setNotes(changed.target.value)}
+              onBlur={() => commitText("notes", notes, setNotes)}
+              className={`mt-0.5 w-full resize-y py-2 text-base ${FIELD_SHAPE}`}
+            />
+          </label>
+        </LineDetail>
+      )}
     </li>
+  );
+}
+
+/**
+ * The two fields the compact line does not carry, over the screen.
+ *
+ * Portalled to `<body>`, and it has to be: the expense list declares
+ * `container-type: inline-size`, which makes it a containing block for
+ * `position: fixed` descendants — so a panel rendered inside the list would
+ * be pinned to the list rather than to the window.
+ *
+ * Nothing in here answers to a container query. The panel is always narrow,
+ * so its two fields are simply stacked, which is why it needs no
+ * `@container` of its own the way the guest detail does: that one reuses the
+ * table's own fields and has to make them believe they are in a narrow list,
+ * while these two exist only here.
+ */
+function LineDetail({
+  expense,
+  description,
+  onClose,
+  children,
+}: {
+  expense: Expense;
+  description: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const panel = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  useDismiss(true, panel, onClose);
+
+  useEffect(() => {
+    panel.current?.focus();
+    const had = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = had;
+    };
+  }, []);
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      data-expense-detail={expense.id}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"
+    >
+      <div
+        ref={panel}
+        tabIndex={-1}
+        className="max-h-[85vh] w-[min(26rem,100%)] overflow-y-auto rounded-lg border border-zinc-200 bg-white p-3 shadow-xl outline-none dark:border-zinc-800 dark:bg-zinc-950"
+      >
+        <div className="mb-2 flex items-baseline gap-2">
+          <h2
+            id={titleId}
+            className="min-w-0 flex-1 truncate text-base font-semibold text-black dark:text-zinc-50"
+          >
+            {description.trim() === "" ? "This line" : description.trim()}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close provider and notes"
+            data-expense-detail-close
+            className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        {children}
+
+        {/* Both fields commit as they are left, the way they do in the table,
+            so this saves nothing that is not already saved — it is the way
+            out once the writing is done. */}
+        <button
+          type="button"
+          onClick={onClose}
+          data-expense-detail-done
+          className="mt-3 h-11 w-full rounded-md bg-black text-sm font-medium text-white dark:bg-zinc-50 dark:text-black"
+        >
+          Done
+        </button>
+      </div>
+    </div>,
+    document.body,
   );
 }

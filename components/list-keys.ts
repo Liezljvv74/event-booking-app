@@ -58,9 +58,20 @@ function stepDown(field: HTMLElement): boolean {
   const next = at.rows[at.index + 1];
   if (next === undefined) return false;
 
-  const target = next.querySelector(
-    `[${FIELD_ATTRIBUTE}="${CSS.escape(at.column)}"]`,
-  );
+  /**
+   * The first one that is actually on the screen, not simply the first in the
+   * markup.
+   *
+   * A row can hold the same column twice now: the expense lines carry a
+   * compact field for a narrow list and a table cell for a wide one, and CSS
+   * decides which is shown. `querySelector` would hand back whichever comes
+   * first in the source either way, so Enter spent half its time focusing a
+   * `display: none` field — which silently does nothing at all, leaving the
+   * cursor where it was and the key looking broken.
+   */
+  const target = Array.from(
+    next.querySelectorAll(`[${FIELD_ATTRIBUTE}="${CSS.escape(at.column)}"]`),
+  ).find((candidate) => candidate.getClientRects().length > 0);
   if (!(target instanceof HTMLElement)) return false;
 
   target.focus();

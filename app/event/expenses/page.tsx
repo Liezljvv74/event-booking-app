@@ -89,14 +89,34 @@ export default function ExpensesScreen() {
   }
 
   return (
-    <section>
+    /* The whole screen measures itself, not just the list: the header has to
+       know whether it is narrow too, so the summary can shorten and Add can
+       become a +. One container answers for both, and it is the width the
+       columns are compared against either way. */
+    <section className={EXPENSE_CONTAINER}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-lg font-semibold text-black dark:text-zinc-50">
           Expenses
         </h1>
+        {/* Narrow, the header is the only place a total appears — the row
+            at the foot of the list goes with the columns — so it carries the
+            total and what is still to pay and nothing else. Wide, it is the
+            whole reckoning, and the foot row repeats the total under the
+            figures it adds up. */}
         <p
           data-expense-summary
-          className="text-xs text-zinc-600 dark:text-zinc-400"
+          className="text-xs text-zinc-600 @min-[40rem]/lines:hidden dark:text-zinc-400"
+        >
+          <span className="font-medium text-zinc-700 dark:text-zinc-300">
+            Total {money(summary.allCents)}
+          </span>
+          {summary.outstandingCents > 0
+            ? ` · ${money(summary.outstandingCents)} outstanding`
+            : ""}
+        </p>
+        <p
+          data-expense-summary-full
+          className="hidden text-xs text-zinc-600 @min-[40rem]/lines:block dark:text-zinc-400"
         >
           {event.expenses.length} line
           {event.expenses.length === 1 ? "" : "s"} ·{" "}
@@ -151,9 +171,13 @@ export default function ExpensesScreen() {
             onClick={openBlankLine}
             disabled={adding}
             data-add-line
-            className="h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 dark:bg-zinc-50 dark:text-black"
+            aria-label="Add an expense line"
+            className="h-9 rounded-md bg-black px-4 text-xs font-medium text-white disabled:opacity-40 @max-[40rem]/lines:w-10 @max-[40rem]/lines:px-0 @max-[40rem]/lines:text-base @max-[40rem]/lines:leading-none dark:bg-zinc-50 dark:text-black"
           >
-            Add
+            <span aria-hidden="true" className="@min-[40rem]/lines:hidden">
+              +
+            </span>
+            <span className="@max-[40rem]/lines:sr-only">Add</span>
           </button>
         </div>
       </div>
@@ -170,7 +194,7 @@ export default function ExpensesScreen() {
           gave them 416 to 544px and hid the last of them behind a sideways
           scroll. Wide enough gets columns; narrower gets a vertical group of
           labelled fields per line. */}
-      <div className={`mt-3 ${EXPENSE_CONTAINER}`}>
+      <div className="mt-3">
         {/* The rows Enter walks down: every expense line, and then the blank
             one when it is open. They are marked from here rather than from
             the <ul>, because the blank line is that list's last row and sits
@@ -197,8 +221,28 @@ export default function ExpensesScreen() {
           )}
 
           {/* Cards need air between them; rows in the grid do not. */}
+          {/* The compact list gets a heading of its own, in the widths its
+              lines use, so each word stands over its column. One row for the
+              whole list rather than a label above every field, which is the
+              room the compact line exists to save. */}
+          {(event.expenses.length > 0 || adding) && (
+            <div
+              aria-hidden="true"
+              data-line-headings
+              className="flex items-center gap-1.5 px-1 pb-1 text-xs text-zinc-500 @min-[40rem]/lines:hidden dark:text-zinc-500"
+            >
+              <span className="min-w-0 flex-1">Description</span>
+              <span data-heading-amount className="w-[4.75rem] shrink-0 text-right">
+                Amount
+              </span>
+              <span className="w-5 shrink-0 text-center">✓</span>
+              <span className="w-10 shrink-0" />
+              <span className="w-10 shrink-0" />
+            </div>
+          )}
+
           {event.expenses.length > 0 && (
-            <ul className="flex flex-col gap-2 @min-[40rem]/lines:gap-0.5">
+            <ul className="flex flex-col gap-1.5 @min-[40rem]/lines:gap-0.5">
               {event.expenses.map((expense) => (
                 <ExpenseRow
                   key={expense.id}
@@ -219,9 +263,9 @@ export default function ExpensesScreen() {
               would space itself around them. */}
           {event.expenses.length > 0 && (
             <div
-              className={`${EXPENSE_GRID} mt-2 border-t border-zinc-200 pt-1.5 @min-[40rem]/lines:mt-0 dark:border-zinc-800`}
+              className={`${EXPENSE_GRID} hidden border-t border-zinc-200 pt-1.5 dark:border-zinc-800`}
             >
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 @min-[40rem]/lines:contents">
+              <div className="@min-[40rem]/lines:contents">
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">
                   Total
                 </span>
@@ -249,7 +293,7 @@ export default function ExpensesScreen() {
           {adding && (
             <div
               data-list-row
-              className="mt-3 rounded-md border border-zinc-200 p-2 @min-[40rem]/lines:rounded-none @min-[40rem]/lines:border-0 @min-[40rem]/lines:p-0 dark:border-zinc-800"
+              className="mt-3 rounded-md border border-zinc-200 @min-[40rem]/lines:rounded-none @min-[40rem]/lines:border-0 dark:border-zinc-800"
             >
               <NewExpenseRow
                 templates={available}

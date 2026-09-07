@@ -7,6 +7,7 @@ import {
   LINE_LABEL_CLASS,
   LINE_TICK_CLASS,
 } from "@/components/expense-row";
+import { FIELD_SHAPE, TICK_SHAPE } from "@/components/form-styles";
 
 import { formatCents, parseCents } from "@/lib/money";
 import type { ExpenseInput } from "@/lib/repository";
@@ -173,10 +174,75 @@ export function NewExpenseRow({
       onKeyDown={enterCarriesOn}
       data-new-expense
     >
-      <div className={EXPENSE_GRID}>
-        {/* The same groups, in the same order, as a line already saved: one
-            per line of the card on a phone, and `contents` from `sm` up
-            where they dissolve into the grid. */}
+      {/* ------------------------------------- narrow: one compact line
+
+          The same three fields a saved line shows, in the same order and the
+          same widths, so a line is typed where it will end up. Provider and
+          notes are not asked for: neither is required, and both are a tap
+          away on the line once it exists. */}
+      <div className="flex items-center gap-1.5 p-1 @min-[40rem]/lines:hidden">
+        <input
+          type="text"
+          list={savedLinesId}
+          value={description}
+          disabled={saving}
+          aria-required="true"
+          aria-label="New expense description"
+          name="description"
+          data-new-expense-description
+          onChange={(changed) => changeDescription(changed.target.value)}
+          className={`h-11 min-w-0 flex-1 text-base ${FIELD_SHAPE}`}
+        />
+
+        <input
+          type="text"
+          inputMode="decimal"
+          value={amount}
+          disabled={saving}
+          aria-required="true"
+          placeholder="0.00"
+          aria-label="New expense amount"
+          name="amount"
+          data-new-expense-amount
+          onChange={(changed) => setAmount(changed.target.value)}
+          className={`h-11 w-[4.75rem] shrink-0 text-right text-base ${FIELD_SHAPE}`}
+        />
+
+        <input
+          type="checkbox"
+          checked={paid}
+          disabled={saving}
+          aria-label="New expense is already paid"
+          name="paid"
+          onChange={(changed) => setPaid(changed.target.checked)}
+          className={`h-5 w-5 shrink-0 ${TICK_SHAPE}`}
+        />
+
+        <button
+          type="submit"
+          disabled={saving}
+          data-add-expense-quick
+          aria-label="Save this new expense line"
+          className="h-11 w-10 shrink-0 rounded-md bg-black text-base leading-none text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+        >
+          <span aria-hidden="true">{saving ? "…" : "✓"}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          aria-label="Discard this new expense line"
+          title="Discard this line"
+          data-cancel-expense-quick
+          className="h-11 w-10 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+
+      {/* --------------------------------- wide: the same six columns again */}
+      <div className={`${EXPENSE_GRID} hidden`}>
         <div className="@min-[40rem]/lines:contents">
           <span aria-hidden="true" className={LINE_LABEL_CLASS}>
             Description
