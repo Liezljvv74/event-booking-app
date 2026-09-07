@@ -317,6 +317,14 @@ repeats makes four events a week apart, which is the sort of thing that has to
 be said rather than inferred, so the button reads *Create 4 events* and the
 dates are listed above it before it is pressed.
 
+Neither repeat control carries an `aria-label`. The label each sits inside
+already names it — *Repeat event* and *times* — and an `aria-label` replaces
+that name rather than adding to it, so the accessible name stopped containing
+the visible one and *"click Repeat event"* had nothing to match. They were the
+only two on the form; Event name, Date, Start and End have always relied on
+their wrapping label alone. Where a name reads thin, the fix is more words on
+the screen, not a second name only some readers are given.
+
 **The form validates itself**, with `noValidate` on the `<form>`. The count
 box carries `min`, `max` and `step`, and native constraint validation
 cancelled submission before the component's own checks ran: 60 repeats raised

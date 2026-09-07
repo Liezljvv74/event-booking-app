@@ -405,10 +405,17 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
           Repeat event
+          {/* No aria-label on either of these two. The label they sit inside
+              already names them — "Repeat event" and "times" — and an
+              aria-label replaces that name rather than adding to it, so the
+              accessible name stopped containing the visible one and
+              "click Repeat event" had no target to match. Every other field
+              on this form has always relied on its wrapping label alone.
+              Where a name reads too thin, the answer is more words on the
+              screen, not a second name only some readers get. */}
           <select
             value={cadence}
             disabled={saving}
-            aria-label="How often the event repeats"
             data-repeat
             onChange={(changed) => {
               setCadence(changed.target.value as RepeatCadence);
@@ -437,7 +444,6 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
               value={times}
               disabled={saving}
               ref={timesField}
-              aria-label="How many times to repeat the event"
               data-repeat-times
               onChange={(changed) => {
                 setTimes(changed.target.value);
