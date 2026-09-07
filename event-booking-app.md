@@ -150,11 +150,16 @@ event manager for now. (The app may evolve into a bigger app, with more function
   parties abreast on a wide screen, so a party can be narrow inside a large
   monitor, and a tablet holding one party per row can be narrower still.
   - **The compact line** is the guest's name, their status as a word beneath
-    it, the table as a dropdown, and a cross. Three things can be done from
-    there and no more: change the table, cancel that one guest, or tap the
-    line to open the full detail. Ten guests are then ten lines rather than
-    ten cards of six dropdowns, and the two facts worth scanning for — who,
-    and have they paid — are the two the line leads with.
+    it, the table as a dropdown, a pencil, and a cross. Three things can be
+    done from there and no more: change the table, cancel that one guest, or
+    open the full detail. Ten guests are then ten lines rather than ten cards
+    of six dropdowns, and the two facts worth scanning for — who, and have
+    they paid — are the two the line leads with.
+  - **The pencil is the same button an expense line carries**, in the same
+    place and the same 40 by 44, so the two compact lists are read the same
+    way. Tapping the name or the rest of the line opens the detail as well;
+    that is a guest line's own affordance, since an expense line has no part
+    of it that is not a control.
   - One **heading row** names those columns for the whole party, *Guest* and
     *Table*, rather than a label above every dropdown: a label per guest would
     cost a line of height on each of them, which is the room the compact line

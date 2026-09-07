@@ -791,7 +791,7 @@ export function AttendeeRow({
       <div
         onClick={tapped}
         data-attendee-line={attendee.id}
-        className="flex items-center gap-2 p-1 @min-[38rem]/guests:hidden"
+        className="flex items-center gap-1.5 p-1 @min-[38rem]/guests:hidden"
       >
         <button
           type="button"
@@ -829,6 +829,25 @@ export function AttendeeRow({
           className={`h-11 w-[5.5rem] shrink-0 text-sm ${FIELD_SHAPE}`}
         />
 
+        {/* The way into the detail, in the same place and the same shape as
+            the pencil on an expense line, so the two compact lists are read
+            the same way. Tapping the name or the rest of the line opens the
+            detail as well — that is a guest line's own affordance, and an
+            expense line cannot have it because every part of one is a
+            control — but a button is the half of it that can be seen. */}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-label={`Details for ${label}`}
+          title="Guest details"
+          data-attendee-more={attendee.id}
+          className="h-11 w-10 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-500 dark:hover:bg-zinc-900"
+        >
+          <span aria-hidden="true">✎</span>
+        </button>
+
         <button
           type="button"
           onClick={() => void onCancel()}
@@ -836,7 +855,7 @@ export function AttendeeRow({
           aria-label={`Cancel ${label}`}
           title="Cancel this guest"
           data-cancel-attendee-quick={attendee.id}
-          className="h-11 w-11 shrink-0 rounded-md border border-red-300 text-base leading-none text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
+          className="h-11 w-10 shrink-0 rounded-md border border-red-300 text-base leading-none text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
         >
           <span aria-hidden="true">×</span>
         </button>

@@ -485,9 +485,17 @@ card measures itself** — a container query at 38rem of its own width, not a
 `sm:` breakpoint against the window.
 
 The compact line is the name, the status as a word beneath it, the table as a
-dropdown and a cross, under one heading row per party reading *Guest* and
-*Table*. **Three things can be done from it and no more**: change the table,
-cancel that one guest, or tap the line to open the full detail.
+dropdown, a **pencil** and a cross, under one heading row per party reading
+*Guest* and *Table*. **Three things can be done from it and no more**: change
+the table, cancel that one guest, or open the full detail.
+
+The pencil is the same button an expense line carries, in the same place and
+the same 40 by 44 — both passes assert those dimensions, so the two compact
+lists are provably the same shape and not merely meant to be. Tapping the name
+or the rest of the line opens the detail too; that is a guest line's own
+affordance, and an expense line cannot have it because every part of one is a
+control. A visible button is the half of it that can be found without being
+told.
 
 The headings are a row for the party rather than a label above every dropdown,
 because a label per guest costs a line of height on each of them — the room
@@ -1250,8 +1258,8 @@ markup order it reads: it still steps down the name column in the table, and
 the compact line is confirmed to hold no typed field for it to walk — there is
 nothing to type on that line, which is the point of it.
 
-**The compact line and the detail behind it have a pass of their own: 37
-assertions, run in both themes, 74 in all.** At 390px: a guest is one line of
+**The compact line and the detail behind it have a pass of their own: 47
+assertions, run in both themes, 94 in all.** At 390px: a guest is one line of
 56px rather than a card; it shows the name and the status as a word; the table
 dropdown reads the table the guest is at and offers the free ones; the cross is
 there; and none of the other seven controls is on the line. Select all and the

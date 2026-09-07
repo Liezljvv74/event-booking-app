@@ -471,13 +471,14 @@ export function BookingCard({
             <div
               aria-hidden="true"
               data-guest-line-headings
-              className="flex items-center gap-2 px-1 pb-1 text-xs text-zinc-500 @min-[38rem]/guests:hidden dark:text-zinc-500"
+              className="flex items-center gap-1.5 px-1 pb-1 text-xs text-zinc-500 @min-[38rem]/guests:hidden dark:text-zinc-500"
             >
               <span className="min-w-0 flex-1 px-1">Guest</span>
               <span data-heading-table className="w-[5.5rem] shrink-0">
                 Table
               </span>
-              <span className="w-11 shrink-0" />
+              <span className="w-10 shrink-0" />
+              <span className="w-10 shrink-0" />
             </div>
 
             {/* The rows Enter walks down, one list per party: Enter on the
