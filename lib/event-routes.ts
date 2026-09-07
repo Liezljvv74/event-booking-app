@@ -80,6 +80,27 @@ export const SECTION_NAV: readonly NavItem[] = [
   { kind: "app", path: SETTINGS_PATH, label: "Settings", shortLabel: "Settings" },
 ];
 
+/**
+ * The same list, split the two ways the phone needs it.
+ *
+ * Derived rather than written out again, so the order above stays the one
+ * place it is decided. A phone shows the event's own screens as a row and
+ * puts the rest behind a **More** menu, because six items and a strip of
+ * events above them were two rows that both had to be scrolled sideways
+ * before anything in them could be reached.
+ */
+export const EVENT_SECTIONS: readonly Extract<NavItem, { kind: "event" }>[] =
+  SECTION_NAV.filter(
+    (item): item is Extract<NavItem, { kind: "event" }> =>
+      item.kind === "event",
+  );
+
+/** The screens that belong to no event: Manage events, Export/Import, Settings. */
+export const APP_SECTIONS: readonly Extract<NavItem, { kind: "app" }>[] =
+  SECTION_NAV.filter(
+    (item): item is Extract<NavItem, { kind: "app" }> => item.kind === "app",
+  );
+
 /** The path of a section, with no event attached to it yet. */
 export function eventSectionPath(section: EventSection): string {
   return section === "" ? "/event" : `/event/${section}`;

@@ -197,6 +197,16 @@ Every screen sits in the same shell: the app header across the top, the
 active events down the left-hand side beneath it, the section nav across the
 top of what is left, and the screen itself under that.
 
+**On a phone the shell is three thin lines rather than two scrolling
+strips.** The events become one line naming the one that is showing — *Spring
+Gala · 1 of 3* — which opens the rest over the screen when pressed; one event
+is a label with nothing to press, and on the screens that belong to no event
+it reads *Choose an event*. The section nav keeps the open event's Dashboard,
+Bookings and Expenses in the row and moves Manage events, Export/Import and
+Settings behind a **More** button, which is itself marked while one of those
+three is showing, so the row still says where you are. Everything in both is
+a link to the same URL it always was.
+
 The header is three sections. The left is the logo, 2.5rem tall and as wide
 as its own proportions make it — given a height and left to work the width
 out, so the shape stays exact whatever artwork is put there. There are two of
@@ -947,6 +957,36 @@ The ones that were argued out and would otherwise be re-litigated:
   `dark:` forms of each sit one depth above their own light form exactly as
   everywhere else in the app. Both were read back out of `getComputedStyle` at
   both widths in both themes rather than trusted.
+- **`overflow-x: auto` takes `overflow-y` with it, and that ate a menu.** The
+  phone's More menu hangs below its row from `top-full`. The row carried
+  `overflow-x-auto` — left over from when six items had to scroll — and CSS
+  promotes an `overflow-y` of `visible` to `auto` the moment the other axis is
+  set, so the row was a scroll container in both directions and clipped the
+  menu away entirely. The panel had a bounding box, a client rect and
+  `aria-expanded="true"`; it painted nothing but a stray vertical scrollbar at
+  the end of the row.
+
+  Two things came out of it. The menu now hangs off the `<nav>`, which is not
+  a scroller, rather than off the row inside it. And the browser passes are
+  no longer allowed to conclude "it is open" from a box: `__onScreen()` takes
+  the middle of a panel and asks `elementFromPoint` what is actually there,
+  which is the only check that can tell a panel from the memory of one. Every
+  assertion about this menu had passed while it was invisible.
+- **A panel's visibility is a class, not just the `hidden` attribute.** Both
+  phone panels carry `hidden={!open}` and a conditional `flex`/`hidden` class.
+  The attribute alone is not safe here: its `display: none` comes from the
+  browser's own stylesheet, and any author `display` utility outranks it — so
+  a panel written `flex` unconditionally is a panel `hidden` cannot close.
+- **The page scrolling sideways on a phone was the section nav all along.**
+  It took three goes to pin down, which is worth recording because two of the
+  three were plausible and wrong. The overflowing elements a sweep reports are
+  mostly false positives: a link inside a scroller genuinely sticks out of its
+  box without extending the page. Blaming the dev overlay was wrong too — the
+  deployed site did it as well, once it had an event on it to draw a nav for.
+  What settled it was hiding one subtree at a time and watching
+  `documentElement.scrollWidth` come back: 533px to 375px the moment the
+  section row went. Six items in a 390px row were the whole of it, and moving
+  three of them into the menu is what fixed the page as well as the row.
 - **Nothing to open means Manage events.** The entry screen is a signpost: to
   the first active event, or, when there is none, to the one screen that can
   create one.
@@ -978,7 +1018,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
-| Mobile | Done — the two dense tables become stacked cards below `sm` rather than scrolling their columns sideways; every other screen scrolls rather than breaking |
+| Mobile | Done — the two dense tables become stacked cards below `sm`, and the chrome is one compact event line plus one section row with the app screens behind **More**. Nothing on a phone scrolls sideways any more: the page itself does not, and neither do the navigation rows that used to |
 
 Out of scope by the spec and not built: visual floor plan, multi-user, any
 network call. Deployment tooling was on that list too until the app was asked
@@ -1057,16 +1097,39 @@ Enter was checked at both widths, since the whole arrangement turns on the
 markup order it reads: it still steps down the name column in the grid and
 down the stacked cards on a phone.
 
-One thing that pass does **not** fix, and did not cause: on a phone the page
-itself scrolls sideways by about 150px, from the section nav's own links
-rather than from anything in a card. The same measurement on the dashboard,
-which this work did not touch, overflows by the same amount, and stashing the
-work reproduced it exactly. Related: at 1280px the bookings list runs two
+That pass ran two assertions short at first: on a phone the page itself
+scrolled sideways by about 150px, from outside the cards. It was the section
+nav, and simplifying the navigation fixed it — those two assertions pass now,
+and the pass is 70 for 70.
+
+One thing is still true and unfixed: at 1280px the bookings list runs two
 abreast and half of that is 494px, while a party's guest columns want 594px,
-so the last column or two sit behind a sideways scroll inside the party.
-That is also unchanged — stashing the work gave the identical figures — but
-the reorder changes which column falls off the edge: the ticket price used
-to, and now the Regular tick does, which is the better of the two to lose.
+so the last column or two sit behind a sideways scroll inside the party. That
+is older than any of this work — stashing it gave identical figures — but the
+reorder changes which column falls off the edge: the ticket price used to, and
+now the Regular tick does, which is the better of the two to lose.
+
+**The phone's navigation has a pass of its own: 40 assertions, run in both
+themes, 80 in all.** Three events are created and then read at 390px and at
+1280px. On a phone: the scrolling strip of events is gone and one selector
+stands in its place, naming the open event and its position; the section row
+holds Dashboard, Bookings and Expenses and nothing else; Manage events,
+Export/Import and Settings are behind More, in full words; the row has nothing
+left to scroll sideways and neither has the page; both controls keep 8px clear
+of the right edge; and the whole chrome measures 154px from the top of the
+page to the bottom of the nav. On a desktop all six items are back in one row,
+with no More button, no selector, and the rail listing all three events.
+
+The behaviour is driven rather than inspected. More starts closed and opens
+when pressed; Escape closes it and so does a press outside it; choosing
+Settings navigates to `/settings/`, closes the menu behind it and leaves More
+marked. The selector lists all three events, marks the open one, and every
+option is a real link carrying `?id=`; choosing another lands on that event's
+dashboard at a different URL, and the back button returns to the screen it
+came from. Both panels are checked with `elementFromPoint` rather than by
+their boxes, which is what caught the clipping described above. With no event
+created at all, the three app screens are the whole row and there is no More
+button to hide them behind.
 
 Still unverified: the folder picker, the permission prompt a remembered folder
 asks for on a new session, and whether Excel is happy with the workbook — all

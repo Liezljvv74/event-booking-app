@@ -38,6 +38,15 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ## Core features
 
 ### App header
+- **The section nav is one row.** From a tablet up it carries all six
+  screens: the open event's Dashboard, Bookings and Expenses, then Manage
+  events, Export/Import and Settings. On a phone it carries the event's three
+  and puts the other three behind a **More** button, which is marked while one
+  of its own screens is showing. Every item is a link to a real URL at either
+  size — nothing navigates by handler — so bookmarks, reloads and the back
+  button work throughout. With no active event the three app screens are the
+  whole row, at every width and with no More button, since Manage events is
+  then the only way back.
 - A bar across the top of every page, in three sections: the Event Diary logo
   on the left, and a middle and a right kept open for whatever they are later
   given.
@@ -50,6 +59,11 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - Any number of active events at a time, listed down the left-hand side of
   the page and switched by picking one. Each shows its name and its date
   only; an event's times are read off the dashboard heading.
+- **On a phone that list is one line**, naming the event whose screen is
+  showing and where it sits in the list, and opening the others over the
+  screen when pressed. One event is a label with nothing to press. The rail
+  and the line are both lists of links to the events' own URLs, so an event
+  can be bookmarked and the back button moves between them.
 - Each event has its own tables, bookings and expenses
 - "New Event" duplicates the previous event's expense list as a starting
   point (still editable/removable)
