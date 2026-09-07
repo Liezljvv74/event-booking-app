@@ -71,11 +71,14 @@ event manager for now. (The app may evolve into a bigger app, with more function
   that event's times — a venue's functions run to a rhythm, and the same
   weekday next week is the likeliest next one. Today's date where there is no
   event to count from.
-- **Repeat event**, beside Create event: how often it repeats — never, daily,
+- **Repeat event**, under the tables: how often it repeats — never, daily,
   weekly, monthly, or on custom dates — and, for the three fixed intervals,
   how many times. Three weekly repeats makes four events a week apart, and the
-  dates are listed under the button before it is pressed rather than left to
-  be counted.
+  dates are listed before the button is pressed rather than left to be
+  counted.
+- **Create event is the last thing in the section**, after the repeat and the
+  dates it makes. At the bottom right on a desktop; directly under the repeat
+  on a phone.
 - A monthly repeat keeps the day of the month, since that is what a monthly
   function means to whoever writes it in a diary. Where the month it lands in
   is too short for that day, the last day of that month is used: the 31st of

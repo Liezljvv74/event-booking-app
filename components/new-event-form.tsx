@@ -308,32 +308,19 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
         <TicketPricesEditor control={prices} disabled={saving} />
       </div>
 
-      {/* Last thing before the button: the tables are the event's furniture
-          rather than its identity. Manage events is where they become a list
-          — by then they differ from one another, which is the point at which
-          a list is worth reading. */}
+      {/* Last of the event's own fields: the tables are its furniture rather
+          than its identity. Manage events is where they become a list — by
+          then they differ from one another, which is the point at which a
+          list is worth reading. */}
       <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
         <TablesPlanner plan={tables} disabled={saving} />
       </div>
 
-      {error !== "" && (
-        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
-      )}
-
-      {/* No Cancel beside it: there is nothing to cancel back to now that
-          the form is always on the screen. */}
+      {/* How often, then how many, then which dates, then the button. The
+          repeat comes before the thing that acts on it: a run of four is
+          decided here, and Create 4 events is the last thing read rather
+          than a label that changed while the eye was elsewhere. */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          data-create-event
-          className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
-        >
-          {saving ? "Creating…" : made === 1 ? "Create event" : `Create ${made} events`}
-        </button>
-
         <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
           Repeat event
           <select
@@ -379,7 +366,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       </div>
 
       {/* The month itself, for the one cadence that is a list of dates rather
-          than an interval. Under the button and above the summary, so the
+          than an interval. Under the dropdown and above the summary, so the
           dates picked and the dates listed sit together. */}
       {cadence === "custom" && eventDate !== "" && (
         <RepeatCalendar
@@ -406,6 +393,31 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
                   .join(", ")}.`}
         </p>
       )}
+
+      {error !== "" && (
+        <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      )}
+
+      {/* The last thing in the section, after every answer it acts on. Right
+          of the column where the column is wide enough to have a right —
+          the far corner is where a form is finished — and straight under the
+          repeat on a phone, where a stacked form has one edge and pushing
+          the button away from it would only be further to reach.
+
+          No Cancel beside it: there is nothing to cancel back to now that
+          the form is always on the screen. */}
+      <div className="mt-4 flex @sm:justify-end">
+        <button
+          type="submit"
+          disabled={saving}
+          data-create-event
+          className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+        >
+          {saving ? "Creating…" : made === 1 ? "Create event" : `Create ${made} events`}
+        </button>
+      </div>
     </form>
   );
 }

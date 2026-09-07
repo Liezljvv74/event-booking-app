@@ -311,11 +311,19 @@ recently, on request, and on that event's times: a venue's functions run to a
 rhythm, and the same weekday next week is the likeliest next one. Today's
 date where there is no event to count from.
 
-Beside Create event is **Repeat event** — never, daily, weekly, monthly, or on
+Under the tables is **Repeat event** — never, daily, weekly, monthly, or on
 custom dates, and for the three fixed intervals how many times. Three weekly
 repeats makes four events a week apart, which is the sort of thing that has to
 be said rather than inferred, so the button reads *Create 4 events* and the
-dates are listed under it before it is pressed.
+dates are listed above it before it is pressed.
+
+**Create event comes last**, after every answer it acts on — the repeat, the
+calendar where there is one, and the dates spelled out. It used to sit at the
+head of that row, which put a button labelled *Create 4 events* to the left of
+the field that decided there were four. It is at the right of the column where
+the column is wide enough to have a right, which is the corner a form is
+finished in, and hard against the left edge on a phone, where a stacked form
+has one edge and moving the button off it would only be further to reach.
 
 A **monthly** repeat keeps the day of the month, because that is what a monthly
 function means to whoever writes it in a diary: the 14th, every month. Where
