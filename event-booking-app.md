@@ -76,9 +76,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
   how many times. Three weekly repeats makes four events a week apart, and the
   dates are listed before the button is pressed rather than left to be
   counted.
-- **Create event is the last thing in the section**, after the repeat and the
-  dates it makes. At the bottom right on a desktop; directly under the repeat
-  on a phone.
+- **Create event is the last thing in the section**, after the repeat, the
+  calendar where there is one, and the dates it makes — so in Custom dates a
+  whole month sits between the dropdown and the button. At the bottom right
+  on a desktop; hard against the left edge on a phone.
 - A monthly repeat keeps the day of the month, since that is what a monthly
   function means to whoever writes it in a diary. Where the month it lands in
   is too short for that day, the last day of that month is used: the 31st of
@@ -312,8 +313,11 @@ always in this order:
 - **Seats a new table starts with** — the spec's default is 10; a room laid
   out in eights or twelves should not be retyped table by table. Any table can
   still be given a different number.
-- **How a new event repeats** is not kept here or anywhere: it is asked on the
-  New event form and forgotten with the form.
+- **How a new event repeats** has no line here, and no setting behind one: it
+  is asked on the New event form and forgotten with the form. It is named in
+  this list only because earlier versions of this spec kept it, and a reader
+  comparing the two should not have to guess whether it was dropped or
+  overlooked.
 - **Currency** — chosen from a list, not typed as a symbol. The spec names no
   currency, so the default is none, which is what the app did before. The
   currency decides the symbol, which side of the figure it sits and what

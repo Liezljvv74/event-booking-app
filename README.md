@@ -320,10 +320,23 @@ dates are listed above it before it is pressed.
 **Create event comes last**, after every answer it acts on — the repeat, the
 calendar where there is one, and the dates spelled out. It used to sit at the
 head of that row, which put a button labelled *Create 4 events* to the left of
-the field that decided there were four. It is at the right of the column where
-the column is wide enough to have a right, which is the corner a form is
-finished in, and hard against the left edge on a phone, where a stacked form
-has one edge and moving the button off it would only be further to reach.
+the field that decided there were four. It is at the right of the column on a
+desktop, which is the corner a form is finished in, and hard against the left
+edge on a phone, which has one edge and nothing to gain from the button
+leaving it.
+
+That switch reads the screen's width and not the column's — the only one in
+this form that does, since every other breakpoint here is a container query.
+Desktop and phone are what the two positions were asked for by, and the
+column's width says nothing about either: it is 516px at a 1280px window and
+399px on a Pixel 7. Both container breakpoints either side were tried and
+each broke one half. The *@sm* one turns at 24rem, under the column on most
+large phones, so the button right-aligned over a stacked form on exactly the
+screens the left edge was for — and 390px, where it was first checked, sat
+10px below the line, which is how it passed. The *@xl* one turns at 36rem,
+over the column at 1280, so the button sat hard left on a desktop. The
+viewport *sm:* is the 640px the rest of the app already treats as the end of
+a phone.
 
 A **monthly** repeat keeps the day of the month, because that is what a monthly
 function means to whoever writes it in a diary: the 14th, every month. Where
@@ -768,10 +781,12 @@ tables block on Manage events fills in for you, and it is read once when a
 form opens rather than watched, so changing the setting never renumbers seats
 in a form somebody is halfway through.
 
-*How a new event repeats* is deliberately **not** stored, here or anywhere.
-It is asked on the New event form and forgotten with the form: unlike the seat
-count, it is not a standing fact about the venue but a request about one
-booking, and one that creates events by itself if it is remembered wrongly.
+*How a new event repeats* is deliberately **not** stored, here or anywhere,
+and so has no line on this screen either — it is named here only because it
+had one of these paragraphs while it was a setting. It is asked on the New
+event form and forgotten with the form: unlike the seat count, it is not a
+standing fact about the venue but a request about one booking, and one that
+creates events by itself if it is remembered wrongly.
 
 *The currency.* Chosen from a list rather than typed as a symbol, on request,
 and the difference is not cosmetic: typing "R" says what character to put in

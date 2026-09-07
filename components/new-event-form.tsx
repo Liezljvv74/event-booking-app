@@ -29,7 +29,7 @@ import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";
  * each is described once the dates are known.
  *
  * The wording is here rather than in the summary line because the two have to
- * agree: whatever the dropdown is called, the line under the button says what
+ * agree: whatever the dropdown is called, the line above the button says what
  * that choice actually did.
  */
 const CADENCES: readonly {
@@ -123,7 +123,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
    *
    * "Weekly, 3 times" means three more after the first — which is the same
    * week the date above is defaulted by, so a rhythm entered once carries
-   * through the lot. The line under the button spells the dates out rather
+   * through the lot. The line above the button spells the dates out rather
    * than leaving the counting to be done twice.
    */
   const [cadence, setCadence] = useState<RepeatCadence>(
@@ -146,8 +146,8 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
    * Called during render as well as on submit — the button says how many
    * events it is about to make — so it reports a bad count as a message
    * rather than throwing, and answers for an empty date field too. Without
-   * that last guard the arithmetic below runs on nothing and the line under
-   * the button reads NaN-NaN-NaN.
+   * that last guard the arithmetic below runs on nothing and the summary
+   * line reads NaN-NaN-NaN.
    */
   function repeatedDates(): { dates: string[] } | { error: string } {
     if (eventDate === "") return { error: "Pick an event date." };
@@ -241,7 +241,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   }
 
   // What the button is about to make, worked out once for the label and the
-  // line beneath it.
+  // summary line above it.
   const planned = repeatedDates();
   const made = "error" in planned ? 1 : planned.dates.length;
 
@@ -401,14 +401,26 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
       )}
 
       {/* The last thing in the section, after every answer it acts on. Right
-          of the column where the column is wide enough to have a right —
-          the far corner is where a form is finished — and straight under the
-          repeat on a phone, where a stacked form has one edge and pushing
-          the button away from it would only be further to reach.
+          of the column on anything wider than a phone — the far corner is
+          where a form is finished — and hard against the left edge on a
+          phone, which has one edge and nothing to gain from the button
+          leaving it.
+
+          On the screen's width, not the column's, and this is the only
+          placement in the form that wants the screen: desktop and phone are
+          what the two positions were asked for by, and the column's width
+          is no guide to either. It is 516px at a 1280px window and 399px on
+          a Pixel 7 — close enough that a container breakpoint falls either
+          between them or below both. Both were tried. @sm turns at 24rem,
+          under the column on most large phones, so the button right-aligned
+          over a stacked form on exactly the screens the left edge was for;
+          @xl turns at 36rem, over the column at 1280, so it sat hard left
+          on a desktop. sm: is the 640px the rest of the app already treats
+          as the end of a phone.
 
           No Cancel beside it: there is nothing to cancel back to now that
           the form is always on the screen. */}
-      <div className="mt-4 flex @sm:justify-end">
+      <div className="mt-4 flex sm:justify-end">
         <button
           type="submit"
           disabled={saving}
