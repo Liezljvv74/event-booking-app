@@ -11,7 +11,6 @@ import {
   AUTO_CLOSE_AFTER_HOURS,
   DEFAULT_SETTINGS,
   DEFAULT_TABLE_SHAPE,
-  MAX_REPEATS,
   MAX_RETENTION_DAYS,
   MAX_SEAT_COUNT,
   MIN_RETENTION_DAYS,
@@ -1688,16 +1687,6 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
     throw new Error(`"${cadence}" is not a way an event can repeat.`);
   }
 
-  const repeats = patch.repeatTimes;
-  if (repeats !== undefined) {
-    if (!Number.isInteger(repeats) || repeats < 1) {
-      throw new Error("An event repeats at least once.");
-    }
-    if (repeats > MAX_REPEATS) {
-      throw new Error(`${MAX_REPEATS} repeats is as many as one press makes.`);
-    }
-  }
-
   return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
     const row = await getOne<SettingsRow>(
       transaction,
@@ -1715,7 +1704,6 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
       regulars: merged.regulars,
       regularsPartyName: merged.regularsPartyName,
       repeatCadence: merged.repeatCadence,
-      repeatTimes: merged.repeatTimes,
       exportDirectory: merged.exportDirectory,
     };
     await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });

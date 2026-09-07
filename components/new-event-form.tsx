@@ -9,7 +9,7 @@ import {
 } from "@/lib/event-time";
 import type { EventTimes } from "@/lib/repository";
 import type { NewEventInput } from "@/lib/use-events";
-import { MAX_REPEATS, type RepeatCadence, type Settings } from "@/lib/types";
+import { MAX_REPEATS, type RepeatCadence } from "@/lib/types";
 import {
   TicketPricesEditor,
   useTicketPriceRows,
@@ -114,8 +114,10 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
    *
    * Opened on the rhythm the last event was scheduled to, which is kept with
    * the settings: a venue whose function is weekly should say so once. The
-   * dates of a custom run are not remembered with it, because particular days
-   * are about the events they made and not about the venue.
+   * count is not kept with it and opens at 1 — how often the place holds a
+   * function is standing, how many to book in one press is about the booking
+   * in hand. Nor are the dates of a custom run, because particular days are
+   * about the events they made and not about the venue.
    *
    * "Weekly, 3 times" means three more after the first — which is the same
    * week the date above is defaulted by, so a rhythm entered once carries
@@ -123,7 +125,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
    * than leaving the counting to be done twice.
    */
   const [cadence, setCadence] = useState<RepeatCadence>(settings.repeatCadence);
-  const [times, setTimes] = useState(String(settings.repeatTimes));
+  const [times, setTimes] = useState("1");
   const [customDates, setCustomDates] = useState<string[]>([]);
 
   /** The same date so many intervals on, for whichever interval is set. */
@@ -225,12 +227,10 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
        * it, and a remounted form opens on whatever the settings say — so a
        * selection written after the events would be written after the form
        * that reads it had already opened, and the run just scheduled would
-       * come back as Never. The count goes with it for the intervals that
-       * take one; Never and a picked list count nothing.
+       * come back as Never. The cadence alone: the count opens at 1 each
+       * time, so there is nothing else to write.
        */
-      const rhythm: Partial<Settings> = { repeatCadence: cadence };
-      if (countsRepeats(cadence)) rhythm.repeatTimes = Number(times);
-      await saveSetting(rhythm);
+      await saveSetting({ repeatCadence: cadence });
 
       await onCreate(
         dates.dates.map((date) => ({

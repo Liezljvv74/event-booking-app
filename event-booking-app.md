@@ -87,10 +87,12 @@ event manager for now. (The app may evolve into a bigger app, with more function
   and a second way to change it that disagreed with the first would be worse
   than no second way at all.
 - **How it repeats is remembered**, and is what the next new event opens on: a
-  venue whose function is weekly should say so once. The count is remembered
-  with it, since "weekly" and "weekly, four times" are one decision. The dates
-  of a custom run are not — particular days are about the events they made,
-  so a form opening on Custom dates opens on an empty calendar.
+  venue whose function is weekly should say so once. Only the cadence — the
+  count opens at 1 every time, since how many functions to book in one press
+  is a decision about the booking in hand rather than about the venue. The
+  dates of a custom run are not remembered either — particular days are about
+  the events they made, so a form opening on Custom dates opens on an empty
+  calendar.
 
 ### Tables
 - Simple numbered list, no visual floor plan yet.  

@@ -338,11 +338,11 @@ disagreed with the first would be worse than no second way at all.
 
 **How it repeats is remembered**, and is what the next new event opens on — a
 venue whose function is weekly says so once and stops saying it, which is why
-the selection is kept with the settings rather than with any event. The count
-goes with it, because "weekly" and "weekly, four times" are one decision about
-the rhythm and remembering half of it would have every run of four reopen as a
-run of one. It is written just before the events are created rather than
-after: the screen clears the form by remounting it, and a form opens on
+the selection is kept with the settings rather than with any event. The
+cadence alone: the times box opens at 1 every time, because how often the
+place holds a function is standing and how many of them to book in one press
+is about the booking in hand. It is written just before the events are created
+rather than after: the screen clears the form by remounting it, and a form opens on
 whatever the settings then say, so a selection saved afterwards would arrive
 too late to be read and the run just scheduled would come back as *Never*.
 The dates of a custom run are not remembered — particular days are about the

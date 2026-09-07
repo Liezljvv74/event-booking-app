@@ -276,18 +276,13 @@ export interface Settings {
    * "custom" is remembered as the choice but the dates are not: a list of
    * particular days is about the events it made and nothing else, so a form
    * opening on Custom opens on an empty calendar.
+   *
+   * The cadence alone is kept, never the number of times it was set to
+   * repeat. How often a venue holds a function is a standing fact about the
+   * place; how many of them to book in one press is a decision about the
+   * booking in hand, so the count opens at 1 every time.
    */
   repeatCadence: RepeatCadence;
-  /**
-   * How many repeats that cadence was set to make, for the intervals that
-   * take a count. Remembered alongside the cadence, because "weekly" and
-   * "weekly, four times" are one decision about the rhythm and remembering
-   * half of it would have every run of four reopen as a run of one.
-   *
-   * Ignored while the cadence is "none" or "custom", neither of which counts
-   * anything. At least 1, never more than MAX_REPEATS.
-   */
-  repeatTimes: number;
   /**
    * The currency amounts are shown in, as an ISO 4217 code — "ZAR", "GBP" —
    * or empty for none, which is what the app did before this existed and
@@ -316,7 +311,6 @@ export const DEFAULT_SETTINGS: Settings = {
   regulars: [],
   regularsPartyName: REGULARS_PARTY,
   repeatCadence: DEFAULT_REPEAT_CADENCE,
-  repeatTimes: 1,
   exportDirectory: null,
 };
 
