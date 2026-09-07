@@ -327,9 +327,19 @@ export default function BookingsScreen() {
           guest count.
         </p>
       ) : (
-        /* Two parties abreast once there is room for both. A party's guest
-           rows need 36rem before they start scrolling sideways, and half of
-           an `xl` screen still clears that, so the split costs nothing.
+        /* Two parties abreast once there is genuinely room for both, which
+           is `2xl` and not `xl`. The old comment here claimed half of an `xl`
+           screen cleared what the guest columns need; measuring said
+           otherwise — half of 1280px leaves a party 494px and the columns
+           want 594, so the split was hiding the last of them behind a
+           sideways scroll at the three commonest laptop widths there are.
+           At 1536px each half has 622px and the columns fit.
+
+           The party card also measures itself now, so a party too narrow for
+           columns lays its guests out as stacked cards rather than clipping
+           them. The two work together: this decides how many parties fit
+           abreast, and the card decides what it can show in the width it
+           ends up with.
 
            Aligned to the top rather than stretched: one party open beside one
            closed should leave the closed one its own height, not a card of
@@ -337,9 +347,9 @@ export default function BookingsScreen() {
 
            Every column is minmax(0,1fr), the one below the split included: a
            bare `grid` sizes its implicit column to the widest thing in it,
-           which on a phone is the 36rem of guest columns, and the page then
-           scrolls sideways instead of the guest rows doing it. */
-        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-x-8 gap-y-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+           which on a phone is the guest columns, and the page then scrolls
+           sideways instead of the party doing it. */
+        <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-x-8 gap-y-3 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {event.bookings.map((booking) => (
             <BookingCard
               key={booking.id}

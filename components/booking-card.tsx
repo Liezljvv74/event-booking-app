@@ -2,9 +2,11 @@
 
 import { useId, useState } from "react";
 import {
+  ATTENDEE_CONTAINER,
   ATTENDEE_GRID,
-  ATTENDEE_MIN_WIDTH,
+  ATTENDEE_OVERFLOW,
   AttendeeRow,
+  GUEST_TICK_CLASS,
 } from "@/components/attendee-row";
 
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
@@ -198,7 +200,13 @@ export function BookingCard({
     <li
       data-booking={booking.id}
       data-has-unseated={unseated > 0 && !allCancelled ? "" : undefined}
-      className={`rounded-lg border p-2 ${
+      /* Capped, because a party stopped running two abreast until 1536px and
+         a single one then stretched to the full width of a 1440px window. The
+         columns are fixed but the name is `1fr`, so all of that slack went
+         into one field: a 640px box for a person and a cross to cancel them
+         at the far end of the screen. 54rem is about the width a party had at
+         1100px, which already read well. */
+      className={`max-w-[54rem] rounded-lg border p-2 ${
         unseated > 0 && !allCancelled
           ? "border-amber-400 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-950/30"
           : "border-zinc-200 dark:border-zinc-800"
@@ -413,16 +421,18 @@ export function BookingCard({
             on their own read as a table waiting to be filled. The header
             line above already says the party is off. */}
         {allCancelled ? null : (
-        /* The columns are narrower than a tablet, so from `sm` up they scroll
-           sideways here rather than wrapping each guest onto several lines. A
-           phone gets no columns to scroll: each guest is a stacked card that
-           carries its own field names. */
-        <div className="mt-2 sm:overflow-x-auto">
-          <div className={ATTENDEE_MIN_WIDTH}>
+        /* The guests measure themselves against this party, not against the
+           window. A party is a table of columns where it is wide enough to
+           hold one and a list of stacked cards where it is not, which is a
+           question only the card can answer: the list runs two abreast on a
+           wide screen, so a party can be 494px inside a 1280px window. */
+        <div className={`mt-2 ${ATTENDEE_CONTAINER}`}>
+          <div className={ATTENDEE_OVERFLOW}>
             {/* The column headings, and the tick that takes the whole party
-                on a move. On a phone the headings go — each card says its own
-                field names — and the tick stays, with the words it needs now
-                that it has no column to sit under. */}
+                on a move. Where the party is too narrow for columns the
+                headings go — each card says its own field names — and the
+                tick stays, with the words it needs once it has no column to
+                sit under. */}
             <div
               className={`${ATTENDEE_GRID} flex items-center gap-2 px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
             >
@@ -439,21 +449,26 @@ export function BookingCard({
                       : new Set(),
                   )
                 }
-                className="h-5 w-5 shrink-0 accent-black sm:h-4 sm:w-4 sm:justify-self-center dark:accent-zinc-300"
+                className={GUEST_TICK_CLASS}
               />
-              <span className="sm:hidden">Select all</span>
-              <span className="hidden sm:block">Name</span>
-              <span className="hidden sm:block">Status</span>
-              <span className="hidden sm:block">Table</span>
-              <span className="hidden sm:block">Ticket</span>
-              <span className="hidden text-center sm:block">Regular</span>
-              <span className="hidden sm:block" />
+              <span className="@min-[38rem]/guests:hidden">Select all</span>
+              <span className="hidden @min-[38rem]/guests:block">Name</span>
+              <span className="hidden @min-[38rem]/guests:block">Status</span>
+              <span className="hidden @min-[38rem]/guests:block">Table</span>
+              <span className="hidden @min-[38rem]/guests:block">Ticket</span>
+              <span className="hidden text-center @min-[38rem]/guests:block">
+                Regular
+              </span>
+              <span className="hidden @min-[38rem]/guests:block" />
             </div>
 
             {/* The rows Enter walks down, one list per party: Enter on the
                 last guest adds another and goes to it. Cards need air between
                 them; rows in the grid do not. */}
-            <ul data-list className="flex flex-col gap-2 sm:gap-0.5">
+            <ul
+              data-list
+              className="flex flex-col gap-2 @min-[38rem]/guests:gap-0.5"
+            >
               {live.map((attendee, index) => (
                 <AttendeeRow
                   key={attendee.id}

@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import {
-  CARD_LABEL_CLASS,
-  DENSE_FIELD_CLASS,
   FIELD_LABEL_CLASS,
-  TICK_CLASS,
+  FIELD_SHAPE,
+  TICK_SHAPE,
 } from "@/components/form-styles";
 import { formatCents, parseCents } from "@/lib/money";
 import { tableOccupancy, type AttendeePatch } from "@/lib/repository";
@@ -34,51 +33,111 @@ const LIVE_STATUSES: readonly AttendeeStatus[] = [
 ];
 
 /**
- * One grid template shared by the header and every row, so the columns line
- * up without a real table — and only from `sm` up. Seven columns want 36rem
- * of width, which is more than a phone has; below that a guest is a stacked
- * card carrying its own field names, and the header goes away.
+ * How wide a party has to be before its guests can be a table.
  *
- * The fields are in one order at both sizes. The card stacks that order top
- * to bottom, the grid lays the same order out left to right, and nothing is
+ * Seven columns have a floor of 594px — the six fixed tracks, the six gaps
+ * between them and the name column with its 7rem minimum — so this is that,
+ * rounded up to 38rem for a little slack.
+ *
+ * Asked of the **container** rather than of the window, and that is the whole
+ * of the fix. A `sm:` breakpoint answers "is the screen wide", which turns out
+ * not to be the question: a party card can be narrow on a very wide screen.
+ * Two separate bands of width proved it. On a tablet between 640px and about
+ * 830px the list is one column and a party had 398 to 526px; from 1280px the
+ * list ran two abreast and each party had 494 to 574px. Both are under 594, so
+ * both hid the last columns behind a sideways scroll inside the card — and no
+ * viewport breakpoint can tell either of them apart from the 900px screen
+ * where the same one-column layout has 658px and fits perfectly well.
+ *
+ * Written out in full at every use below, `@min-[38rem]/guests:` and its
+ * `@max-` twin, and never assembled from a constant. Tailwind reads the source
+ * text for class names it should generate CSS for; a name built at runtime by
+ * interpolating a prefix is a name it never sees, and the utility simply does
+ * not exist in the stylesheet. Which is silent — the markup looks right, the
+ * class is on the element, and nothing happens.
+ */
+
+/**
+ * One grid template shared by the header and every row, so the columns line
+ * up without a real table — and only once the party is wide enough to hold
+ * it. Below that a guest is a stacked card carrying its own field names, and
+ * the header goes away.
+ *
+ * The fields are in one order either way. The card stacks that order top to
+ * bottom, the grid lays the same order out left to right, and nothing is
  * moved by `order-*` or by a grid line — so Tab, and a screen reader, follow
- * the eye on a phone exactly as they do on a desktop. Agreeing on one order
+ * the eye in the card exactly as they do in the table. Agreeing on one order
  * is what put Status up beside the name and moved Regular down beside the
  * cross: a card has to say who this guest is and whether they have paid
  * before it says anything else, and the row has to read the way the card
  * does.
  */
 export const ATTENDEE_GRID =
-  "sm:grid sm:items-center sm:gap-2 " +
-  "sm:grid-cols-[1.25rem_minmax(7rem,1fr)_8rem_5rem_7rem_3.5rem_2.5rem]";
+  "@min-[38rem]/guests:grid @min-[38rem]/guests:items-center " +
+  "@min-[38rem]/guests:gap-2 " +
+  "@min-[38rem]/guests:grid-cols-[1.25rem_minmax(7rem,1fr)_8rem_5rem_7rem_3.5rem_2.5rem]";
 
-/** Narrower than a tablet, so the columns scroll sideways instead of wrapping. */
-export const ATTENDEE_MIN_WIDTH = "sm:min-w-[36rem]";
+/**
+ * The party declares itself the thing those columns measure against. Named,
+ * so the query cannot be answered by some other container added later.
+ */
+export const ATTENDEE_CONTAINER = "@container/guests";
+
+/**
+ * A last resort rather than the mechanism. The container query is what keeps
+ * the columns from overflowing; this is here so that if one ever does grow
+ * past its floor, the party scrolls and not the page. No panel hangs inside
+ * the guest area, so the `overflow-y` that `overflow-x` promotes to `auto`
+ * has nothing to clip — which it did have in the section nav.
+ */
+export const ATTENDEE_OVERFLOW = "@min-[38rem]/guests:overflow-x-auto";
+
+/** A guest field: thumb-sized on the card, tightened in the table. */
+const GUEST_FIELD_CLASS =
+  `h-11 text-base ${FIELD_SHAPE} ` +
+  "@min-[38rem]/guests:h-9 @min-[38rem]/guests:text-sm";
+
+/** A field name above it on the card, gone once the header carries it. */
+const GUEST_LABEL_CLASS =
+  `mb-0.5 block @min-[38rem]/guests:hidden ${FIELD_LABEL_CLASS}`;
+
+/** A tick box: a thumb's width on the card, a pointer's in the table. */
+export const GUEST_TICK_CLASS =
+  `h-5 w-5 ${TICK_SHAPE} ` +
+  "@min-[38rem]/guests:h-4 @min-[38rem]/guests:w-4 " +
+  "@min-[38rem]/guests:justify-self-center";
 
 /**
  * Cancelling a guest, which is the one thing on this row that cannot be
  * undone.
  *
  * On the card it is fenced off below a red rule and says what it does in
- * words: the fields above it are all thumb-sized now, and a bare cross among
- * them is too easy to hit by accident. In the grid it stays the square cross
- * it has always been — one of these sits on every guest of every party, and
- * the word said the same thing a dozen times down a column.
+ * words: the fields above it are all thumb-sized there, and a bare cross
+ * among them is too easy to hit by accident. In the table it stays the square
+ * cross it has always been — one of these sits on every guest of every party,
+ * and the word said the same thing a dozen times down a column.
  *
- * Every colour is stated once for the phone and once for the tablet, as a
- * `max-sm:`/`sm:` pair that cannot both apply. Two unprefixed utilities for
+ * Every colour is stated once for the card and once for the table, as a
+ * `@max-`/`@min-` pair that cannot both apply. Two unprefixed utilities for
  * one property would leave the winner to whichever Tailwind happened to emit
  * last, which is how the orange lost to the black the first time.
  */
 const CANCEL_CLASS =
   "rounded-md border leading-none disabled:opacity-50 " +
-  "max-sm:h-11 max-sm:w-full max-sm:border-red-300 max-sm:text-sm " +
-  "max-sm:font-medium max-sm:text-red-700 max-sm:hover:bg-red-50 " +
-  "dark:max-sm:border-red-800 dark:max-sm:text-red-400 " +
-  "dark:max-sm:hover:bg-red-950/40 " +
-  "sm:h-9 sm:w-9 sm:justify-self-center sm:border-zinc-300 sm:text-base " +
-  "sm:text-zinc-700 sm:hover:bg-zinc-100 " +
-  "dark:sm:border-zinc-700 dark:sm:text-zinc-300 dark:sm:hover:bg-zinc-900";
+  "@max-[38rem]/guests:h-11 @max-[38rem]/guests:w-full " +
+  "@max-[38rem]/guests:border-red-300 @max-[38rem]/guests:text-sm " +
+  "@max-[38rem]/guests:font-medium @max-[38rem]/guests:text-red-700 " +
+  "@max-[38rem]/guests:hover:bg-red-50 " +
+  "dark:@max-[38rem]/guests:border-red-800 " +
+  "dark:@max-[38rem]/guests:text-red-400 " +
+  "dark:@max-[38rem]/guests:hover:bg-red-950/40 " +
+  "@min-[38rem]/guests:h-9 @min-[38rem]/guests:w-9 " +
+  "@min-[38rem]/guests:justify-self-center " +
+  "@min-[38rem]/guests:border-zinc-300 @min-[38rem]/guests:text-base " +
+  "@min-[38rem]/guests:text-zinc-700 @min-[38rem]/guests:hover:bg-zinc-100 " +
+  "dark:@min-[38rem]/guests:border-zinc-700 " +
+  "dark:@min-[38rem]/guests:text-zinc-300 " +
+  "dark:@min-[38rem]/guests:hover:bg-zinc-900";
 
 /**
  * Option values in the ticket column that are not one of the event's prices:
@@ -199,7 +258,7 @@ export function AttendeeRow({
       data-list-row
       // Enter moves down the column; every field in the row bubbles to here.
       onKeyDown={enterMovesDown(onAddGuest)}
-      className="rounded-md border border-zinc-200 p-2 sm:rounded-none sm:border-0 sm:p-0 dark:border-zinc-800"
+      className="rounded-md border border-zinc-200 p-2 @min-[38rem]/guests:rounded-none @min-[38rem]/guests:border-0 @min-[38rem]/guests:p-0 dark:border-zinc-800"
     >
       <div className={ATTENDEE_GRID}>
         {/* Who this is: the tick that takes them on a batch move, and the
@@ -209,7 +268,7 @@ export function AttendeeRow({
             `sm` up, where it dissolves and hands both fields straight to the
             grid as its first two columns. Every group below works the same
             way, which is what lets one order serve both layouts. */}
-        <div className="flex items-center gap-2 sm:contents">
+        <div className="flex items-center gap-2 @min-[38rem]/guests:contents">
           <input
             type="checkbox"
             checked={selected}
@@ -217,7 +276,7 @@ export function AttendeeRow({
             aria-label={`Select guest ${position} to move`}
             data-select-attendee={attendee.id}
             onChange={(changed) => onSelect(changed.target.checked)}
-            className={TICK_CLASS}
+            className={GUEST_TICK_CLASS}
           />
 
           <input
@@ -236,14 +295,14 @@ export function AttendeeRow({
                 commitName();
               }
             }}
-            className={DENSE_FIELD_CLASS}
+            className={GUEST_FIELD_CLASS}
           />
         </div>
 
         {/* Straight under the name, because whether a guest has paid is the
             other thing worth knowing before any of the detail. */}
-        <div className="mt-2 sm:contents">
-          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="mt-2 @min-[38rem]/guests:contents">
+          <span aria-hidden="true" className={GUEST_LABEL_CLASS}>
               Status
             </span>
           <select
@@ -255,7 +314,7 @@ export function AttendeeRow({
             onChange={(changed) =>
               void apply({ status: changed.target.value as AttendeeStatus })
             }
-            className={DENSE_FIELD_CLASS}
+            className={GUEST_FIELD_CLASS}
           >
             {LIVE_STATUSES.map((status) => (
               <option key={status} value={status}>
@@ -269,9 +328,9 @@ export function AttendeeRow({
             booking, below the name and the status that identify it. Two
             abreast on a phone — both are short, and a card that has to be
             scrolled past ten times cannot spend a whole line on each. */}
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:contents">
-          <div className="sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="mt-2 grid grid-cols-2 gap-2 @min-[38rem]/guests:contents">
+          <div className="@min-[38rem]/guests:contents">
+            <span aria-hidden="true" className={GUEST_LABEL_CLASS}>
               Table
             </span>
             <select
@@ -288,7 +347,7 @@ export function AttendeeRow({
                       : Number(changed.target.value),
                 })
               }
-              className={DENSE_FIELD_CLASS}
+              className={GUEST_FIELD_CLASS}
             >
               <option value="">-</option>
               {seating.map((entry) => {
@@ -322,8 +381,8 @@ export function AttendeeRow({
               that is what almost every guest is on. Typing an amount is
               still open to whoever needs it, behind the last option — and it
               is the only control on an event whose prices were never set. */}
-          <div className="sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+          <div className="@min-[38rem]/guests:contents">
+            <span aria-hidden="true" className={GUEST_LABEL_CLASS}>
               Ticket
             </span>
             {onList && !typing ? (
@@ -349,7 +408,7 @@ export function AttendeeRow({
                     void apply({ ticketPriceCents: chosen.amountCents });
                   }
                 }}
-                className={DENSE_FIELD_CLASS}
+                className={GUEST_FIELD_CLASS}
               >
                 {event.ticketPrices.map((candidate) => (
                   <option key={candidate.id} value={candidate.id}>
@@ -400,7 +459,7 @@ export function AttendeeRow({
                     setTyping(false);
                   }
                 }}
-                className={DENSE_FIELD_CLASS}
+                className={GUEST_FIELD_CLASS}
               />
             )}
           </div>
@@ -411,7 +470,7 @@ export function AttendeeRow({
             same table when it is created. It used to sit between the name and
             the table, which is the place a phone card can least afford it —
             the two things a card must say first are the name and the status. */}
-        <div className="mt-2 flex items-center gap-2 sm:contents">
+        <div className="mt-2 flex items-center gap-2 @min-[38rem]/guests:contents">
           <input
             type="checkbox"
             checked={attendee.regularId !== null}
@@ -432,9 +491,12 @@ export function AttendeeRow({
                 .catch((caught: unknown) => setError(describeError(caught)))
                 .finally(() => setBusy(false));
             }}
-            className={TICK_CLASS}
+            className={GUEST_TICK_CLASS}
           />
-          <span aria-hidden="true" className={`sm:hidden ${FIELD_LABEL_CLASS}`}>
+          <span
+            aria-hidden="true"
+            className={`@min-[38rem]/guests:hidden ${FIELD_LABEL_CLASS}`}
+          >
             Regular
           </span>
         </div>
@@ -447,7 +509,7 @@ export function AttendeeRow({
             replaced said "Cancel" and the accessible name said "Cancel guest
             3", neither of which is a person; a cross has nothing but its
             name, so the name should be the one thing that tells them apart. */}
-        <div className="mt-2 border-t border-red-200 pt-2 sm:contents dark:border-red-900/60">
+        <div className="mt-2 border-t border-red-200 pt-2 @min-[38rem]/guests:contents dark:border-red-900/60">
           <button
             type="button"
             onClick={() => void onCancel()}
@@ -461,8 +523,8 @@ export function AttendeeRow({
             data-cancel-attendee={attendee.id}
             className={CANCEL_CLASS}
           >
-            <span className="sm:hidden">Cancel guest</span>
-            <span aria-hidden="true" className="hidden sm:inline">
+            <span className="@min-[38rem]/guests:hidden">Cancel guest</span>
+            <span aria-hidden="true" className="hidden @min-[38rem]/guests:inline">
               ×
             </span>
           </button>

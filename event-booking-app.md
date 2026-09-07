@@ -132,15 +132,24 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - A party with any guest still unseated is tinted amber on the bookings
   screen, so it can be found while scrolling. A wholly cancelled party is
   not: nobody in it has a seat and nobody in it is coming.
-- **A guest is a row of columns on a tablet or a desktop, and a stacked card
-  on a phone.** The columns are narrower than a phone can show, so below
-  roughly 640px each guest becomes a card carrying its own field names: the
-  name and the payment status first, because they say who this is and whether
-  they have paid; the table and the ticket price beneath them; the Regular
-  tick after those; and cancelling the guest fenced off at the foot of the
-  card, below a red rule, in words rather than as a bare cross. The fields are
-  in one order at both sizes — see **Typing a list** — which is why the status
-  sits beside the name in the columns too.
+- **A guest is a row of columns where the party is wide enough for them, and
+  a stacked card where it is not.** The columns need 594px; the party card
+  measures itself and shows a table above 38rem of its own width and cards
+  below it. That is a question about the card and not about the window: the
+  bookings list runs two parties abreast on a wide screen, so a party can be
+  narrow inside a large monitor, and a tablet holding one party per row can be
+  narrower still.
+  - As a card, each guest carries its own field names: the name and the
+    payment status first, because between them they say who this is and
+    whether they have paid; the table and the ticket price beneath them; the
+    Regular tick after those; and cancelling the guest fenced off at the foot,
+    below a red rule, in words rather than as a bare cross.
+  - The fields are in one order either way — see **Typing a list** — which is
+    why the status sits beside the name in the columns too.
+- **The bookings list runs two parties abreast once each half can hold the
+  guest columns**, which is 1536px and not 1280px. A party is capped at 54rem
+  so that a single one on a wide screen does not stretch its name field across
+  the window.
 
 ### Expenses
 - Add line items (description + amount) per event. The blank line to type

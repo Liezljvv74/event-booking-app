@@ -479,16 +479,25 @@ that still fits it, so part-filled tables fill before new ones open; a party
 too large for any one table is split across the closest run of tables that
 can take it, and the screen says where everyone went.
 
-A guest is a row of columns on a tablet or a desktop and a **stacked card on
-a phone**. Seven columns want 36rem, which is more than a phone has, so below
-`sm` each guest becomes a card that carries its own field names: the name and
-the payment status first, the table and the ticket price two abreast beneath
-them, the Regular tick after those, and **Cancel guest** fenced off at the
-foot below a red rule, in words rather than as a bare cross. The column
-headings go on a phone, having nothing left to label, and the tick that takes
+A guest is a row of columns where the party is wide enough to hold them and a
+**stacked card** where it is not. The columns need 594px, and **the party card
+measures itself** — a container query at 38rem of its own width, not a `sm:`
+breakpoint against the window. As a card each guest carries its own field
+names: the name and the payment status first, the table and the ticket price
+two abreast beneath them, the Regular tick after those, and **Cancel guest**
+fenced off at the foot below a red rule, in words rather than as a bare cross.
+The column headings go, having nothing left to label, and the tick that takes
 the whole party on a move stays with the word *Select all* beside it. The
-fields, the tick boxes and that button are all thumb-sized below `sm` and
-back to pointer size above it.
+fields, the tick boxes and that button are all thumb-sized on the card and
+back to pointer size in the table.
+
+The list runs **two parties abreast from 1536px**, where each half has 622px
+and the columns fit. It used to split at 1280px on the strength of a comment
+claiming half an `xl` screen cleared what the columns need; it did not — half
+of 1280 leaves a party 494px — so the last columns were hidden behind a
+sideways scroll at the three commonest laptop widths there are. A party is
+also capped at 54rem, so a single one below the split does not stretch its
+name field across a 1440px window.
 
 ### Ticket prices
 
@@ -815,10 +824,12 @@ The ones that were argued out and would otherwise be re-litigated:
 - **A grid column that must shrink is `minmax(0,1fr)`, never `1fr`.** Both
   two-column screens say so explicitly, the single column below the split
   included. A bare `grid` sizes its implicit column to the widest thing in
-  it, and on Bookings that is the 36rem the guest columns need — so the page
+  it, and on Bookings that was the 594px the guest columns need — so the page
   itself began scrolling sideways on a phone instead of the guest rows doing
   it, which is the one thing the spec's mobile rule forbids. It cost nothing
-  to fix and would have been easy to ship.
+  to fix and would have been easy to ship. The guest rows no longer overflow
+  at all, since the party card only draws them when it has room, but the rule
+  stands for whatever is put in that column next.
 - **The two columns measure themselves, not the window.** An opened event and
   the New event form are the same four fields across, and half of a wide
   window is not the same width as a whole narrow one — so the rows inside each
@@ -957,6 +968,32 @@ The ones that were argued out and would otherwise be re-litigated:
   `dark:` forms of each sit one depth above their own light form exactly as
   everywhere else in the app. Both were read back out of `getComputedStyle` at
   both widths in both themes rather than trusted.
+- **A table that can be narrow on a wide screen asks its container, not the
+  window.** The guest columns need 594px and were switched on at `sm`, which
+  is a question about the screen. It is the wrong question. Measuring across
+  twelve widths found two separate bands where a party had less than 594px and
+  clipped its last columns: 640 to about 830px, where the list is one column
+  on a tablet and a party had 398 to 526px, and 1280px up, where the list ran
+  two abreast and each party had 494 to 574px. No viewport breakpoint can tell
+  either band apart from the 900px screen where the same one-column layout has
+  658px and fits.
+
+  So the party card declares `@container/guests` and the guest row asks
+  `@min-[38rem]/guests:`. The two-abreast split moved from `xl` to `2xl` as
+  well, because 1280 to 1440 is where most laptops live and a table is the
+  better thing to show there; between them, the split decides how many parties
+  fit abreast and the card decides what it can draw in the width it is given.
+  Capping a party at 54rem is the third part: without it a single party below
+  the split stretched its `1fr` name column to 640px, with the cross that
+  cancels a guest at the far end of the window.
+- **A Tailwind class assembled from a constant does not exist.** The obvious
+  way to write the above is `const GRID_AT = "@min-[38rem]/guests"` and then
+  `` `${GRID_AT}:grid` ``. Tailwind reads the *source text* for the class names
+  it should generate CSS for, so a name built at run time is a name it never
+  sees: the markup looks right, the class is on the element, and no rule
+  exists. It fails silently, which is the worst way for it to fail. Every one
+  of these variants is written out in full, and the build was checked for
+  `@container guests (min-width:38rem)` in the emitted CSS rather than assumed.
 - **`overflow-x: auto` takes `overflow-y` with it, and that ate a menu.** The
   phone's More menu hangs below its row from `top-full`. The row carried
   `overflow-x-auto` — left over from when six items had to scroll — and CSS
@@ -1102,12 +1139,15 @@ scrolled sideways by about 150px, from outside the cards. It was the section
 nav, and simplifying the navigation fixed it — those two assertions pass now,
 and the pass is 70 for 70.
 
-One thing is still true and unfixed: at 1280px the bookings list runs two
-abreast and half of that is 494px, while a party's guest columns want 594px,
-so the last column or two sit behind a sideways scroll inside the party. That
-is older than any of this work — stashing it gave identical figures — but the
-reorder changes which column falls off the edge: the ticket price used to, and
-now the Regular tick does, which is the better of the two to lose.
+The guest columns being clipped inside a party is fixed too, and has a pass of
+its own: **36 assertions across twelve widths** — 640, 700, 768, 900, 1024,
+1100, 1280, 1366, 1440, 1536, 1680 and 1920px — each checking that no guest
+column is hidden behind a sideways scroll, that the page itself does not scroll
+sideways, and that the party is laid out as cards below about 830px and as a
+table above it. The same sweep before the change is what found the two bands
+of clipping in the first place, and it still prints the room each layout has
+against what the columns want, so the next change to either can be measured
+rather than guessed at.
 
 **The phone's navigation has a pass of its own: 40 assertions, run in both
 themes, 80 in all.** Three events are created and then read at 390px and at
