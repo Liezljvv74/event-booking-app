@@ -53,7 +53,7 @@ export const EXPENSE_OVERFLOW = "@min-[40rem]/lines:overflow-x-auto";
 
 /** A line's field: thumb-sized in the stack, tightened in the columns. */
 export const LINE_FIELD_CLASS =
-  `h-11 text-base ${FIELD_SHAPE} ` +
+  `h-11 w-full text-base ${FIELD_SHAPE} ` +
   "@min-[40rem]/lines:h-9 @min-[40rem]/lines:text-sm";
 
 /** A field name above it in the stack, gone once the header carries it. */

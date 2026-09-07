@@ -133,17 +133,26 @@ event manager for now. (The app may evolve into a bigger app, with more function
   screen, so it can be found while scrolling. A wholly cancelled party is
   not: nobody in it has a seat and nobody in it is coming.
 - **A guest is a row of columns where the party is wide enough for them, and
-  a stacked card where it is not.** The columns need 594px; the party card
-  measures itself and shows a table above 38rem of its own width and cards
-  below it. That is a question about the card and not about the window: the
-  bookings list runs two parties abreast on a wide screen, so a party can be
-  narrow inside a large monitor, and a tablet holding one party per row can be
-  narrower still.
-  - As a card, each guest carries its own field names: the name and the
-    payment status first, because between them they say who this is and
-    whether they have paid; the table and the ticket price beneath them; the
-    Regular tick after those; and cancelling the guest fenced off at the foot,
-    below a red rule, in words rather than as a bare cross.
+  one compact line where it is not.** The columns need 594px; the party card
+  measures itself and shows a table above 38rem of its own width. That is a
+  question about the card and not about the window: the bookings list runs two
+  parties abreast on a wide screen, so a party can be narrow inside a large
+  monitor, and a tablet holding one party per row can be narrower still.
+  - **The compact line** is the guest's name, their status as a word beneath
+    it, the table as a dropdown, and a cross. Three things can be done from
+    there and no more: change the table, cancel that one guest, or tap the
+    line to open the full detail. Ten guests are then ten lines rather than
+    ten cards of six dropdowns, and the two facts worth scanning for — who,
+    and have they paid — are the two the line leads with.
+  - **The full detail opens over the screen**, with every field on it: name,
+    status, table, ticket price, the Regular tick and Cancel guest. It is the
+    same arrangement the columns hold, stacked. Fields commit as they are
+    left, exactly as they do in the table, so Done only closes it; Escape, the
+    cross and a press outside close it too, and cancelling the guest from
+    inside closes it because there is no longer a guest to show.
+  - **The batch-move ticks belong to the table.** Picking several guests to
+    move together needs room to show what was picked, so the compact line has
+    no tick and the party has no Select all beside it; the table keeps both.
   - The fields are in one order either way — see **Typing a list** — which is
     why the status sits beside the name in the columns too.
 - **The bookings list runs two parties abreast once each half can hold the

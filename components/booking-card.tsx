@@ -429,12 +429,12 @@ export function BookingCard({
         <div className={`mt-2 ${ATTENDEE_CONTAINER}`}>
           <div className={ATTENDEE_OVERFLOW}>
             {/* The column headings, and the tick that takes the whole party
-                on a move. Where the party is too narrow for columns the
-                headings go — each card says its own field names — and the
-                tick stays, with the words it needs once it has no column to
-                sit under. */}
+                on a move. Both belong to the table and go with it: the
+                compact line has no tick to select, since picking several
+                guests to move together is a thing for a screen with room to
+                show what was picked. */}
             <div
-              className={`${ATTENDEE_GRID} flex items-center gap-2 px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
+              className={`${ATTENDEE_GRID} hidden px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
             >
               <input
                 type="checkbox"
@@ -451,23 +451,22 @@ export function BookingCard({
                 }
                 className={GUEST_TICK_CLASS}
               />
-              <span className="@min-[38rem]/guests:hidden">Select all</span>
-              <span className="hidden @min-[38rem]/guests:block">Name</span>
-              <span className="hidden @min-[38rem]/guests:block">Status</span>
-              <span className="hidden @min-[38rem]/guests:block">Table</span>
-              <span className="hidden @min-[38rem]/guests:block">Ticket</span>
-              <span className="hidden text-center @min-[38rem]/guests:block">
-                Regular
-              </span>
-              <span className="hidden @min-[38rem]/guests:block" />
+              <span>Name</span>
+              <span>Status</span>
+              <span>Table</span>
+              <span>Ticket</span>
+              <span className="text-center">Regular</span>
+              <span />
             </div>
 
             {/* The rows Enter walks down, one list per party: Enter on the
                 last guest adds another and goes to it. Cards need air between
                 them; rows in the grid do not. */}
+            {/* Compact lines want a hair of air between them; rows of the
+                table do not. */}
             <ul
               data-list
-              className="flex flex-col gap-2 @min-[38rem]/guests:gap-0.5"
+              className="flex flex-col gap-1.5 @min-[38rem]/guests:gap-0.5"
             >
               {live.map((attendee, index) => (
                 <AttendeeRow

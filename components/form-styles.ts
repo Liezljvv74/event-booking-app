@@ -22,20 +22,29 @@
  */
 
 /**
- * Everything about a text, date, time or number input except how tall it is
- * and how big its text is: the full width of whatever holds it, and the
- * borders and colours that make it a field rather than a word.
+ * Everything about a text, date, time or number input except its size: the
+ * borders and colours that make it a field rather than a word, and nothing
+ * about how wide or tall it is.
+ *
+ * No width, and that was a bug once. It used to carry `w-full`, which every
+ * caller wanted until one did not: the table field on a compact guest line is
+ * 5.5rem, and `w-[5.5rem]` beside an unprefixed `w-full` is two utilities for
+ * one property with the winner left to whichever Tailwind emitted last. It
+ * emitted `w-full`, the field came out 346px wide, and the cross beside it was
+ * pushed off the edge of the page. Width belongs to whoever knows how wide the
+ * field should be.
  */
 export const FIELD_SHAPE =
-  "w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 " +
+  "min-w-0 rounded-md border border-zinc-300 bg-white px-2 " +
   "text-black disabled:opacity-50 " +
   "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
 
 /**
- * That field, sized against the viewport: tall enough to hit with a thumb,
- * and one step shorter from `sm` up where a pointer is doing the hitting.
+ * That field, sized against the viewport: the full width of whatever holds
+ * it, tall enough to hit with a thumb, and one step shorter from `sm` up
+ * where a pointer is doing the hitting.
  */
-export const FIELD_CLASS = `h-11 text-base ${FIELD_SHAPE} sm:h-9`;
+export const FIELD_CLASS = `h-11 w-full text-base ${FIELD_SHAPE} sm:h-9`;
 
 /**
  * The same field where several sit across one line — the price rows and the

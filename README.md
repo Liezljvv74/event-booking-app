@@ -479,17 +479,32 @@ that still fits it, so part-filled tables fill before new ones open; a party
 too large for any one table is split across the closest run of tables that
 can take it, and the screen says where everyone went.
 
-A guest is a row of columns where the party is wide enough to hold them and a
-**stacked card** where it is not. The columns need 594px, and **the party card
-measures itself** — a container query at 38rem of its own width, not a `sm:`
-breakpoint against the window. As a card each guest carries its own field
-names: the name and the payment status first, the table and the ticket price
-two abreast beneath them, the Regular tick after those, and **Cancel guest**
-fenced off at the foot below a red rule, in words rather than as a bare cross.
-The column headings go, having nothing left to label, and the tick that takes
-the whole party on a move stays with the word *Select all* beside it. The
-fields, the tick boxes and that button are all thumb-sized on the card and
-back to pointer size in the table.
+A guest is a row of columns where the party is wide enough to hold them and
+**one compact line** where it is not. The columns need 594px, and **the party
+card measures itself** — a container query at 38rem of its own width, not a
+`sm:` breakpoint against the window.
+
+The compact line is the name, the status as a word beneath it, the table as a
+dropdown and a cross. **Three things can be done from it and no more**: change
+the table, cancel that one guest, or tap the line to open the full detail.
+Everything else is behind that tap. It replaced a stacked card of six controls
+per guest, which meant a party of ten was a very long scroll of dropdowns with
+the two facts worth scanning for — who, and have they paid — spread down it;
+ten guests are now ten lines of 56px.
+
+**The detail opens over the screen** and holds every field: name, status,
+table, ticket price, the Regular tick and **Cancel guest** below a red rule.
+It is the same arrangement the columns hold, stacked, and not a second copy of
+it — see the note in *Decisions worth remembering*. Fields commit as they are
+left, exactly as in the table, so **Done** only closes the panel; Escape, the
+cross and a press outside do the same, and cancelling the guest from inside
+closes it because there is no guest left to show. Closing puts the cursor back
+on the line it came from.
+
+**The batch-move ticks stay with the table.** Picking several guests to travel
+together needs room to show what was picked, so the compact line has no tick
+and the party header has no *Select all* beside it. Cancelling a whole party is
+still the cross in the party header, in both layouts.
 
 The list runs **two parties abreast from 1536px**, where each half has 622px
 and the columns fit. It used to split at 1280px on the strength of a comment
@@ -996,6 +1011,28 @@ The ones that were argued out and would otherwise be re-litigated:
   Capping a party at 54rem is the third part: without it a single party below
   the split stretched its `1fr` name column to 640px, with the cross that
   cancels a guest at the far end of the window.
+- **A modal cannot live inside a container query.** `container-type:
+  inline-size` gives an element layout containment, which makes it a
+  containing block for `position: fixed` descendants — so the guest detail,
+  rendered inside the party card that declares `@container/guests`, would be
+  pinned to a card 340px wide instead of to the window. It is portalled to
+  `<body>` instead.
+
+  Which raises the opposite problem: outside the container, none of the
+  `@max-[38rem]/guests:` classes match, so the fields would arrive with no
+  layout at all. The panel therefore declares `@container/guests` itself, at
+  26rem — below the threshold — and the very same `GuestFields` component
+  lays itself out in the stacked shape without a single class written twice.
+  The fields follow the width of whatever they are in, wherever that is.
+- **Width is not part of a field's shape.** `FIELD_SHAPE` used to include
+  `w-full`, which every caller wanted until one did not: the table dropdown on
+  a compact line is 5.5rem, and `w-[5.5rem]` beside an unprefixed `w-full` is
+  two utilities for one property with the winner left to whichever Tailwind
+  emitted last. It emitted `w-full`; the field came out 346px wide and pushed
+  the cross off the edge of the page. The browser pass caught it as 46px of
+  sideways scroll, which is the only reason it was found — it looked right in
+  every other respect. Width now belongs to whoever knows how wide the field
+  should be.
 - **A Tailwind class assembled from a constant does not exist.** The obvious
   way to write the above is `const GRID_AT = "@min-[38rem]/guests"` and then
   `` `${GRID_AT}:grid` ``. Tailwind reads the *source text* for the class names
@@ -1141,8 +1178,28 @@ card's own field names are gone; both crosses are 36 by 36 and grey; and the
 running total's right edge still lines up with the amount column's.
 
 Enter was checked at both widths, since the whole arrangement turns on the
-markup order it reads: it still steps down the name column in the grid and
-down the stacked cards on a phone.
+markup order it reads: it still steps down the name column in the table, and
+the compact line is confirmed to hold no typed field for it to walk — there is
+nothing to type on that line, which is the point of it.
+
+**The compact line and the detail behind it have a pass of their own: 37
+assertions, run in both themes, 74 in all.** At 390px: a guest is one line of
+56px rather than a card; it shows the name and the status as a word; the table
+dropdown reads the table the guest is at and offers the free ones; the cross is
+there; and none of the other seven controls is on the line. Select all and the
+column headings are gone with the ticks they belonged to.
+
+Then the behaviour, driven: tapping the line opens the detail, which is
+confirmed to be a child of `<body>` and confirmed painted with
+`elementFromPoint` rather than by its box; every field is in it, the
+batch-move tick is not, and the fields measure 44px, which is the stacked
+shape. Changing the status inside it reaches the line behind it — *Paid* to
+*Not paying* — and the panel stays open while more is edited. Done closes it
+and returns the cursor to the line; Escape closes it; the body can scroll
+again afterwards. The table dropdown on the line moves the guest to table 2,
+and the cross takes one guest of three off the party and puts them under
+Cancelled guests. At 1280px all seven controls are back on the row, Select all
+and the headings with them, and there is no second table field beside them.
 
 That pass ran two assertions short at first: on a phone the page itself
 scrolled sideways by about 150px, from outside the cards. It was the section
