@@ -144,6 +144,12 @@ event manager for now. (The app may evolve into a bigger app, with more function
     line to open the full detail. Ten guests are then ten lines rather than
     ten cards of six dropdowns, and the two facts worth scanning for — who,
     and have they paid — are the two the line leads with.
+  - One **heading row** names those columns for the whole party, *Guest* and
+    *Table*, rather than a label above every dropdown: a label per guest would
+    cost a line of height on each of them, which is the room the compact line
+    exists to save. Only two of the three cells are named — a name reads as a
+    name and "Paid" reads as a status, but a bare number beside a red cross
+    does not read as a table until something says so.
   - **The full detail opens over the screen**, with every field on it: name,
     status, table, ticket price, the Regular tick and Cancel guest. It is the
     same arrangement the columns hold, stacked. Fields commit as they are

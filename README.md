@@ -485,8 +485,15 @@ card measures itself** — a container query at 38rem of its own width, not a
 `sm:` breakpoint against the window.
 
 The compact line is the name, the status as a word beneath it, the table as a
-dropdown and a cross. **Three things can be done from it and no more**: change
-the table, cancel that one guest, or tap the line to open the full detail.
+dropdown and a cross, under one heading row per party reading *Guest* and
+*Table*. **Three things can be done from it and no more**: change the table,
+cancel that one guest, or tap the line to open the full detail.
+
+The headings are a row for the party rather than a label above every dropdown,
+because a label per guest costs a line of height on each of them — the room
+the compact line exists to save. Only two of the three cells are named: a name
+reads as a name and *Paid* reads as a status, but a bare number beside a red
+cross does not read as a table until something says so.
 Everything else is behind that tap. It replaced a stacked card of six controls
 per guest, which meant a party of ten was a very long scroll of dropdowns with
 the two facts worth scanning for — who, and have they paid — spread down it;

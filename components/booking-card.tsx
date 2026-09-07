@@ -459,10 +459,31 @@ export function BookingCard({
               <span />
             </div>
 
+            {/* The compact list gets a heading of its own, in the same three
+                cells its lines use so each word stands over its column.
+
+                One row for the whole party rather than a label above every
+                dropdown: a label per guest would cost ten lines of height on
+                a party of ten, which is the room the compact line was made to
+                save. Only two of the three are named — a name reads as a name
+                and "Paid" reads as a status, but a bare number beside a red
+                cross does not read as a table until something says so. */}
+            <div
+              aria-hidden="true"
+              data-guest-line-headings
+              className="flex items-center gap-2 px-1 pb-1 text-xs text-zinc-500 @min-[38rem]/guests:hidden dark:text-zinc-500"
+            >
+              <span className="min-w-0 flex-1 px-1">Guest</span>
+              <span data-heading-table className="w-[5.5rem] shrink-0">
+                Table
+              </span>
+              <span className="w-11 shrink-0" />
+            </div>
+
             {/* The rows Enter walks down, one list per party: Enter on the
-                last guest adds another and goes to it. Cards need air between
-                them; rows in the grid do not. */}
-            {/* Compact lines want a hair of air between them; rows of the
+                last guest adds another and goes to it.
+
+                Compact lines want a hair of air between them; rows of the
                 table do not. */}
             <ul
               data-list
