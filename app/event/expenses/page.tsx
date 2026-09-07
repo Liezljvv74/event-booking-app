@@ -170,9 +170,11 @@ export default function ExpensesScreen() {
         </p>
       )}
 
-      {/* Six columns are wider than a phone, so they scroll sideways here
-          rather than wrapping each line onto several rows. */}
-      <div className="mt-3 overflow-x-auto">
+      {/* Six columns are wider than a tablet, so from `sm` up they scroll
+          sideways here rather than wrapping each line onto several rows. A
+          phone gets no columns to scroll: each line is a vertical group of
+          labelled fields instead. */}
+      <div className="mt-3 sm:overflow-x-auto">
         {/* The rows Enter walks down: every expense line, and then the blank
             one when it is open. They are marked from here rather than from
             the <ul>, because the blank line is that list's last row and sits
@@ -182,9 +184,11 @@ export default function ExpensesScreen() {
           {/* Only where there is something under them to label. With no
               lines and nothing being added they were six words above an
               empty space. */}
+          {/* Gone on a phone as well, where every field on every line
+              carries its own name. */}
           {(event.expenses.length > 0 || adding) && (
             <div
-              className={`${EXPENSE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
+              className={`${EXPENSE_GRID} hidden px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
               aria-hidden="true"
             >
               <span>Description</span>
@@ -196,8 +200,9 @@ export default function ExpensesScreen() {
             </div>
           )}
 
+          {/* Cards need air between them; rows in the grid do not. */}
           {event.expenses.length > 0 && (
-            <ul className="flex flex-col gap-0.5">
+            <ul className="flex flex-col gap-2 sm:gap-0.5">
               {event.expenses.map((expense) => (
                 <ExpenseRow
                   key={expense.id}
@@ -212,36 +217,44 @@ export default function ExpensesScreen() {
           )}
 
           {/* The running total sits in the amount column, under the figures
-              it adds up. */}
+              it adds up. On a phone there is no amount column to sit in, so
+              the three figures spread across one line of their own — and the
+              blanks that hold the empty columns apart go, since a flex row
+              would space itself around them. */}
           {event.expenses.length > 0 && (
             <div
-              className={`${EXPENSE_GRID} border-t border-zinc-200 pt-1.5 dark:border-zinc-800`}
+              className={`${EXPENSE_GRID} mt-2 border-t border-zinc-200 pt-1.5 sm:mt-0 dark:border-zinc-800`}
             >
-              <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                Total
-              </span>
-              <span />
-              <span
-                data-expense-total
-                className="text-right text-sm font-semibold text-black dark:text-zinc-50"
-              >
-                {money(summary.allCents)}
-              </span>
-              <span />
-              <span
-                data-expense-outstanding
-                className="text-xs text-zinc-600 dark:text-zinc-400"
-              >
-                {summary.outstandingCents === 0
-                  ? "all paid"
-                  : `${money(summary.outstandingCents)} outstanding`}
-              </span>
-              <span />
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 sm:contents">
+                <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Total
+                </span>
+                <span className="hidden sm:block" />
+                <span
+                  data-expense-total
+                  className="text-sm font-semibold text-black sm:text-right dark:text-zinc-50"
+                >
+                  {money(summary.allCents)}
+                </span>
+                <span className="hidden sm:block" />
+                <span
+                  data-expense-outstanding
+                  className="text-xs text-zinc-600 dark:text-zinc-400"
+                >
+                  {summary.outstandingCents === 0
+                    ? "all paid"
+                    : `${money(summary.outstandingCents)} outstanding`}
+                </span>
+                <span className="hidden sm:block" />
+              </div>
             </div>
           )}
 
           {adding && (
-            <div data-list-row className="mt-3">
+            <div
+              data-list-row
+              className="mt-3 rounded-md border border-zinc-200 p-2 sm:rounded-none sm:border-0 sm:p-0 dark:border-zinc-800"
+            >
               <NewExpenseRow
                 templates={available}
                 onAdd={(input) => addExpenseLine(event.id, input)}

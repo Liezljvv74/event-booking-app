@@ -1,6 +1,11 @@
 "use client";
 
 import { useId, useState } from "react";
+import {
+  CARD_LABEL_CLASS,
+  DENSE_FIELD_CLASS,
+  TICK_CLASS,
+} from "@/components/form-styles";
 import { formatCents, parseCents } from "@/lib/money";
 import type { ExpensePatch } from "@/lib/repository";
 import type { Expense, ExpenseTemplate } from "@/lib/types";
@@ -10,17 +15,42 @@ import { useMoney } from "@/components/event-provider";
 
 /**
  * One grid template shared by the header, every line and the add row, so the
- * columns line up without a real table element. Notes and description get
- * the flexible width; the amount, the tick and the button are fixed.
+ * columns line up without a real table element — and only from `sm` up. Notes
+ * and description get the flexible width; the amount, the tick and the button
+ * are fixed.
+ *
+ * Six columns want 42rem, which is wider than any phone. Below `sm` a line is
+ * a vertical group of labelled fields instead, in the order they are written
+ * in: nothing is moved by `order-*` or by a grid line, so Tab and a screen
+ * reader follow the eye at either size.
  */
 export const EXPENSE_GRID =
-  "grid grid-cols-[minmax(8rem,1.3fr)_minmax(7rem,1fr)_6rem_3rem_minmax(8rem,1.3fr)_4.5rem] items-center gap-2";
+  "sm:grid sm:items-center sm:gap-2 " +
+  "sm:grid-cols-[minmax(8rem,1.3fr)_minmax(7rem,1fr)_6rem_3rem_minmax(8rem,1.3fr)_4.5rem]";
 
-/** Wider than a phone, so the columns scroll sideways instead of wrapping. */
-export const EXPENSE_MIN_WIDTH = "min-w-[42rem]";
+/** Wider than a tablet, so the columns scroll sideways instead of wrapping. */
+export const EXPENSE_MIN_WIDTH = "sm:min-w-[42rem]";
 
-export const expenseFieldClass =
-  "h-9 w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50";
+/**
+ * Clearing a line: off this event, and kept in the saved lines to be picked
+ * again on the next one.
+ *
+ * Set apart below a rule on the card, the way the guest row sets its cancel
+ * apart, but in the app's ordinary grey rather than in red. Cancelling a
+ * guest cannot be undone; this can, by picking the line back out of the
+ * dropdown, so it is not the same kind of button and should not wear the same
+ * colour.
+ *
+ * The width and the type size are stated once for the phone and once for the
+ * tablet, as a `max-sm:`/`sm:` pair that cannot both apply. The colours are
+ * the same at both sizes and so are said once, unprefixed.
+ */
+const CLEAR_CLASS =
+  "rounded-md border border-zinc-300 leading-none text-zinc-700 " +
+  "hover:bg-zinc-100 disabled:opacity-50 " +
+  "max-sm:h-11 max-sm:w-full max-sm:text-sm max-sm:font-medium " +
+  "sm:h-9 sm:w-9 sm:justify-self-center sm:text-base " +
+  "dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900";
 
 interface Props {
   expense: Expense;
@@ -150,102 +180,157 @@ export function ExpenseRow({
   }
 
   return (
+    /**
+     * A card on a phone, a bare row from `sm` up. The border is what tells
+     * one line from the next once the fields are stacked; in the grid the
+     * columns lining up already do it.
+     */
     <li
       data-expense={expense.id}
       data-list-row
       // Enter moves down the column; every field in the row bubbles to here.
       onKeyDown={enterMovesDown(onEnter)}
-      className={paid ? "opacity-70" : ""}
+      className={`rounded-md border border-zinc-200 p-2 sm:rounded-none sm:border-0 sm:p-0 dark:border-zinc-800 ${
+        paid ? "opacity-70" : ""
+      }`}
     >
       <div className={EXPENSE_GRID}>
-        <input
-          type="text"
-          list={savedLinesId}
-          value={description}
-          disabled={busy}
-          aria-label={`Description of ${expense.description}`}
-          data-expense-description={expense.id}
-          data-list-field="description"
-          onChange={(changed) => setDescription(changed.target.value)}
-          onBlur={commitDescription}
-          onKeyDown={keyCommit(commitDescription)}
-          className={expenseFieldClass}
-        />
+        {/* What the cost was, which is the line's name. First on the card and
+            first in the row.
 
-        <input
-          type="text"
-          value={provider}
-          disabled={busy}
-          placeholder="-"
-          aria-label={`Provider for ${expense.description}`}
-          data-expense-provider={expense.id}
-          data-list-field="provider"
-          onChange={(changed) => setProvider(changed.target.value)}
-          onBlur={() => commitText("provider", provider, setProvider)}
-          onKeyDown={keyCommit(() =>
-            commitText("provider", provider, setProvider),
-          )}
-          className={expenseFieldClass}
-        />
+            Each group below is a line of the card on a phone, and `contents`
+            from `sm` up, where it dissolves and hands its fields straight to
+            the grid. That is what lets one order of fields serve both. */}
+        <div className="sm:contents">
+          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+            Description
+          </span>
+          <input
+            type="text"
+            list={savedLinesId}
+            value={description}
+            disabled={busy}
+            aria-label={`Description of ${expense.description}`}
+            data-expense-description={expense.id}
+            data-list-field="description"
+            onChange={(changed) => setDescription(changed.target.value)}
+            onBlur={commitDescription}
+            onKeyDown={keyCommit(commitDescription)}
+            className={DENSE_FIELD_CLASS}
+          />
+        </div>
 
-        <input
-          type="text"
-          inputMode="decimal"
-          value={amount}
-          disabled={busy}
-          aria-label={`Amount of ${expense.description}`}
-          data-expense-amount={expense.id}
-          data-list-field="amount"
-          onChange={(changed) => setAmount(changed.target.value)}
-          onBlur={commitAmount}
-          onKeyDown={keyCommit(commitAmount)}
-          className={`${expenseFieldClass} text-right`}
-        />
+        {/* Who it went to, how much it was, and whether it has gone out yet.
+            One line of the card between them: all three are short, and a
+            line on its own for each would make a card of six. */}
+        <div className="mt-2 flex items-end gap-2 sm:contents">
+          <div className="min-w-0 flex-1 sm:contents">
+            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+              Provider
+            </span>
+            <input
+              type="text"
+              value={provider}
+              disabled={busy}
+              placeholder="-"
+              aria-label={`Provider for ${expense.description}`}
+              data-expense-provider={expense.id}
+              data-list-field="provider"
+              onChange={(changed) => setProvider(changed.target.value)}
+              onBlur={() => commitText("provider", provider, setProvider)}
+              onKeyDown={keyCommit(() =>
+                commitText("provider", provider, setProvider),
+              )}
+              className={DENSE_FIELD_CLASS}
+            />
+          </div>
 
-        <input
-          type="checkbox"
-          checked={paid}
-          disabled={busy}
-          aria-label={`${expense.description} is paid`}
-          data-expense-paid={expense.id}
-          data-list-field="paid"
-          onChange={(changed) => {
-            const wanted = changed.target.checked;
-            setPaid(wanted);
-            void apply({ paid: wanted }, () => setPaid(expense.paid));
-          }}
-          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
-        />
+          <div className="w-24 shrink-0 sm:contents">
+            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+              Amount
+            </span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              disabled={busy}
+              aria-label={`Amount of ${expense.description}`}
+              data-expense-amount={expense.id}
+              data-list-field="amount"
+              onChange={(changed) => setAmount(changed.target.value)}
+              onBlur={commitAmount}
+              onKeyDown={keyCommit(commitAmount)}
+              className={`${DENSE_FIELD_CLASS} text-right`}
+            />
+          </div>
 
-        <input
-          type="text"
-          value={notes}
-          disabled={busy}
-          placeholder="-"
-          aria-label={`Notes on ${expense.description}`}
-          data-expense-notes={expense.id}
-          data-list-field="notes"
-          onChange={(changed) => setNotes(changed.target.value)}
-          onBlur={() => commitText("notes", notes, setNotes)}
-          onKeyDown={keyCommit(() => commitText("notes", notes, setNotes))}
-          className={expenseFieldClass}
-        />
+          {/* The tick sits low enough on the card for its middle to line up
+              with the middle of the two boxes beside it, which its label
+              above and its smaller height would otherwise put it above. */}
+          <div className="flex shrink-0 flex-col items-center sm:contents">
+            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+              Paid
+            </span>
+            <input
+              type="checkbox"
+              checked={paid}
+              disabled={busy}
+              aria-label={`${expense.description} is paid`}
+              data-expense-paid={expense.id}
+              data-list-field="paid"
+              onChange={(changed) => {
+                const wanted = changed.target.checked;
+                setPaid(wanted);
+                void apply({ paid: wanted }, () => setPaid(expense.paid));
+              }}
+              className={`${TICK_CLASS} max-sm:mb-3`}
+            />
+          </div>
+        </div>
 
-        {/* Square, so it reads as a cross rather than as a word. What it
-            does is in its name and its tooltip, which is where the word went:
-            a line's own button does not need to spell itself out in a column
-            it shares with nineteen others saying the same thing. */}
-        <button
-          type="button"
-          onClick={() => void onClear()}
-          disabled={busy}
-          aria-label={`Clear ${expense.description}`}
-          title="Clear this line, keeping it in the saved lines"
-          data-expense-clear={expense.id}
-          className="h-9 w-9 justify-self-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-        >
-          <span aria-hidden="true">×</span>
-        </button>
+        {/* Whatever else is worth writing down, on a line of its own: it is
+            the one field here with no length to it. */}
+        <div className="mt-2 sm:contents">
+          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+            Notes
+          </span>
+          <input
+            type="text"
+            value={notes}
+            disabled={busy}
+            placeholder="-"
+            aria-label={`Notes on ${expense.description}`}
+            data-expense-notes={expense.id}
+            data-list-field="notes"
+            onChange={(changed) => setNotes(changed.target.value)}
+            onBlur={() => commitText("notes", notes, setNotes)}
+            onKeyDown={keyCommit(() => commitText("notes", notes, setNotes))}
+            className={DENSE_FIELD_CLASS}
+          />
+        </div>
+
+        {/* Set apart at the foot of the card, away from the fields a thumb
+            has just been over. In the grid it is the square cross it has
+            always been: what it does is in its name and its tooltip, which
+            is where the word went — a line's own button does not need to
+            spell itself out in a column it shares with nineteen others
+            saying the same thing. */}
+        <div className="mt-2 border-t border-zinc-200 pt-2 sm:contents dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => void onClear()}
+            disabled={busy}
+            aria-label={`Clear ${expense.description}`}
+            title="Clear this line, keeping it in the saved lines"
+            data-expense-clear={expense.id}
+            className={CLEAR_CLASS}
+          >
+            <span className="sm:hidden">Clear line</span>
+            <span aria-hidden="true" className="hidden sm:inline">
+              ×
+            </span>
+          </button>
+        </div>
       </div>
 
       <datalist id={savedLinesId} data-saved-lines={expense.id}>

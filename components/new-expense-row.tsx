@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { EXPENSE_GRID } from "@/components/expense-row";
 import {
-  EXPENSE_GRID,
-  expenseFieldClass,
-} from "@/components/expense-row";
+  CARD_LABEL_CLASS,
+  DENSE_FIELD_CLASS,
+  TICK_CLASS,
+} from "@/components/form-styles";
 import { formatCents, parseCents } from "@/lib/money";
 import type { ExpenseInput } from "@/lib/repository";
 import type { ExpenseTemplate } from "@/lib/types";
@@ -29,8 +31,10 @@ interface Props {
 }
 
 /**
- * A blank line to fill in, sharing the table's columns so it is typed where
- * it will end up rather than in a separate form above or below the list.
+ * A blank line to fill in, sharing the columns of the lines above it so it is
+ * typed where it will end up rather than in a separate form above or below
+ * the list — and, on a phone, sharing their stacked shape for the same
+ * reason.
  *
  * It used to sit at the foot of the list permanently, an empty row on every
  * visit whether or not anything was being added. Now the Add button at the
@@ -169,77 +173,110 @@ export function NewExpenseRow({
       data-new-expense
     >
       <div className={EXPENSE_GRID}>
-        <input
-          type="text"
-          list={savedLinesId}
-          value={description}
-          disabled={saving}
-          aria-required="true"
-          aria-label="New expense description"
-          name="description"
-          data-list-field="description"
-          ref={descriptionField}
-          onChange={(changed) => changeDescription(changed.target.value)}
-          className={expenseFieldClass}
-        />
+        {/* The same groups, in the same order, as a line already saved: one
+            per line of the card on a phone, and `contents` from `sm` up
+            where they dissolve into the grid. */}
+        <div className="sm:contents">
+          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+            Description
+          </span>
+          <input
+            type="text"
+            list={savedLinesId}
+            value={description}
+            disabled={saving}
+            aria-required="true"
+            aria-label="New expense description"
+            name="description"
+            data-list-field="description"
+            ref={descriptionField}
+            onChange={(changed) => changeDescription(changed.target.value)}
+            className={DENSE_FIELD_CLASS}
+          />
+        </div>
 
-        <input
-          type="text"
-          value={provider}
-          disabled={saving}
-          placeholder="Optional"
-          aria-label="New expense provider"
-          name="provider"
-          data-list-field="provider"
-          onChange={(changed) => setProvider(changed.target.value)}
-          className={expenseFieldClass}
-        />
+        <div className="mt-2 flex items-end gap-2 sm:contents">
+          <div className="min-w-0 flex-1 sm:contents">
+            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+              Provider
+            </span>
+            <input
+              type="text"
+              value={provider}
+              disabled={saving}
+              placeholder="Optional"
+              aria-label="New expense provider"
+              name="provider"
+              data-list-field="provider"
+              onChange={(changed) => setProvider(changed.target.value)}
+              className={DENSE_FIELD_CLASS}
+            />
+          </div>
 
-        <input
-          type="text"
-          inputMode="decimal"
-          value={amount}
-          disabled={saving}
-          aria-required="true"
-          placeholder="0.00"
-          aria-label="New expense amount"
-          name="amount"
-          data-list-field="amount"
-          onChange={(changed) => setAmount(changed.target.value)}
-          className={`${expenseFieldClass} text-right`}
-        />
+          <div className="w-24 shrink-0 sm:contents">
+            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+              Amount
+            </span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              disabled={saving}
+              aria-required="true"
+              placeholder="0.00"
+              aria-label="New expense amount"
+              name="amount"
+              data-list-field="amount"
+              onChange={(changed) => setAmount(changed.target.value)}
+              className={`${DENSE_FIELD_CLASS} text-right`}
+            />
+          </div>
 
-        <input
-          type="checkbox"
-          checked={paid}
-          disabled={saving}
-          aria-label="New expense is already paid"
-          name="paid"
-          data-list-field="paid"
-          onChange={(changed) => setPaid(changed.target.checked)}
-          className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
-        />
+          <div className="flex shrink-0 flex-col items-center sm:contents">
+            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+              Paid
+            </span>
+            <input
+              type="checkbox"
+              checked={paid}
+              disabled={saving}
+              aria-label="New expense is already paid"
+              name="paid"
+              data-list-field="paid"
+              onChange={(changed) => setPaid(changed.target.checked)}
+              className={`${TICK_CLASS} max-sm:mb-3`}
+            />
+          </div>
+        </div>
 
-        <input
-          type="text"
-          value={notes}
-          disabled={saving}
-          placeholder="Optional"
-          aria-label="New expense notes"
-          name="notes"
-          data-list-field="notes"
-          onChange={(changed) => setNotes(changed.target.value)}
-          className={expenseFieldClass}
-        />
+        <div className="mt-2 sm:contents">
+          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+            Notes
+          </span>
+          <input
+            type="text"
+            value={notes}
+            disabled={saving}
+            placeholder="Optional"
+            aria-label="New expense notes"
+            name="notes"
+            data-list-field="notes"
+            onChange={(changed) => setNotes(changed.target.value)}
+            className={DENSE_FIELD_CLASS}
+          />
+        </div>
 
         {/* Save and discard share the last column, which is one button wide,
-            so the cross is square and the word goes on the other one. */}
-        <div className="flex items-center gap-1">
+            so the cross is square and the word goes on the other one. This
+            group stays a box of its own at both sizes — two buttons cannot
+            dissolve into one grid cell — and on the card it is set apart at
+            the foot the way a saved line's Clear is. */}
+        <div className="mt-2 flex items-center gap-2 border-t border-zinc-200 pt-2 sm:mt-0 sm:gap-1 sm:border-0 sm:pt-0 dark:border-zinc-800">
           <button
             type="submit"
             disabled={saving}
             data-add-expense
-            className="h-9 flex-1 rounded-md bg-black text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
+            className="h-11 flex-1 rounded-md bg-black text-sm font-medium text-white disabled:opacity-50 sm:h-9 sm:text-xs dark:bg-zinc-50 dark:text-black"
           >
             {saving ? "…" : "Save"}
           </button>
@@ -250,7 +287,7 @@ export function NewExpenseRow({
             aria-label="Discard this new expense line"
             title="Discard this line"
             data-cancel-expense
-            className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            className="h-11 w-11 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 sm:h-9 sm:w-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
           >
             <span aria-hidden="true">×</span>
           </button>

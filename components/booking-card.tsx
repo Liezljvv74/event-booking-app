@@ -413,12 +413,18 @@ export function BookingCard({
             on their own read as a table waiting to be filled. The header
             line above already says the party is off. */}
         {allCancelled ? null : (
-        /* The columns are narrower than a phone, so they scroll sideways
-           here rather than wrapping each guest onto several lines. */
-        <div className="mt-2 overflow-x-auto">
+        /* The columns are narrower than a tablet, so from `sm` up they scroll
+           sideways here rather than wrapping each guest onto several lines. A
+           phone gets no columns to scroll: each guest is a stacked card that
+           carries its own field names. */
+        <div className="mt-2 sm:overflow-x-auto">
           <div className={ATTENDEE_MIN_WIDTH}>
+            {/* The column headings, and the tick that takes the whole party
+                on a move. On a phone the headings go — each card says its own
+                field names — and the tick stays, with the words it needs now
+                that it has no column to sit under. */}
             <div
-              className={`${ATTENDEE_GRID} px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
+              className={`${ATTENDEE_GRID} flex items-center gap-2 px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
             >
               <input
                 type="checkbox"
@@ -433,19 +439,21 @@ export function BookingCard({
                       : new Set(),
                   )
                 }
-                className="h-4 w-4 justify-self-center accent-black dark:accent-zinc-300"
+                className="h-5 w-5 shrink-0 accent-black sm:h-4 sm:w-4 sm:justify-self-center dark:accent-zinc-300"
               />
-              <span>Name</span>
-              <span className="text-center">Regular</span>
-              <span>Table</span>
-              <span>Status</span>
-              <span>Ticket</span>
-              <span />
+              <span className="sm:hidden">Select all</span>
+              <span className="hidden sm:block">Name</span>
+              <span className="hidden sm:block">Status</span>
+              <span className="hidden sm:block">Table</span>
+              <span className="hidden sm:block">Ticket</span>
+              <span className="hidden text-center sm:block">Regular</span>
+              <span className="hidden sm:block" />
             </div>
 
             {/* The rows Enter walks down, one list per party: Enter on the
-                last guest adds another and goes to it. */}
-            <ul data-list className="flex flex-col gap-0.5">
+                last guest adds another and goes to it. Cards need air between
+                them; rows in the grid do not. */}
+            <ul data-list className="flex flex-col gap-2 sm:gap-0.5">
               {live.map((attendee, index) => (
                 <AttendeeRow
                   key={attendee.id}

@@ -95,9 +95,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
   frees their seats
 - **Cancel part of a booking**: cancel individual attendees within a party
   without touching the rest
-- **Regular guests.** Each guest's row carries a Regular tick, between the
-  name and the table. A guest ticked there is written into the next event as
-  it is created, at the same table, and stays ticked so it happens again.
+- **Regular guests.** Each guest's row carries a Regular tick, last of the
+  guest's fields, after the ticket price. A guest ticked there is written into
+  the next event as it is created, at the same table, and stays ticked so it
+  happens again.
   They arrive as one party called "Regular", which can be renamed like any
   other, and the new name carries on from then.
   - Ticking puts the guest on a **standing list of regulars**, kept with the
@@ -117,6 +118,15 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - A party with any guest still unseated is tinted amber on the bookings
   screen, so it can be found while scrolling. A wholly cancelled party is
   not: nobody in it has a seat and nobody in it is coming.
+- **A guest is a row of columns on a tablet or a desktop, and a stacked card
+  on a phone.** The columns are narrower than a phone can show, so below
+  roughly 640px each guest becomes a card carrying its own field names: the
+  name and the payment status first, because they say who this is and whether
+  they have paid; the table and the ticket price beneath them; the Regular
+  tick after those; and cancelling the guest fenced off at the foot of the
+  card, below a red rule, in words rather than as a bare cross. The fields are
+  in one order at both sizes — see **Typing a list** — which is why the status
+  sits beside the name in the columns too.
 
 ### Expenses
 - Add line items (description + amount) per event. The blank line to type
@@ -126,6 +136,12 @@ event manager for now. (The app may evolve into a bigger app, with more function
   it, and Enter on a line already in the list does the same, so a list of
   costs is typed straight down. The Save button saves without opening
   another.
+- **A line is a row of columns on a tablet or a desktop, and a vertical group
+  of labelled fields on a phone**, in the order the fields are written in:
+  description; then provider, amount and the paid tick across one line; then
+  notes; then clearing the line, set apart at the foot. Clearing is grey
+  rather than red, unlike cancelling a guest: the line goes to the saved
+  lines and can be picked back out, so it is not a one-way door.
 - Auto-copied forward whenever a new event is created
 - When a line item is removed, keep it in memory to be selected from a dropdown for a next event
 - Option to permanently delete line items that will not be used again in the future
@@ -229,6 +245,12 @@ Show all six of the following, always in this order:
   behaviour and is left to it. Nothing on any screen reorders itself visually
   away from the order its fields are written in, which is the one thing that
   would put Tab out of step with the eye.
+- That holds at every width. A screen that stacks its columns into a card on
+  a phone stacks them in the order they are written, top to bottom; it never
+  moves a field with `order-*`, a reversed flex direction or a grid line. So
+  where a card wants a field earlier than the columns did, the field moves in
+  the markup and the columns follow it, rather than the two orders being
+  allowed to disagree.
 - The lists this applies to are the ones with fields in them: the expense
   lines, and the guests of a party.
 

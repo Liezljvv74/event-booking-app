@@ -32,3 +32,22 @@ export const DENSE_FIELD_CLASS = `${FIELD_CLASS} sm:text-sm`;
 
 /** The small grey word above a field. */
 export const FIELD_LABEL_CLASS = "text-xs text-zinc-600 dark:text-zinc-400";
+
+/**
+ * The same word above a field on a phone card, and gone from `sm` up, where
+ * the list has a header row saying it once for every line beneath it.
+ *
+ * Carries `aria-hidden` wherever it is used, the way the header rows it
+ * stands in for do. Every control under one of these already says the same
+ * words in its own `aria-label`, and a field announced twice is worse than a
+ * field announced once.
+ */
+export const CARD_LABEL_CLASS = `mb-0.5 block sm:hidden ${FIELD_LABEL_CLASS}`;
+
+/**
+ * A tick box: a thumb's width on a phone, and back to a pointer's from `sm`
+ * up, where it also centres itself under its column heading.
+ */
+export const TICK_CLASS =
+  "h-5 w-5 shrink-0 accent-black sm:h-4 sm:w-4 sm:justify-self-center " +
+  "dark:accent-zinc-300";

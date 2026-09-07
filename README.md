@@ -467,6 +467,17 @@ that still fits it, so part-filled tables fill before new ones open; a party
 too large for any one table is split across the closest run of tables that
 can take it, and the screen says where everyone went.
 
+A guest is a row of columns on a tablet or a desktop and a **stacked card on
+a phone**. Seven columns want 36rem, which is more than a phone has, so below
+`sm` each guest becomes a card that carries its own field names: the name and
+the payment status first, the table and the ticket price two abreast beneath
+them, the Regular tick after those, and **Cancel guest** fenced off at the
+foot below a red rule, in words rather than as a bare cross. The column
+headings go on a phone, having nothing left to label, and the tick that takes
+the whole party on a move stays with the word *Select all* beside it. The
+fields, the tick boxes and that button are all thumb-sized below `sm` and
+back to pointer size above it.
+
 ### Ticket prices
 
 An event is sold at a list of prices rather than one, because the same
@@ -503,7 +514,14 @@ default nobody looked at then undercharges rather than billing someone for
 something they never agreed to.
 
 **Expenses** — a six-column table (description, provider, amount, paid, notes)
-edited in place. Only description and amount are required. Clearing a line
+edited in place on a tablet or a desktop, and a **vertical group of labelled
+fields on a phone**: the description, then the provider, the amount and the
+paid tick across one line, then the notes, then **Clear line** set apart at
+the foot. That last one is grey rather than red, unlike cancelling a guest —
+the line goes to the saved lines and can be picked back out, so it is not the
+one-way door a cancellation is. The blank line being written follows the same
+shape, and the running total, which sits under the amount column in the
+table, spreads across one line of its own on a phone. Only description and amount are required. Clearing a line
 saves it to a library that every Description dropdown then offers, minus
 whatever is already in the list. The button that clears one is a cross, on
 request, as is the one that clears the guests picked for a move on Bookings:
@@ -881,6 +899,33 @@ The ones that were argued out and would otherwise be re-litigated:
   of it. So this is the right shape rather than a saving anybody will feel,
   and the reason to keep it is that the next thing added to one of those
   layouts should have to justify crossing the boundary.
+- **One order of fields serves both layouts, and `display: contents` is what
+  lets it.** A guest wants its name and payment status first on a phone card,
+  and the columns had the status fourth. The fix is not `order-*` on the
+  phone. The rule written into `components/list-keys.ts` is that nothing
+  reorders itself visually away from the order its fields are written in,
+  because that is the one thing that puts Tab — and a screen reader — out of
+  step with the eye. So the markup moved instead. The
+  status went up beside the name, the Regular tick went down beside the
+  cross, and the grid's columns were re-sequenced to match, which is why the
+  desktop headings now read *Name · Status · Table · Ticket · Regular*.
+
+  The card's lines are wrapper divs that are `sm:contents`: on a phone they
+  are a flex row or a two-column grid, and from `sm` up they dissolve and hand
+  their fields straight to the one grid as its columns. So there is one copy
+  of every control, one set of `data-` hooks, and no chance of the two
+  layouts drifting apart — which is what rendering a phone version beside a
+  desktop version would have risked.
+- **A colour that differs by width is stated as a `max-sm:`/`sm:` pair, never
+  as a bare utility plus an override.** The guest's cancel is red on the card
+  and grey in the row. Written as `border-red-300` with `sm:border-zinc-300`
+  over it, the two overlap in light mode at one variant of depth apart and the
+  winner is whichever Tailwind happened to emit last — the same trap that let
+  the orange lose to the black once already. Written as `max-sm:border-red-300`
+  and `sm:border-zinc-300`, the two media queries cannot both apply, and the
+  `dark:` forms of each sit one depth above their own light form exactly as
+  everywhere else in the app. Both were read back out of `getComputedStyle` at
+  both widths in both themes rather than trusted.
 - **Nothing to open means Manage events.** The entry screen is a signpost: to
   the first active event, or, when there is none, to the one screen that can
   create one.
@@ -912,7 +957,7 @@ The ones that were argued out and would otherwise be re-litigated:
 | Ticket prices per event, several with what each includes | Done — **not in the spec**, added on request |
 | App header with a logo | Done — the horizontal logo on the left, middle and right kept open; **not in the original spec**, added on request and the spec amended to match |
 | Permanently delete a saved expense line | **Gone** — it lived in the Saved lines block, removed on request, and the repository function went with the dead-code sweep |
-| Mobile | Done — narrow screens scroll their columns sideways rather than breaking |
+| Mobile | Done — the two dense tables become stacked cards below `sm` rather than scrolling their columns sideways; every other screen scrolls rather than breaking |
 
 Out of scope by the spec and not built: visual floor plan, multi-user, any
 network call. Deployment tooling was on that list too until the app was asked
@@ -963,6 +1008,44 @@ ticket amount, adds a guest at the foot of a party and lands the cursor on
 it, adds to the right party when two are open, moves down the expense lines,
 and opens the blank expense line from the last of them. That pass found a
 fault reading the code had not: see the note on the ticket column below.
+
+The stacked phone layouts have a pass of their own, **68 assertions run twice
+— once in a light-mode browser and once in a dark-mode one, 136 in all**, with
+the same event, party of three and two expense lines driven through the
+buttons at 390px and then re-measured at 1280px.
+
+At 390px: each guest and each expense line is a bordered card with
+thumb-sized fields; the fields stack in the order they are written, with the
+name and status above the table and ticket, the Regular tick after them and
+the cancel last; table and ticket share a line and the table is the left of
+the two; every field carries its own name and the column headings are gone;
+the party tick reads *Select all*; the cancel sits below a red rule, says
+*Cancel guest*, spans the card and resolves to a red border rather than a
+grey one; the expense clear says *Clear line* and resolves to grey; the paid
+tick's middle lines up with the middles of the boxes beside it; and the total
+and what is outstanding share one line.
+
+At 1280px: the card melts back into the grid — the wrapper divs report
+`display: contents` and paint no box, so the red rule cannot show; all seven
+guest fields and all six expense fields sit on one line each; the columns run
+in the written order and the headings stand over the fields they name; the
+card's own field names are gone; both crosses are 36 by 36 and grey; and the
+running total's right edge still lines up with the amount column's.
+
+Enter was checked at both widths, since the whole arrangement turns on the
+markup order it reads: it still steps down the name column in the grid and
+down the stacked cards on a phone.
+
+One thing that pass does **not** fix, and did not cause: on a phone the page
+itself scrolls sideways by about 150px, from the section nav's own links
+rather than from anything in a card. The same measurement on the dashboard,
+which this work did not touch, overflows by the same amount, and stashing the
+work reproduced it exactly. Related: at 1280px the bookings list runs two
+abreast and half of that is 494px, while a party's guest columns want 594px,
+so the last column or two sit behind a sideways scroll inside the party.
+That is also unchanged — stashing the work gave the identical figures — but
+the reorder changes which column falls off the edge: the ticket price used
+to, and now the Regular tick does, which is the better of the two to lose.
 
 Still unverified: the folder picker, the permission prompt a remembered folder
 asks for on a new session, and whether Excel is happy with the workbook — all
