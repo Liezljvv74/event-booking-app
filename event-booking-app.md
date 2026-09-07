@@ -76,6 +76,11 @@ event manager for now. (The app may evolve into a bigger app, with more function
   how many times. Three weekly repeats makes four events a week apart, and the
   dates are listed before the button is pressed rather than left to be
   counted.
+- **A refused press says why and moves the caret to the field to change** —
+  the name, the date or the repeat count. The form does its own validation
+  rather than leaving it to the browser, so the message is the app's own
+  wording in the app's own place. When the plan cannot be made the button
+  names no number: it reads Create, not Create event.
 - **Create event is the last thing in the section**, after the repeat, the
   calendar where there is one, and the dates it makes — so in Custom dates a
   whole month sits between the dropdown and the button. At the bottom right

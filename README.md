@@ -317,6 +317,31 @@ repeats makes four events a week apart, which is the sort of thing that has to
 be said rather than inferred, so the button reads *Create 4 events* and the
 dates are listed above it before it is pressed.
 
+**The form validates itself**, with `noValidate` on the `<form>`. The count
+box carries `min`, `max` and `step`, and native constraint validation
+cancelled submission before the component's own checks ran: 60 repeats raised
+a bubble in the browser's own wording, anchored on an input well above the
+button now that the button is at the foot of the form, and said nothing to a
+screen reader. Every constraint those attributes express is checked again in
+the component with a better message — the count, and the seats and table
+counts in the planner's own validator — so taking the browser out of it loses
+nothing. The attributes stay for the spinner and the numeric keypad they give
+a phone.
+
+A refused press **moves the caret to the field to change**: the name, the
+date, or the count. It has to, because the message is often not new — the
+summary line reports the plan's problems as they happen, so pressing Create
+over one it has already printed adds nothing to the screen, and the press
+would otherwise look ignored. The prices and the tables keep their own
+editors and their own messages, and nothing on this form holds their inputs,
+so those errors move no focus. A custom run over the cap moves none either: a
+calendar of 31 days has no one field to blame.
+
+The button **names no number when the plan is broken**. It reads *Create*
+rather than *Create event*, because a count of one is the single answer that
+looks like an ordinary form, and it used to appear directly under a line
+saying no event could be made.
+
 **Create event comes last**, after every answer it acts on — the repeat, the
 calendar where there is one, and the dates spelled out. It used to sit at the
 head of that row, which put a button labelled *Create 4 events* to the left of

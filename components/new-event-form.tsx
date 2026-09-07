@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   addDays,
   addMonths,
@@ -111,6 +111,20 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   const tables = useTablePlan(settings.defaultSeatCount);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  /**
+   * The three fields a refused press can point at, so the cursor lands on
+   * the thing to change.
+   *
+   * Needed because the message is not always new: the summary line reports
+   * the plan's problems as they happen, so pressing Create over one it has
+   * already printed adds nothing to the screen. Moving the caret is what
+   * makes the press mean something. The prices and the tables have their own
+   * editors and their own messages; nothing here holds their inputs, so
+   * those errors move no focus.
+   */
+  const nameField = useRef<HTMLInputElement>(null);
+  const dateField = useRef<HTMLInputElement>(null);
+  const timesField = useRef<HTMLInputElement>(null);
   /**
    * How this event repeats, how many times, and — where the answer is a list
    * rather than an interval — on which dates.
@@ -223,11 +237,15 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
    * So is a plan error in the one cadence that has no summary line — Never,
    * where a cleared date field has nothing else to report it.
    */
-  function report(message: string) {
+  function report(
+    message: string,
+    field?: React.RefObject<HTMLInputElement | null>,
+  ) {
     const plan = repeatedDates();
     const alreadyShown =
       cadence !== "none" && "error" in plan ? plan.error : "";
     setError(message === alreadyShown ? "" : message);
+    field?.current?.focus();
   }
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -235,11 +253,11 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
 
     const trimmed = name.trim();
     if (trimmed === "") {
-      report("Give the event a name.");
+      report("Give the event a name.", nameField);
       return;
     }
     if (eventDate === "") {
-      report("Pick an event date.");
+      report("Pick an event date.", dateField);
       return;
     }
     const priced = prices.toInputs();
@@ -255,7 +273,11 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
 
     const dates = repeatedDates();
     if ("error" in dates) {
-      report(dates.error);
+      // The count is what a plan error is nearly always about — the two
+      // messages it can carry are both about the number in that box. A
+      // custom run over the cap is the exception, and a calendar of 31 days
+      // has no one field to blame, so that one moves no focus.
+      report(dates.error, countsRepeats(cadence) ? timesField : undefined);
       return;
     }
 
@@ -281,11 +303,28 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   // What the button is about to make, worked out once for the label and the
   // summary line above it.
   const planned = repeatedDates();
-  const made = "error" in planned ? 1 : planned.dates.length;
+  // Null rather than 1 when the plan is broken: the button used to read
+  // "Create event" directly under a line saying no event could be made, and
+  // a count of one is the one answer that looks like an ordinary form.
+  const made = "error" in planned ? null : planned.dates.length;
 
   return (
     <form
       onSubmit={submit}
+      /* Validated here, not by the browser.
+
+         The count box carries min, max and step, and native constraint
+         validation cancelled submission before submit() ran: 60 repeats
+         raised a bubble in the browser's own wording, anchored on an input
+         well above the button now that the button is at the foot of the
+         form, with nothing said to a screen reader and none of this
+         component's own checks reached. Every constraint those attributes
+         express is checked again here with a better message — the count in
+         repeatedDates, and the seats and table counts in the planner's own
+         toInputs, which submit calls — so taking the browser out of it
+         loses nothing. The attributes stay for the spinner and the numeric
+         keypad they give a phone. */
+      noValidate
       className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
     >
       {/* Name, then the date and times to the right of it, the same shape
@@ -298,6 +337,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
             name="name"
             value={name}
             disabled={saving}
+            ref={nameField}
             onChange={(changed) => setName(changed.target.value)}
             className={fieldClass}
             placeholder="Spring Gala"
@@ -311,6 +351,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
             name="eventDate"
             value={eventDate}
             disabled={saving}
+            ref={dateField}
             onChange={(changed) => {
               setEventDate(changed.target.value);
               forgetDates();
@@ -395,6 +436,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
               inputMode="numeric"
               value={times}
               disabled={saving}
+              ref={timesField}
               aria-label="How many times to repeat the event"
               data-repeat-times
               onChange={(changed) => {
@@ -469,7 +511,13 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
           data-create-event
           className="h-11 rounded-md bg-black px-4 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-black"
         >
-          {saving ? "Creating…" : made === 1 ? "Create event" : `Create ${made} events`}
+          {saving
+            ? "Creating…"
+            : made === null
+              ? "Create"
+              : made === 1
+                ? "Create event"
+                : `Create ${made} events`}
         </button>
       </div>
     </form>
