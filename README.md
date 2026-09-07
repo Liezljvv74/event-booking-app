@@ -357,6 +357,15 @@ The event's own date shows as taken and is not pressable there: the Date field
 above is the one place an event is dated, and a second way to change it that
 disagreed with the first would be worse than no second way at all.
 
+**The picks are forgotten whenever the plan they belong to changes** — the
+event's date, or the cadence. They used to survive both. The calendar
+re-seeds on the event's date, so moving an event from March to September
+painted September while three March picks stayed in the state: off screen,
+unpressable without paging back three months, still counted by the button and
+still created as events. Leaving Custom dates and coming back restored a list
+that had been abandoned. An empty calendar is the only answer the form can
+show honestly, and it is where a fresh one starts.
+
 **How it repeats is not remembered.** Every form opens on *Never*, once, with
 no dates picked, whatever the last event was scheduled to. It was kept with
 the settings for a while, on the reasoning that a venue whose function is

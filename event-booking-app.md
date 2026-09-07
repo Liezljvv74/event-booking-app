@@ -86,7 +86,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
   January repeats on the 28th of February and then on the 31st of March.
 - **Custom dates** opens a calendar, a month at a time, and the dates are
   pressed on it. Any date may be picked, and one earlier than the event's own
-  simply becomes the first of the run. The event's own date is in the run and
+  simply becomes the first of the run. The picks are forgotten if the event's
+  date or the cadence changes: they belong to the plan they were made
+  against, and the calendar cannot show a pick in a month it has left. The event's own date is in the run and
   is not pressable there — the Date field is the one place an event is dated,
   and a second way to change it that disagreed with the first would be worse
   than no second way at all.

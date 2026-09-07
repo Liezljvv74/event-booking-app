@@ -182,6 +182,23 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
     };
   }
 
+  /**
+   * Forget the picked dates.
+   *
+   * They are picked against one plan — this event, on this date, repeating
+   * this way — and neither the calendar nor the form can show a pick that
+   * belongs to a plan that has moved on. The calendar re-seeds on the event's
+   * date, so changing the date from March to September paints September while
+   * three March picks stay in the state: off screen, unpressable without
+   * paging back three months, and still counted by the button. Leaving the
+   * cadence and coming back restored a list the user had abandoned. Either
+   * way the honest answer is an empty calendar, which is where a fresh form
+   * starts.
+   */
+  function forgetDates() {
+    setCustomDates([]);
+  }
+
   /** Pick a date for a custom run, or take one back off it. */
   function toggleDate(date: string) {
     setCustomDates((current) =>
@@ -192,32 +209,53 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
     setError("");
   }
 
+  /**
+   * Say it once.
+   *
+   * The summary line reports the plan's own problems as they happen, in
+   * place, and it sits directly above the button — so a message already
+   * printed there is not printed again in the alert between them. Clearing
+   * the times box used to read "Enter how many times to repeat it, at least
+   * once." twice, once grey and once red, twelve pixels apart.
+   *
+   * Everything the summary cannot say is still said here: a missing name, a
+   * price or a table the editors rejected, a store that refused the write.
+   * So is a plan error in the one cadence that has no summary line — Never,
+   * where a cleared date field has nothing else to report it.
+   */
+  function report(message: string) {
+    const plan = repeatedDates();
+    const alreadyShown =
+      cadence !== "none" && "error" in plan ? plan.error : "";
+    setError(message === alreadyShown ? "" : message);
+  }
+
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
 
     const trimmed = name.trim();
     if (trimmed === "") {
-      setError("Give the event a name.");
+      report("Give the event a name.");
       return;
     }
     if (eventDate === "") {
-      setError("Pick an event date.");
+      report("Pick an event date.");
       return;
     }
     const priced = prices.toInputs();
     if ("error" in priced) {
-      setError(priced.error);
+      report(priced.error);
       return;
     }
     const seated = tables.toInputs();
     if ("error" in seated) {
-      setError(seated.error);
+      report(seated.error);
       return;
     }
 
     const dates = repeatedDates();
     if ("error" in dates) {
-      setError(dates.error);
+      report(dates.error);
       return;
     }
 
@@ -273,7 +311,10 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
             name="eventDate"
             value={eventDate}
             disabled={saving}
-            onChange={(changed) => setEventDate(changed.target.value)}
+            onChange={(changed) => {
+              setEventDate(changed.target.value);
+              forgetDates();
+            }}
             className={fieldClass}
           />
         </label>
@@ -330,6 +371,7 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
             data-repeat
             onChange={(changed) => {
               setCadence(changed.target.value as RepeatCadence);
+              forgetDates();
               setError("");
             }}
             className="h-11 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
