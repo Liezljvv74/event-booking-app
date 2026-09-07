@@ -191,6 +191,28 @@ export default function BookingsScreen() {
     }
   }
 
+  /**
+   * The parties the list shows: the ones with somebody still coming.
+   *
+   * A party whose guests are every one of them cancelled is off the screen
+   * altogether. Its people are under Cancelled guests below, named with the
+   * party they were booked on, which is the whole of what is left to say
+   * about it — the line above the bookings counts the seats they gave back,
+   * and a row reading "0/3 guests" is a party-shaped space where the eye is
+   * looking for parties to work on.
+   *
+   * The booking itself is not deleted, and nothing about it changes: this is
+   * a question of what the list shows. It is filtered here rather than in the
+   * card because a card that renders nothing still takes its turn in the
+   * grid, and the count beside the heading has to agree with what is under
+   * it.
+   */
+  const standing = event.bookings.filter((booking) =>
+    booking.attendees.some((attendee) =>
+      SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+    ),
+  );
+
   const attendees = event.bookings.flatMap((booking) => booking.attendees);
   const live = attendees.filter((attendee) =>
     SEAT_OCCUPYING_STATUSES.includes(attendee.status),
@@ -222,8 +244,8 @@ export default function BookingsScreen() {
           data-bookings-summary
           className="text-xs text-zinc-600 dark:text-zinc-400"
         >
-          {event.bookings.length} booking
-          {event.bookings.length === 1 ? "" : "s"} · {live.length} guest
+          {standing.length} booking
+          {standing.length === 1 ? "" : "s"} · {live.length} guest
           {live.length === 1 ? "" : "s"}
           {unseated > 0 ? ` · ${unseated} unseated` : ""}
         </p>
@@ -365,7 +387,7 @@ export default function BookingsScreen() {
            which on a phone is the guest columns, and the page then scrolls
            sideways instead of the party doing it. */
         <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] items-start gap-x-8 gap-y-3 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          {event.bookings.map((booking) => (
+          {standing.map((booking) => (
             <BookingCard
               key={booking.id}
               event={event}

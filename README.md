@@ -541,8 +541,8 @@ request: the same colour the dashboard's unseated line and the too-many-guests
 warning already use for something wanting attention that is not yet wrong. The
 whole card rather than a badge on it, because the point of a colour is to be
 findable while scrolling past thirty parties and a badge has to be read to be
-noticed. A wholly cancelled party is left grey — nobody in it has a seat, and
-nobody in it is coming either. Seating the last guest takes the colour off.
+noticed. Seating the last guest takes the colour off. A wholly cancelled
+party never shows either way, having no row at all.
 
 Each guest's row carries a **Regular** tick between their name and their
 table, on request: somebody who comes to everything. A guest ticked there is
@@ -608,15 +608,23 @@ The party name opens and closes them on its own, and while the fields are up
 it is the one thing off screen, so the guests cannot be folded away
 mid-edit. A **+** at the bottom right of each party adds a guest to it.
 
-**Every party row ends in the same cross.** A wholly cancelled one used to
-put a *Party cancelled* pill there instead, which made that row end in a
-paragraph where every other row ends in a cross, and spent about a hundred
-pixels saying what the line beside it already says — the summary reads
-*0/3 guests · 3 cancelled* for exactly those parties. The cross is disabled
-there, because there is nobody left to cancel, and it says so to a screen
-reader. Disabled rather than absent: a row that drops the control shifts
-everything beside it, and a party is cancelled today and takes a guest
-again tomorrow, at which point the cross wakes up. Every
+**A wholly cancelled party has no line at all.** The list shows the parties
+with somebody still coming; the rest are under *Cancelled guests* below,
+each name with its party in brackets, which is the whole of what is left to
+say about one. Before this it kept a row reading *0/3 guests · 3 cancelled*,
+which is a party-shaped space in a list the eye is scanning for parties to
+work on. The count beside the heading counts what is on the screen, so
+cancelling the last guest of a party takes it from *2 bookings* to *1
+booking* as the row goes.
+
+The booking is not deleted and nothing about it changes — this is what the
+list shows, filtered on the screen rather than in the store, so an export
+still carries it and the cancelled guests keep the party name they were
+booked under. What does go with the row is the way back: the **+** that let
+a wholly cancelled party take a guest again lived on it, so cancelling every
+guest of a party now ends it, and booking those people again means a new
+booking. That was a deliberate trade, asked for after the row was seen in
+use. Every
 cancellation on the event is gathered under **Cancelled guests** below the
 bookings, each one a name with its party in brackets. Guests are
 edited individually: name, table, payment status, ticket price. The price a
@@ -1495,6 +1503,11 @@ wholly cancelled party still offers **+** and the guest it adds lands at the
 freed table rather than nowhere; and a brand new party of two seats itself
 there with no complaint about room.
 
+That third step is a record of what the screen did then, not of what it does
+now: a wholly cancelled party has since been taken off the list altogether,
+so it has no **+** to offer. The seats it gives back, which is what this pass
+was really about, still come back the same way.
+
 The second takes the paths a single table cannot reach. With both tables full,
 one guest is cancelled off party A and a guest of party B is moved onto that
 seat with their own dropdown — the option reads `1 · 1 free` and is not
@@ -1646,7 +1659,9 @@ passed on, and her stored record cancelled at a price of zero; **+** then
 filling the seat she gave up; a second party's **+** seating its guest with
 *that* party rather than at the first party's table; a wholly cancelled party
 keeping its card, its marking and its telephone number but losing its **+**,
-while the live party keeps its own; four cancellations surviving a reload;
+while the live party keeps its own — a step that has since been overtaken
+twice, first by giving such a party its **+** back and then by taking its row
+off the screen entirely; four cancellations surviving a reload;
 and on a phone, a collapsed party showing no **+** and an open one showing a
 32px target, with the page not scrolling sideways. The gutter between two
 parties was measured at 32px.

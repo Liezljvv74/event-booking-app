@@ -138,10 +138,13 @@ event manager for now. (The app may evolve into a bigger app, with more function
   Edit on an open party leaves it open. **Leaving the editor rolls both back
   up**, by Save or by Cancel, so the screen returns to a list of party names.
   The party name opens and closes them on its own.
-- **Every party row ends in the same cross**, a wholly cancelled one
-  included. The cross is disabled there — there is nobody left to cancel —
-  and the party line already reads "0/3 guests · 3 cancelled". It wakes up
-  again when the party takes a guest.
+- **A party whose guests are all cancelled leaves the list.** Only the
+  parties with somebody still coming have a line; the cancelled guests appear
+  under Cancelled guests, named with the party they were booked on. The
+  booking is not deleted — it is what the list shows — but the party has no
+  row and so no **+**, which means cancelling the last guest of a party ends
+  it and those people are booked again as a new booking. The count beside the
+  heading counts the parties on the screen.
 - Each attendee: name, table assignment, status, ticket price (defaults
   from the booking's price but is editable per attendee)
 - **Cancel whole booking**: sets all attendees in the party to `cancelled`,
@@ -181,7 +184,7 @@ event manager for now. (The app may evolve into a bigger app, with more function
     come: the cancellation was about that night.
 - A party with any guest still unseated is tinted amber on the bookings
   screen, so it can be found while scrolling. A wholly cancelled party is
-  not: nobody in it has a seat and nobody in it is coming.
+  neither tinted nor plain: it has no row there at all.
 - **A guest is a row of columns where the party is wide enough for them, and
   one compact line where it is not.** The columns need 594px; the party card
   measures itself and shows a table above 38rem of its own width. That is a

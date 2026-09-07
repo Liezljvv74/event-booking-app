@@ -153,7 +153,6 @@ export function BookingCard({
     SEAT_OCCUPYING_STATUSES.includes(attendee.status),
   );
   const cancelledCount = booking.attendees.length - live.length;
-  const allCancelled = live.length === 0;
   const dueCents = booking.attendees
     .filter((attendee) => attendee.status === "pay_at_venue")
     .reduce((total, attendee) => total + attendee.ticketPriceCents, 0);
@@ -222,12 +221,11 @@ export function BookingCard({
      *
      * The whole card rather than a badge on it: the point of a colour is to
      * be findable while scrolling past thirty parties, and a badge has to be
-     * read to be noticed. A wholly cancelled party is left alone even though
-     * nobody in it has a seat — nobody in it is coming either.
+     * read to be noticed.
      */
     <li
       data-booking={booking.id}
-      data-has-unseated={unseated > 0 && !allCancelled ? "" : undefined}
+      data-has-unseated={unseated > 0 ? "" : undefined}
       /* Capped, because a party stopped running two abreast until 1536px and
          a single one then stretched to the full width of a 1440px window. The
          columns are fixed but the name is `1fr`, so all of that slack went
@@ -235,7 +233,7 @@ export function BookingCard({
          at the far end of the screen. 54rem is about the width a party had at
          1100px, which already read well. */
       className={`max-w-[54rem] rounded-lg border p-2 ${
-        unseated > 0 && !allCancelled
+        unseated > 0
           ? "border-amber-400 bg-amber-50 dark:border-amber-700/70 dark:bg-amber-950/30"
           : "border-zinc-200 dark:border-zinc-800"
       }`}
@@ -374,31 +372,17 @@ export function BookingCard({
                mind" by half the people who pressed it, and cancelling a
                party is the one thing in this app that cannot be undone.
 
-               A wholly cancelled party used to put a "Party cancelled" pill
-               here instead, which made that one row end in a paragraph where
-               every other row ends in a cross, and cost a hundred pixels to
-               say what the line beside it already says: the summary reads
-               "0/3 guests · 3 cancelled" for exactly these parties. So the
-               cross is in every row, and it is disabled on this one because
-               there is nobody left to cancel. Disabled rather than gone: a
-               row that skips the control shifts everything beside it, and a
-               party is cancelled today and has a guest again tomorrow. */
+               A card is only ever given a party with somebody still coming,
+               so there is always somebody for this to cancel. It briefly
+               carried a disabled twin for a wholly cancelled party, back
+               when such a party still had a line on the screen. */
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              disabled={allCancelled}
-              aria-label={
-                allCancelled
-                  ? `${booking.partyName} is cancelled`
-                  : `Cancel the whole of ${booking.partyName}`
-              }
-              title={
-                allCancelled
-                  ? "Every guest on this party is cancelled"
-                  : "Cancel this whole party"
-              }
+              aria-label={`Cancel the whole of ${booking.partyName}`}
+              title="Cancel this whole party"
               data-cancel-booking={booking.id}
-              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:disabled:hover:bg-transparent"
+              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -468,16 +452,11 @@ export function BookingCard({
           </div>
         )}
 
-        {/* Nothing to lay out for a party that is wholly cancelled: its
-            guests are all in Cancelled guests below, and the column headings
-            on their own read as a table waiting to be filled. The header
-            line above already says the party is off. */}
-        {allCancelled ? null : (
-        /* The guests measure themselves against this party, not against the
-           window. A party is a table of columns where it is wide enough to
-           hold one and a list of stacked cards where it is not, which is a
-           question only the card can answer: the list runs two abreast on a
-           wide screen, so a party can be 494px inside a 1280px window. */
+        {/* The guests measure themselves against this party, not against the
+            window. A party is a table of columns where it is wide enough to
+            hold one and a list of stacked cards where it is not, which is a
+            question only the card can answer: the list runs two abreast on a
+            wide screen, so a party can be 494px inside a 1280px window. */}
         <div className={`mt-2 ${ATTENDEE_CONTAINER}`}>
           <div className={ATTENDEE_OVERFLOW}>
             {/* The column headings, and the tick that takes the whole party
@@ -559,27 +538,18 @@ export function BookingCard({
                 />
               ))}
             </ul>
-
           </div>
         </div>
-        )}
 
         {/* Bottom right of the party, below its guests: the place a list is
             added to.
 
-            On a wholly cancelled party too, now. It used to be left off one,
-            on the reasoning that a live guest there would be an
-            un-cancellation by the side door — but adding a guest is not
-            un-cancelling anybody: the guests who dropped out stay cancelled
-            and stay in Cancelled guests, and the new one is a new person on a
-            booking that stands again.
-
-            Leaving it off made a dead end. Cancel every guest of a party and
-            their seats come back to the room, which the free-seat line says
-            plainly — and the party they came back from had no way to put
-            anyone in them. The only route was a whole New booking, which is
-            not obvious from a party whose line read nothing but cancelled
-            guests with a table still free beside it. */}
+            Adding a guest is not un-cancelling anybody. The guests who
+            dropped out stay cancelled and stay in Cancelled guests below;
+            this is a new person on a booking that is still running. A party
+            with nobody left coming has no line here at all now, so there is
+            no plus on one either — cancelling the last guest of a party ends
+            it, and the way to book those people again is a new booking. */}
         <div className="mt-1.5 flex justify-end">
           <button
             type="button"
