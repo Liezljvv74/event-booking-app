@@ -1687,21 +1687,37 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
       STORE_SETTINGS,
       SETTINGS_KEY,
     );
-    // Written field by field rather than spread wholesale, so a key left
-    // behind by an older shape of the settings — there has been one already —
-    // is dropped by the next save rather than carried forever.
-    const merged = { ...DEFAULT_SETTINGS, ...row?.value, ...patch };
-    const value: Settings = {
-      retentionDays: merged.retentionDays,
-      defaultSeatCount: merged.defaultSeatCount,
-      currency: merged.currency,
-      regulars: merged.regulars,
-      regularsPartyName: merged.regularsPartyName,
-      exportDirectory: merged.exportDirectory,
-    };
+    const value = onlySettings({ ...DEFAULT_SETTINGS, ...row?.value, ...patch });
     await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });
     return value;
   });
+}
+
+/**
+ * The settings as they are stored: named field by field, so nothing else
+ * riding along on the object gets written.
+ *
+ * Every path that writes the settings row goes through here. A read is a
+ * structured clone rather than a JSON round trip, and so is a write, so a
+ * key left behind by an older shape of the settings — there have been two
+ * already, the repeat cadence and its count — survives a spread of the
+ * stored value and would otherwise be put straight back. Naming the fields
+ * is what drops it on the next save.
+ *
+ * It lived inside saveSettings, which meant that promise held for one of the
+ * two writers: the regulars path read the row, spread it and put the whole
+ * object back, so ticking a guest as a regular re-persisted keys that
+ * nothing reads. Same list, one place, both callers.
+ */
+function onlySettings(merged: Settings): Settings {
+  return {
+    retentionDays: merged.retentionDays,
+    defaultSeatCount: merged.defaultSeatCount,
+    currency: merged.currency,
+    regulars: merged.regulars,
+    regularsPartyName: merged.regularsPartyName,
+    exportDirectory: merged.exportDirectory,
+  };
 }
 
 /**
@@ -1782,7 +1798,7 @@ async function mutateRegulars<T>(
       if (outcome.settings !== undefined) {
         await put(transaction, STORE_SETTINGS, {
           key: SETTINGS_KEY,
-          value: outcome.settings,
+          value: onlySettings(outcome.settings),
         });
       }
       return outcome.result;

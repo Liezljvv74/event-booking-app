@@ -834,6 +834,16 @@ tables block on Manage events fills in for you, and it is read once when a
 form opens rather than watched, so changing the setting never renumbers seats
 in a form somebody is halfway through.
 
+Every path that writes the settings row names its fields one by one, through
+a single `onlySettings()`. A read is a structured clone and so is a write, so
+a key left behind by an older shape of the settings survives a spread of the
+stored value and would be put straight back. Naming the fields is what drops
+it. That list used to live inside the settings save, which kept the promise
+for one of the two writers only: the regulars path read the row, spread it and
+put the whole object back, so ticking a guest as a regular re-persisted the
+repeat cadence and its count long after both had been removed. Same list, one
+place, both callers.
+
 *How a new event repeats* is deliberately **not** stored, here or anywhere,
 and so has no line on this screen either — it is named here only because it
 had one of these paragraphs while it was a setting. It is asked on the New

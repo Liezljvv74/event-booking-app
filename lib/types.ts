@@ -84,8 +84,9 @@ export interface Table {
   seatCount: number;
   /**
    * Long, round or square. Tables created before shapes existed are read back
-   * as round, which is a guess — the app never asked, so there is nothing
-   * better to say and nothing that depends on the answer.
+   * as long, the same default a new table takes, which is a guess — the app
+   * never asked, so there is nothing better to say and nothing that depends
+   * on the answer.
    */
   shape: TableShape;
 }
