@@ -411,9 +411,23 @@ Each card is read by its heading: the heading is bold at
 20px. Both were asked for twice, in that direction — the row is scanned across
 for the label you want, not for the biggest number on the screen, and the
 height the figures gave up is height the rest of the page moves up by. The
-heading stopped at 13px rather than 14 on purpose: at 14 a label like *Amount
+heading stopped at 13px rather than 14 in the row: at 14 a label like *Amount
 due at the venue* takes a third line in a sixth-width card, and the two lines'
-room reserved below it stops being the two lines it is there for. Then the
+room reserved below it stops being the two lines it is there for.
+
+**On a phone there is no row**, so neither of those constraints applies and
+the cards are shaped for the screen they are on: one card per line, one line
+per card, label at the left and figures at the right, the six stacked under
+one another. Below the small breakpoint the six were two abreast and three
+lines deep each — a heading wrapped over two lines, then its figures below —
+which took most of a phone's first screen to say six numbers. Stacked, the
+whole set sits above the seating list. The heading goes up to 14px there,
+which is the size it wanted all along and could not have while it shared a
+row: a label with a line to itself has nothing to wrap against. A block
+carrying two figures, *Guests* and a room that is oversold, keeps them side
+by side rather than stacked, since stacking them is the one thing that would
+make a card two lines. It holds down to 320px with a six-figure amount in
+it. Then the
 seating list: each table with its seat count, what is free and who is sitting
 there, the names a size below the table's own line since a full table is ten
 of them on one line. Guests with no name yet are counted rather than

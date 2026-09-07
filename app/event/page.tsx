@@ -101,8 +101,13 @@ function Stat({
   negative?: boolean;
 }) {
   return (
+    /* One line on a phone — label at the left, figures at the right — and a
+       stacked card from the small breakpoint up, where six of them share a
+       row and the label needs the width to itself. Six one-line rows is the
+       whole set inside a phone's first screen; six three-line cards two
+       abreast was most of a scroll. */
     <div
-      className={`rounded-lg border p-2 ${
+      className={`flex items-baseline justify-between gap-x-3 rounded-lg border p-2 sm:block ${
         lead
           ? "border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900"
           : "border-zinc-200 dark:border-zinc-800"
@@ -111,22 +116,23 @@ function Stat({
       {/* Bold, on request, and dark enough for the weight to tell: a bold
           zinc-600 at this size reads as a smudge rather than as a heading.
 
-          Two lines' worth of room whether or not the label needs it, so the
-          figures line up across the row instead of stepping down wherever a
-          longer label wraps. */}
-      {/* 13px rather than the next step up to 14: a point is as much as
-          "slightly bigger" wants, and it leaves the wrapping where it was.
-          At 14 a label like "Amount due at the venue" takes a third line in
-          a sixth-width card, and the two lines' room below stops being the
-          two lines it is there to reserve. */}
-      <div className="min-h-[2rem] text-[0.8125rem] leading-4 font-semibold text-zinc-700 dark:text-zinc-300">
+          14px on a phone, where the label has a line of its own and nothing
+          to wrap against, and 13px from the small breakpoint up, where it
+          does not: at 14 in a sixth-width card "Amount due at the venue"
+          takes a third line, and the two lines' room reserved below it stops
+          being the two lines it is there to reserve. That room is what keeps
+          the figures on one baseline across the row, so it is kept where the
+          row exists and dropped on the phone, where each card is its own
+          row. */}
+      <div className="text-sm leading-4 font-semibold text-zinc-700 sm:min-h-[2rem] sm:text-[0.8125rem] dark:text-zinc-300">
         {label}
       </div>
 
-      {/* Now that the cards are a sixth of the row wide, two figures never
-          fit on one line, so a card carrying a pair stacks them and the row
-          stretches to suit. Each number keeps its unit beside it either way. */}
-      <div className="flex flex-col items-start gap-y-0.5">
+      {/* Side by side on a phone, which is what keeps a card carrying a pair
+          to one line, and stacked from the small breakpoint up, where a
+          sixth-width card has no room for two figures abreast. Each number
+          keeps its unit beside it either way. */}
+      <div className="flex shrink-0 items-baseline gap-x-3 sm:flex-col sm:items-start sm:gap-x-0 sm:gap-y-0.5">
         {figures.map((figure, index) => (
           /* The number and its unit travel together, so neither wraps away
              from the other. */
@@ -237,9 +243,10 @@ export default function EventDashboard() {
       {/* All six on one line from the large breakpoint up, which is what
           makes them this narrow: labels get two lines' worth of room and
           wrap into it, and the figures drop a size to match. Below that they
-          fall back to three across, then two. Expected profit closes the
-          set: it is what the five before it add up to. */}
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          fall back to three across, and on a phone to one under another,
+          each card a single line. Expected profit closes the set: it is what
+          the five before it add up to. */}
+      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat
           label="Guests"
           figures={[

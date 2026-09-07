@@ -233,7 +233,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
 - Option to permanently delete line items that will not be used again in the future
 
 ### Dashboard (per active event)
-Show all six of the following, always in this order:
+The six figures are a row of cards on a desktop and a stack of one-line cards
+on a phone: one card per line, label at the left and figures at the right, so
+the whole set is read without scrolling. Show all six of the following,
+always in this order:
 1. Table list with seat count and assigned attendee names per table, and a
    line naming anyone not yet seated. Following it opens the bookings screen
    at the parties they belong to rather than at the top of the list.
