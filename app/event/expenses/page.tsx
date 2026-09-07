@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useEventContext, useMoney } from "@/components/event-provider";
 import {
+  EXPENSE_CONTAINER,
   EXPENSE_GRID,
-  EXPENSE_MIN_WIDTH,
+  EXPENSE_OVERFLOW,
   ExpenseRow,
 } from "@/components/expense-row";
 import { NewExpenseRow } from "@/components/new-expense-row";
@@ -163,22 +164,24 @@ export default function ExpensesScreen() {
         </p>
       )}
 
-      {/* Six columns are wider than a tablet, so from `sm` up they scroll
-          sideways here rather than wrapping each line onto several rows. A
-          phone gets no columns to scroll: each line is a vertical group of
-          labelled fields instead. */}
-      <div className="mt-3 sm:overflow-x-auto">
+      {/* The lines measure themselves against this list, not against the
+          window. Six columns need 624px, and the list has the screen less the
+          event rail and the page padding — so a tablet that `sm:` called wide
+          gave them 416 to 544px and hid the last of them behind a sideways
+          scroll. Wide enough gets columns; narrower gets a vertical group of
+          labelled fields per line. */}
+      <div className={`mt-3 ${EXPENSE_CONTAINER}`}>
         {/* The rows Enter walks down: every expense line, and then the blank
             one when it is open. They are marked from here rather than from
             the <ul>, because the blank line is that list's last row and sits
             outside it — the two have to be one list for Enter on the last
             expense to step into the blank rather than open a second one. */}
-        <div data-list className={EXPENSE_MIN_WIDTH}>
+        <div data-list className={EXPENSE_OVERFLOW}>
           {/* Only where there is something under them to label. With no
               lines and nothing being added they were six words above an
               empty space. */}
-          {/* Gone on a phone as well, where every field on every line
-              carries its own name. */}
+          {/* Gone wherever the lines are stacked as well, since every field
+              on every line carries its own name there. */}
           {(event.expenses.length > 0 || adding) && (
             <div
               className={`${EXPENSE_GRID} hidden px-1 pb-1 text-xs text-zinc-500 dark:text-zinc-500`}
@@ -195,7 +198,7 @@ export default function ExpensesScreen() {
 
           {/* Cards need air between them; rows in the grid do not. */}
           {event.expenses.length > 0 && (
-            <ul className="flex flex-col gap-2 sm:gap-0.5">
+            <ul className="flex flex-col gap-2 @min-[40rem]/lines:gap-0.5">
               {event.expenses.map((expense) => (
                 <ExpenseRow
                   key={expense.id}
@@ -216,20 +219,20 @@ export default function ExpensesScreen() {
               would space itself around them. */}
           {event.expenses.length > 0 && (
             <div
-              className={`${EXPENSE_GRID} mt-2 border-t border-zinc-200 pt-1.5 sm:mt-0 dark:border-zinc-800`}
+              className={`${EXPENSE_GRID} mt-2 border-t border-zinc-200 pt-1.5 @min-[40rem]/lines:mt-0 dark:border-zinc-800`}
             >
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 sm:contents">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 @min-[40rem]/lines:contents">
                 <span className="text-xs text-zinc-600 dark:text-zinc-400">
                   Total
                 </span>
-                <span className="hidden sm:block" />
+                <span className="hidden @min-[40rem]/lines:block" />
                 <span
                   data-expense-total
-                  className="text-sm font-semibold text-black sm:text-right dark:text-zinc-50"
+                  className="text-sm font-semibold text-black @min-[40rem]/lines:text-right dark:text-zinc-50"
                 >
                   {money(summary.allCents)}
                 </span>
-                <span className="hidden sm:block" />
+                <span className="hidden @min-[40rem]/lines:block" />
                 <span
                   data-expense-outstanding
                   className="text-xs text-zinc-600 dark:text-zinc-400"
@@ -238,7 +241,7 @@ export default function ExpensesScreen() {
                     ? "all paid"
                     : `${money(summary.outstandingCents)} outstanding`}
                 </span>
-                <span className="hidden sm:block" />
+                <span className="hidden @min-[40rem]/lines:block" />
               </div>
             </div>
           )}
@@ -246,7 +249,7 @@ export default function ExpensesScreen() {
           {adding && (
             <div
               data-list-row
-              className="mt-3 rounded-md border border-zinc-200 p-2 sm:rounded-none sm:border-0 sm:p-0 dark:border-zinc-800"
+              className="mt-3 rounded-md border border-zinc-200 p-2 @min-[40rem]/lines:rounded-none @min-[40rem]/lines:border-0 @min-[40rem]/lines:p-0 dark:border-zinc-800"
             >
               <NewExpenseRow
                 templates={available}

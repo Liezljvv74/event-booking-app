@@ -535,10 +535,15 @@ default nobody looked at then undercharges rather than billing someone for
 something they never agreed to.
 
 **Expenses** — a six-column table (description, provider, amount, paid, notes)
-edited in place on a tablet or a desktop, and a **vertical group of labelled
-fields on a phone**: the description, then the provider, the amount and the
-paid tick across one line, then the notes, then **Clear line** set apart at
-the foot. That last one is grey rather than red, unlike cancelling a guest —
+edited in place where the list is wide enough for the columns, and a **vertical
+group of labelled fields** where it is not. The columns need 624px and **the
+list measures itself**, a container query at 40rem of its own width, the way a
+party measures itself on Bookings: the list is the window less the event rail
+and the page padding, about 224px, so a tablet that `sm:` called wide gave the
+six columns 416 to 544px and hid the last of them behind a sideways scroll.
+Stacked, it reads: the description, then the provider, the amount and the paid
+tick across one line, then the notes, then **Clear line** set apart at the
+foot. That last one is grey rather than red, unlike cancelling a guest —
 the line goes to the saved lines and can be picked back out, so it is not the
 one-way door a cancellation is. The blank line being written follows the same
 shape, and the running total, which sits under the amount column in the
@@ -979,7 +984,12 @@ The ones that were argued out and would otherwise be re-litigated:
   658px and fits.
 
   So the party card declares `@container/guests` and the guest row asks
-  `@min-[38rem]/guests:`. The two-abreast split moved from `xl` to `2xl` as
+  `@min-[38rem]/guests:`. The expense lines have the same shape of problem in
+  the lower band alone — six columns needing 624px in a list that a tablet
+  gives 416 to 544 — and the same answer, `@container/lines` at 40rem, named
+  apart because the threshold differs. Between them they took the last two
+  `min-w-[…]` props off these screens: a table that is only drawn where it fits
+  has no need of a floor to scroll against. The two-abreast split moved from `xl` to `2xl` as
   well, because 1280 to 1440 is where most laptops live and a table is the
   better thing to show there; between them, the split decides how many parties
   fit abreast and the card decides what it can draw in the width it is given.
@@ -1139,15 +1149,16 @@ scrolled sideways by about 150px, from outside the cards. It was the section
 nav, and simplifying the navigation fixed it — those two assertions pass now,
 and the pass is 70 for 70.
 
-The guest columns being clipped inside a party is fixed too, and has a pass of
-its own: **36 assertions across twelve widths** — 640, 700, 768, 900, 1024,
-1100, 1280, 1366, 1440, 1536, 1680 and 1920px — each checking that no guest
-column is hidden behind a sideways scroll, that the page itself does not scroll
-sideways, and that the party is laid out as cards below about 830px and as a
-table above it. The same sweep before the change is what found the two bands
-of clipping in the first place, and it still prints the room each layout has
-against what the columns want, so the next change to either can be measured
-rather than guessed at.
+Both tables being clipped is fixed too, and they share a pass: **72 assertions
+across twelve widths** — 640, 700, 768, 900, 1024, 1100, 1280, 1366, 1440,
+1536, 1680 and 1920px — checking for each of the guest columns and the expense
+columns that nothing is hidden behind a sideways scroll, that the page itself
+does not scroll sideways, and that the layout is the stacked one below its
+threshold and the table above it (about 830px of window for a party, about
+864px for the expense list). The same sweep before the change is what found
+the bands of clipping in the first place, and it still prints the room each
+layout has against what its columns want, so the next change to either can be
+measured rather than guessed at.
 
 **The phone's navigation has a pass of its own: 40 assertions, run in both
 themes, 80 in all.** Three events are created and then read at 390px and at

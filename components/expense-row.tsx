@@ -2,9 +2,9 @@
 
 import { useId, useState } from "react";
 import {
-  CARD_LABEL_CLASS,
-  DENSE_FIELD_CLASS,
-  TICK_CLASS,
+  FIELD_LABEL_CLASS,
+  FIELD_SHAPE,
+  TICK_SHAPE,
 } from "@/components/form-styles";
 import { formatCents, parseCents } from "@/lib/money";
 import type { ExpensePatch } from "@/lib/repository";
@@ -14,42 +14,83 @@ import { enterMovesDown } from "@/components/list-keys";
 import { useMoney } from "@/components/event-provider";
 
 /**
- * One grid template shared by the header, every line and the add row, so the
- * columns line up without a real table element — and only from `sm` up. Notes
- * and description get the flexible width; the amount, the tick and the button
- * are fixed.
+ * How wide the list has to be before a line can be a row of columns.
  *
- * Six columns want 42rem, which is wider than any phone. Below `sm` a line is
- * a vertical group of labelled fields instead, in the order they are written
- * in: nothing is moved by `order-*` or by a grid line, so Tab and a screen
- * reader follow the eye at either size.
+ * Six columns have a floor of 624px — the four fixed and minimum tracks plus
+ * the five gaps between them — so this is that, rounded up to 40rem for a
+ * little slack. It used also to carry a 42rem minimum width, which is where
+ * the old 672px figure came from; the container query makes that unnecessary,
+ * since the columns are only drawn where they fit.
+ *
+ * Asked of the container rather than of the window, for the reason the guest
+ * table is: a `sm:` breakpoint answers "is the screen wide", and the list has
+ * the screen less the event rail and the page padding — about 224px less. So a
+ * tablet between 640px and about 860px gave six columns 416 to 544px and hid
+ * the last of them behind a sideways scroll, while `sm:` said it was fine.
+ *
+ * Written out in full at every use, never assembled from a constant: Tailwind
+ * reads the source text for the class names it generates, so a name built at
+ * run time is a name it never sees and a rule that never exists.
  */
 export const EXPENSE_GRID =
-  "sm:grid sm:items-center sm:gap-2 " +
-  "sm:grid-cols-[minmax(8rem,1.3fr)_minmax(7rem,1fr)_6rem_3rem_minmax(8rem,1.3fr)_4.5rem]";
+  "@min-[40rem]/lines:grid @min-[40rem]/lines:items-center " +
+  "@min-[40rem]/lines:gap-2 " +
+  "@min-[40rem]/lines:grid-cols-[minmax(8rem,1.3fr)_minmax(7rem,1fr)_6rem_3rem_minmax(8rem,1.3fr)_4.5rem]";
 
-/** Wider than a tablet, so the columns scroll sideways instead of wrapping. */
-export const EXPENSE_MIN_WIDTH = "sm:min-w-[42rem]";
+/**
+ * The list declares itself the thing those columns measure against. Named,
+ * so the query cannot be answered by some other container added later — and
+ * named apart from the guest table, which has its own threshold.
+ */
+export const EXPENSE_CONTAINER = "@container/lines";
+
+/**
+ * A last resort rather than the mechanism, as on the guest table: the query
+ * above is what keeps the columns from overflowing, and this is here so that
+ * if a track ever grows past its floor the list scrolls and not the page.
+ */
+export const EXPENSE_OVERFLOW = "@min-[40rem]/lines:overflow-x-auto";
+
+/** A line's field: thumb-sized in the stack, tightened in the columns. */
+export const LINE_FIELD_CLASS =
+  `h-11 text-base ${FIELD_SHAPE} ` +
+  "@min-[40rem]/lines:h-9 @min-[40rem]/lines:text-sm";
+
+/** A field name above it in the stack, gone once the header carries it. */
+export const LINE_LABEL_CLASS =
+  `mb-0.5 block @min-[40rem]/lines:hidden ${FIELD_LABEL_CLASS}`;
+
+/**
+ * The paid tick. In the stack it sits low enough for its middle to line up
+ * with the middle of the two boxes beside it, which its label above and its
+ * smaller height would otherwise put it above.
+ */
+export const LINE_TICK_CLASS =
+  `h-5 w-5 ${TICK_SHAPE} @max-[40rem]/lines:mb-3 ` +
+  "@min-[40rem]/lines:h-4 @min-[40rem]/lines:w-4 " +
+  "@min-[40rem]/lines:justify-self-center";
 
 /**
  * Clearing a line: off this event, and kept in the saved lines to be picked
  * again on the next one.
  *
- * Set apart below a rule on the card, the way the guest row sets its cancel
+ * Set apart below a rule in the stack, the way the guest row sets its cancel
  * apart, but in the app's ordinary grey rather than in red. Cancelling a
  * guest cannot be undone; this can, by picking the line back out of the
  * dropdown, so it is not the same kind of button and should not wear the same
  * colour.
  *
- * The width and the type size are stated once for the phone and once for the
- * tablet, as a `max-sm:`/`sm:` pair that cannot both apply. The colours are
- * the same at both sizes and so are said once, unprefixed.
+ * The width and the type size are stated once for the stack and once for the
+ * columns, as a `@max-`/`@min-` pair that cannot both apply. The colours are
+ * the same either way and so are said once, unprefixed.
  */
 const CLEAR_CLASS =
   "rounded-md border border-zinc-300 leading-none text-zinc-700 " +
   "hover:bg-zinc-100 disabled:opacity-50 " +
-  "max-sm:h-11 max-sm:w-full max-sm:text-sm max-sm:font-medium " +
-  "sm:h-9 sm:w-9 sm:justify-self-center sm:text-base " +
+  "@max-[40rem]/lines:h-11 @max-[40rem]/lines:w-full " +
+  "@max-[40rem]/lines:text-sm @max-[40rem]/lines:font-medium " +
+  "@min-[40rem]/lines:h-9 @min-[40rem]/lines:w-9 " +
+  "@min-[40rem]/lines:justify-self-center @min-[40rem]/lines:text-base " +
   "dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900";
 
 interface Props {
@@ -190,7 +231,7 @@ export function ExpenseRow({
       data-list-row
       // Enter moves down the column; every field in the row bubbles to here.
       onKeyDown={enterMovesDown(onEnter)}
-      className={`rounded-md border border-zinc-200 p-2 sm:rounded-none sm:border-0 sm:p-0 dark:border-zinc-800 ${
+      className={`rounded-md border border-zinc-200 p-2 @min-[40rem]/lines:rounded-none @min-[40rem]/lines:border-0 @min-[40rem]/lines:p-0 dark:border-zinc-800 ${
         paid ? "opacity-70" : ""
       }`}
     >
@@ -201,8 +242,8 @@ export function ExpenseRow({
             Each group below is a line of the card on a phone, and `contents`
             from `sm` up, where it dissolves and hands its fields straight to
             the grid. That is what lets one order of fields serve both. */}
-        <div className="sm:contents">
-          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="@min-[40rem]/lines:contents">
+          <span aria-hidden="true" className={LINE_LABEL_CLASS}>
             Description
           </span>
           <input
@@ -216,16 +257,16 @@ export function ExpenseRow({
             onChange={(changed) => setDescription(changed.target.value)}
             onBlur={commitDescription}
             onKeyDown={keyCommit(commitDescription)}
-            className={DENSE_FIELD_CLASS}
+            className={LINE_FIELD_CLASS}
           />
         </div>
 
         {/* Who it went to, how much it was, and whether it has gone out yet.
             One line of the card between them: all three are short, and a
             line on its own for each would make a card of six. */}
-        <div className="mt-2 flex items-end gap-2 sm:contents">
-          <div className="min-w-0 flex-1 sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="mt-2 flex items-end gap-2 @min-[40rem]/lines:contents">
+          <div className="min-w-0 flex-1 @min-[40rem]/lines:contents">
+            <span aria-hidden="true" className={LINE_LABEL_CLASS}>
               Provider
             </span>
             <input
@@ -241,12 +282,12 @@ export function ExpenseRow({
               onKeyDown={keyCommit(() =>
                 commitText("provider", provider, setProvider),
               )}
-              className={DENSE_FIELD_CLASS}
+              className={LINE_FIELD_CLASS}
             />
           </div>
 
-          <div className="w-24 shrink-0 sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+          <div className="w-24 shrink-0 @min-[40rem]/lines:contents">
+            <span aria-hidden="true" className={LINE_LABEL_CLASS}>
               Amount
             </span>
             <input
@@ -260,15 +301,15 @@ export function ExpenseRow({
               onChange={(changed) => setAmount(changed.target.value)}
               onBlur={commitAmount}
               onKeyDown={keyCommit(commitAmount)}
-              className={`${DENSE_FIELD_CLASS} text-right`}
+              className={`${LINE_FIELD_CLASS} text-right`}
             />
           </div>
 
           {/* The tick sits low enough on the card for its middle to line up
               with the middle of the two boxes beside it, which its label
               above and its smaller height would otherwise put it above. */}
-          <div className="flex shrink-0 flex-col items-center sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+          <div className="flex shrink-0 flex-col items-center @min-[40rem]/lines:contents">
+            <span aria-hidden="true" className={LINE_LABEL_CLASS}>
               Paid
             </span>
             <input
@@ -283,15 +324,15 @@ export function ExpenseRow({
                 setPaid(wanted);
                 void apply({ paid: wanted }, () => setPaid(expense.paid));
               }}
-              className={`${TICK_CLASS} max-sm:mb-3`}
+              className={LINE_TICK_CLASS}
             />
           </div>
         </div>
 
         {/* Whatever else is worth writing down, on a line of its own: it is
             the one field here with no length to it. */}
-        <div className="mt-2 sm:contents">
-          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="mt-2 @min-[40rem]/lines:contents">
+          <span aria-hidden="true" className={LINE_LABEL_CLASS}>
             Notes
           </span>
           <input
@@ -305,7 +346,7 @@ export function ExpenseRow({
             onChange={(changed) => setNotes(changed.target.value)}
             onBlur={() => commitText("notes", notes, setNotes)}
             onKeyDown={keyCommit(() => commitText("notes", notes, setNotes))}
-            className={DENSE_FIELD_CLASS}
+            className={LINE_FIELD_CLASS}
           />
         </div>
 
@@ -315,7 +356,7 @@ export function ExpenseRow({
             is where the word went — a line's own button does not need to
             spell itself out in a column it shares with nineteen others
             saying the same thing. */}
-        <div className="mt-2 border-t border-zinc-200 pt-2 sm:contents dark:border-zinc-800">
+        <div className="mt-2 border-t border-zinc-200 pt-2 @min-[40rem]/lines:contents dark:border-zinc-800">
           <button
             type="button"
             onClick={() => void onClear()}
@@ -325,8 +366,8 @@ export function ExpenseRow({
             data-expense-clear={expense.id}
             className={CLEAR_CLASS}
           >
-            <span className="sm:hidden">Clear line</span>
-            <span aria-hidden="true" className="hidden sm:inline">
+            <span className="@min-[40rem]/lines:hidden">Clear line</span>
+            <span aria-hidden="true" className="hidden @min-[40rem]/lines:inline">
               ×
             </span>
           </button>

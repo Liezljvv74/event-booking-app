@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { EXPENSE_GRID } from "@/components/expense-row";
 import {
-  CARD_LABEL_CLASS,
-  DENSE_FIELD_CLASS,
-  TICK_CLASS,
-} from "@/components/form-styles";
+  EXPENSE_GRID,
+  LINE_FIELD_CLASS,
+  LINE_LABEL_CLASS,
+  LINE_TICK_CLASS,
+} from "@/components/expense-row";
+
 import { formatCents, parseCents } from "@/lib/money";
 import type { ExpenseInput } from "@/lib/repository";
 import type { ExpenseTemplate } from "@/lib/types";
@@ -176,8 +177,8 @@ export function NewExpenseRow({
         {/* The same groups, in the same order, as a line already saved: one
             per line of the card on a phone, and `contents` from `sm` up
             where they dissolve into the grid. */}
-        <div className="sm:contents">
-          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="@min-[40rem]/lines:contents">
+          <span aria-hidden="true" className={LINE_LABEL_CLASS}>
             Description
           </span>
           <input
@@ -191,13 +192,13 @@ export function NewExpenseRow({
             data-list-field="description"
             ref={descriptionField}
             onChange={(changed) => changeDescription(changed.target.value)}
-            className={DENSE_FIELD_CLASS}
+            className={LINE_FIELD_CLASS}
           />
         </div>
 
-        <div className="mt-2 flex items-end gap-2 sm:contents">
-          <div className="min-w-0 flex-1 sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="mt-2 flex items-end gap-2 @min-[40rem]/lines:contents">
+          <div className="min-w-0 flex-1 @min-[40rem]/lines:contents">
+            <span aria-hidden="true" className={LINE_LABEL_CLASS}>
               Provider
             </span>
             <input
@@ -209,12 +210,12 @@ export function NewExpenseRow({
               name="provider"
               data-list-field="provider"
               onChange={(changed) => setProvider(changed.target.value)}
-              className={DENSE_FIELD_CLASS}
+              className={LINE_FIELD_CLASS}
             />
           </div>
 
-          <div className="w-24 shrink-0 sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+          <div className="w-24 shrink-0 @min-[40rem]/lines:contents">
+            <span aria-hidden="true" className={LINE_LABEL_CLASS}>
               Amount
             </span>
             <input
@@ -228,12 +229,12 @@ export function NewExpenseRow({
               name="amount"
               data-list-field="amount"
               onChange={(changed) => setAmount(changed.target.value)}
-              className={`${DENSE_FIELD_CLASS} text-right`}
+              className={`${LINE_FIELD_CLASS} text-right`}
             />
           </div>
 
-          <div className="flex shrink-0 flex-col items-center sm:contents">
-            <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+          <div className="flex shrink-0 flex-col items-center @min-[40rem]/lines:contents">
+            <span aria-hidden="true" className={LINE_LABEL_CLASS}>
               Paid
             </span>
             <input
@@ -244,13 +245,13 @@ export function NewExpenseRow({
               name="paid"
               data-list-field="paid"
               onChange={(changed) => setPaid(changed.target.checked)}
-              className={`${TICK_CLASS} max-sm:mb-3`}
+              className={LINE_TICK_CLASS}
             />
           </div>
         </div>
 
-        <div className="mt-2 sm:contents">
-          <span aria-hidden="true" className={CARD_LABEL_CLASS}>
+        <div className="mt-2 @min-[40rem]/lines:contents">
+          <span aria-hidden="true" className={LINE_LABEL_CLASS}>
             Notes
           </span>
           <input
@@ -262,7 +263,7 @@ export function NewExpenseRow({
             name="notes"
             data-list-field="notes"
             onChange={(changed) => setNotes(changed.target.value)}
-            className={DENSE_FIELD_CLASS}
+            className={LINE_FIELD_CLASS}
           />
         </div>
 
@@ -271,12 +272,12 @@ export function NewExpenseRow({
             group stays a box of its own at both sizes — two buttons cannot
             dissolve into one grid cell — and on the card it is set apart at
             the foot the way a saved line's Clear is. */}
-        <div className="mt-2 flex items-center gap-2 border-t border-zinc-200 pt-2 sm:mt-0 sm:gap-1 sm:border-0 sm:pt-0 dark:border-zinc-800">
+        <div className="mt-2 flex items-center gap-2 border-t border-zinc-200 pt-2 @min-[40rem]/lines:mt-0 @min-[40rem]/lines:gap-1 @min-[40rem]/lines:border-0 @min-[40rem]/lines:pt-0 dark:border-zinc-800">
           <button
             type="submit"
             disabled={saving}
             data-add-expense
-            className="h-11 flex-1 rounded-md bg-black text-sm font-medium text-white disabled:opacity-50 sm:h-9 sm:text-xs dark:bg-zinc-50 dark:text-black"
+            className="h-11 flex-1 rounded-md bg-black text-sm font-medium text-white disabled:opacity-50 @min-[40rem]/lines:h-9 @min-[40rem]/lines:text-xs dark:bg-zinc-50 dark:text-black"
           >
             {saving ? "…" : "Save"}
           </button>
@@ -287,7 +288,7 @@ export function NewExpenseRow({
             aria-label="Discard this new expense line"
             title="Discard this line"
             data-cancel-expense
-            className="h-11 w-11 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 sm:h-9 sm:w-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+            className="h-11 w-11 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 @min-[40rem]/lines:h-9 @min-[40rem]/lines:w-9 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
           >
             <span aria-hidden="true">×</span>
           </button>
