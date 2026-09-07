@@ -1078,6 +1078,26 @@ The ones that were argued out and would otherwise be re-litigated:
   `documentElement.scrollWidth` come back: 533px to 375px the moment the
   section row went. Six items in a 390px row were the whole of it, and moving
   three of them into the menu is what fixed the page as well as the row.
+- **A freed seat needs somewhere to be filled from.** A cancelled guest has
+  always given their seat back: `tableOccupancy()` counts only the statuses
+  that occupy one, so the free-seat line, the dashboard, every table dropdown
+  and the move bar all stopped counting them the moment they were cancelled.
+  What was missing was the other half. A party whose every guest had been
+  cancelled showed no **+**, on the reasoning that a live guest on a cancelled
+  booking would be an un-cancellation by the side door — so the room reported
+  four free seats at table 1 and the party those seats came back from had no
+  way to put anyone in them. The only route was a whole New booking, which is
+  not an obvious thing to reach for when a party is sitting there with a table
+  free beside it.
+
+  Adding a guest un-cancels nobody: the guests who dropped out stay cancelled
+  and stay in Cancelled guests, and the new one is a new person on a booking
+  that stands again. So the + is unconditional now, and `addAttendee()` seats a
+  guest joining a party that sits nowhere the way a new booking is seated —
+  the tightest table with room — rather than leaving them nowhere, which would
+  have read as the app refusing to give back a seat it had already freed. A
+  party with live guests who merely have no table is still left alone: that is
+  one being placed by hand.
 - **Nothing to open means Manage events.** The entry screen is a signpost: to
   the first active event, or, when there is none, to the one screen that can
   create one.
@@ -1245,6 +1265,30 @@ came from. Both panels are checked with `elementFromPoint` rather than by
 their boxes, which is what caught the clipping described above. With no event
 created at all, the three app screens are the whole row and there is no More
 button to hide them behind.
+
+**Freed seats have a pass of their own: 29 assertions across two scripts**, on
+a room deliberately too small to hide anything — one table of two seats in the
+first, two tables of two in the second, so a single seat is the difference
+between a party fitting and not.
+
+The first walks the whole cycle: two guests fill the only table and it reads
+full; one is cancelled and the free-seat line says `table 1: 1`; **+** puts a
+guest in that seat; the whole party is cancelled and both seats come back; the
+wholly cancelled party still offers **+** and the guest it adds lands at the
+freed table rather than nowhere; and a brand new party of two seats itself
+there with no complaint about room.
+
+The second takes the paths a single table cannot reach. With both tables full,
+one guest is cancelled off party A and a guest of party B is moved onto that
+seat with their own dropdown — the option reads `1 · 1 free` and is not
+disabled, and the move is accepted with no error. Another cancellation, and the
+batch move bar offers `Table 1 · 2 free`. Then, at 390px, a guest is cancelled
+from inside the detail panel: the panel closes itself, the party is one guest
+shorter, and the seat is back in the free-seat line.
+
+Between them they cover every route a seat can be claimed by: the per-guest
+dropdown, the move bar, **+**, a new booking's auto-seating, a whole-party
+cancellation and the mobile panel.
 
 Still unverified: the folder picker, the permission prompt a remembered folder
 asks for on a new session, and whether Excel is happy with the workbook — all

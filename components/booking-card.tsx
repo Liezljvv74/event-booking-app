@@ -512,24 +512,34 @@ export function BookingCard({
         )}
 
         {/* Bottom right of the party, below its guests: the place a list is
-            added to. Left off a wholly cancelled party — that booking is
-            off, and a live guest on it would be an un-cancellation by the
-            side door, which this app does not have. */}
-        {!allCancelled && (
-          <div className="mt-1.5 flex justify-end">
-            <button
-              type="button"
-              onClick={addGuest}
-              disabled={busy}
-              data-add-guest={booking.id}
-              aria-label={`Add a guest to ${booking.partyName}`}
-              title="Add a guest to this party"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              <span aria-hidden="true">+</span>
-            </button>
-          </div>
-        )}
+            added to.
+
+            On a wholly cancelled party too, now. It used to be left off one,
+            on the reasoning that a live guest there would be an
+            un-cancellation by the side door — but adding a guest is not
+            un-cancelling anybody: the guests who dropped out stay cancelled
+            and stay in Cancelled guests, and the new one is a new person on a
+            booking that stands again.
+
+            Leaving it off made a dead end. Cancel every guest of a party and
+            their seats come back to the room, which the free-seat line says
+            plainly — and the party they came back from had no way to put
+            anyone in them. The only route was a whole New booking, which is
+            not obvious from a party reading "Party cancelled" with a table
+            still free beside it. */}
+        <div className="mt-1.5 flex justify-end">
+          <button
+            type="button"
+            onClick={addGuest}
+            disabled={busy}
+            data-add-guest={booking.id}
+            aria-label={`Add a guest to ${booking.partyName}`}
+            title="Add a guest to this party"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            <span aria-hidden="true">+</span>
+          </button>
+        </div>
       </div>
     </li>
   );

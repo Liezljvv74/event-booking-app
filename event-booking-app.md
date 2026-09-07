@@ -109,6 +109,17 @@ event manager for now. (The app may evolve into a bigger app, with more function
   frees their seats
 - **Cancel part of a booking**: cancel individual attendees within a party
   without touching the rest
+- **A cancelled guest gives their seat straight back to the room**, and the
+  party they were cancelled off can put somebody in it. Its **+** is there
+  whether or not any guest on it is still coming: adding a guest un-cancels
+  nobody — those who dropped out stay cancelled and stay in Cancelled guests —
+  and a party whose every guest was cancelled used to have no + at all, which
+  left free seats beside a booking with no way to fill them.
+- A guest added to a party that sits nowhere, every one of its guests having
+  been cancelled, is seated the way a new booking is: the table with least
+  room to spare that still has some. A party with live guests who merely have
+  no table yet is left alone, since that is one the manager is placing by
+  hand.
 - **Regular guests.** Each guest's row carries a Regular tick, last of the
   guest's fields, after the ticket price. A guest ticked there is written into
   the next event as it is created, at the same table, and stays ticked so it

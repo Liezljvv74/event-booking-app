@@ -1271,6 +1271,11 @@ export function moveAttendees(
  * sent to whichever table happens to be emptiest: a guest joining a party is
  * joining the people, and putting them across the room without being asked
  * would be a stranger decision than leaving the table for the manager.
+ *
+ * The exception is a party with no live guests left at all, every one of them
+ * having been cancelled. There are no people to join and no table to join
+ * them at, so this seats them the way a new booking is seated - the tightest
+ * table with room - rather than leaving them nowhere. See below.
  */
 export function addAttendee(
   eventId: string,
@@ -1307,11 +1312,43 @@ export function addAttendee(
       .filter((table) => table.free >= 1)
       .sort((a, b) => a.free - b.free || a.tableNumber - b.tableNumber);
 
+    /**
+     * A party sitting nowhere is seated the way a new booking is: the table
+     * with least room to spare that still has some.
+     *
+     * "Nowhere" means every guest on it has been cancelled, which is the one
+     * case where the rule above has nothing to work with — there is no table
+     * the party is at, because there is nobody at one. Leaving the guest
+     * unseated then reads as the app refusing to give back a seat it has
+     * already freed: the count says the table has room, and the guest who
+     * arrives to fill it lands nowhere.
+     *
+     * A party with live guests who merely have no table is left alone. That
+     * is a party the manager is placing by hand, and a guest joining it
+     * belongs with the people rather than at whichever table is emptiest.
+     */
+    const nobodySeated = !booking.attendees.some(
+      (attendee) =>
+        SEAT_OCCUPYING_STATUSES.includes(attendee.status) &&
+        attendee.assignedTableNumber !== null,
+    );
+    const noLiveGuests = !booking.attendees.some((attendee) =>
+      SEAT_OCCUPYING_STATUSES.includes(attendee.status),
+    );
+
+    const fallback =
+      nobodySeated && noLiveGuests
+        ? tableOccupancy(event)
+            .filter((table) => table.free >= 1)
+            .sort((a, b) => a.free - b.free || a.tableNumber - b.tableNumber)
+        : [];
+
     const added: Attendee = {
       id: newId(),
       regularId: null,
       name: "",
-      assignedTableNumber: partyTables[0]?.tableNumber ?? null,
+      assignedTableNumber:
+        partyTables[0]?.tableNumber ?? fallback[0]?.tableNumber ?? null,
       status: "pay_at_venue",
       ticketPriceCents: booking.ticketPriceCents,
     };
