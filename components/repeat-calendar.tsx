@@ -21,8 +21,13 @@
  * mean re-typing the Date field to say the same thing.
  */
 
-import { useState } from "react";
-import { addMonths, formatEventDate, todayIso } from "@/lib/event-time";
+import { useEffect, useRef, useState } from "react";
+import {
+  addDays,
+  addMonths,
+  formatEventDate,
+  todayIso,
+} from "@/lib/event-time";
 
 /**
  * The weekday headings, in the reader's own language, Monday first.
@@ -110,8 +115,108 @@ export function RepeatCalendar({
     setMonth(firstOfMonth(firstDate));
   }
 
+  /**
+   * The one day in the grid that Tab reaches, and the arrow keys move.
+   *
+   * A month is thirty-odd buttons. Each one its own tab stop made the grid
+   * thirty-odd presses wide: with the button at the foot of the form, Create
+   * sat thirty-three Tabs past the calendar in a 31-day month, so the cadence
+   * needing the most work put its only submit control furthest away. One stop
+   * for the grid is what a calendar is expected to be, and the arrows are
+   * what makes the other days reachable — take the tab stops away without
+   * them and the days are not reachable at all.
+   *
+   * Held as a date rather than an index so paging months keeps its place, and
+   * derived below rather than trusted: the month can move underneath it, from
+   * the nav buttons or from the Date field above.
+   */
+  const [active, setActive] = useState(firstDate);
+  /**
+   * Whether the anchor should be focused once it is on screen.
+   *
+   * Only the keyboard sets it. Focus has to be moved after the render that
+   * paints the target — a month away, the button does not exist yet — and
+   * that is an effect. Doing it on every anchor change instead would pull
+   * focus into the calendar when the mouse pages a month, or when the Date
+   * field above moves it.
+   *
+   * A ref rather than state: it is a note to the effect, not something the
+   * screen depends on, and setting state from inside an effect to clear it
+   * is both a second render and a lint error.
+   */
+  const chasing = useRef(false);
+  const grid = useRef<HTMLDivElement>(null);
+
   const picked = new Set(chosen);
   const today = todayIso();
+
+  const cells = monthCells(month);
+  const days = cells.filter((iso): iso is string => iso !== null);
+  /**
+   * The anchor as it actually is: the remembered day while the grid still
+   * holds it, the event's own date when the grid holds that, and otherwise
+   * the 1st. So paging a month with the mouse leaves a tab stop behind on a
+   * day that exists.
+   */
+  const anchor = days.includes(active)
+    ? active
+    : days.includes(firstDate)
+      ? firstDate
+      : days[0];
+
+  useEffect(() => {
+    if (!chasing.current) return;
+    chasing.current = false;
+    grid.current
+      ?.querySelector<HTMLButtonElement>(`[data-calendar-day="${anchor}"]`)
+      ?.focus();
+  }, [anchor]);
+
+  /**
+   * Move the anchor to a date, paging the month to reach it.
+   *
+   * firstOfMonth of a date already in this month is this month, so the state
+   * lands on the same string and React skips the re-render; a date a month
+   * away pages the grid to hold it. Either way the effect above then puts
+   * focus on it.
+   */
+  function goTo(target: string) {
+    // Already here. The key came from the anchor, so the anchor already has
+    // focus and there is nothing to page to and nothing to wait for —
+    // Home on the 1st, End on the 31st.
+    if (target === anchor) return;
+    chasing.current = true;
+    setMonth(firstOfMonth(target));
+    setActive(target);
+  }
+
+  /**
+   * The keys a calendar is expected to answer: the arrows a day and a week at
+   * a time, Page for a month, Home and End for the ends of this one. Enter
+   * and Space are the button's own and are left alone.
+   */
+  function navigate(pressed: React.KeyboardEvent<HTMLButtonElement>, from: string) {
+    const by: Record<string, number> = {
+      ArrowLeft: -1,
+      ArrowRight: 1,
+      ArrowUp: -7,
+      ArrowDown: 7,
+    };
+    if (pressed.key in by) {
+      pressed.preventDefault();
+      goTo(addDays(from, by[pressed.key]));
+      return;
+    }
+    if (pressed.key === "PageUp" || pressed.key === "PageDown") {
+      pressed.preventDefault();
+      goTo(addMonths(from, pressed.key === "PageUp" ? -1 : 1));
+      return;
+    }
+    if (pressed.key === "Home" || pressed.key === "End") {
+      pressed.preventDefault();
+      goTo(pressed.key === "Home" ? days[0] : days[days.length - 1]);
+    }
+  }
 
   return (
     <div
@@ -148,7 +253,21 @@ export function RepeatCalendar({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 p-1">
+      {/* One group, named by its month, so a screen reader says what it has
+          arrived in — the heading above is the same words, and it is the
+          nav's own label rather than the grid's.
+
+          Not role="grid": that promises rows of gridcells, and these are
+          seven-across CSS grid children with no row elements between them.
+          A promise the markup does not keep reads worse to a screen reader
+          than no promise, and what was actually wrong here was the tab
+          order, which is behaviour. */}
+      <div
+        ref={grid}
+        role="group"
+        aria-label={monthHeading(month)}
+        className="grid grid-cols-7 gap-0.5 p-1"
+      >
         {WEEKDAYS.map((weekday, index) => (
           <span
             /* The letters repeat across locales — T for Tuesday and for
@@ -161,7 +280,7 @@ export function RepeatCalendar({
           </span>
         ))}
 
-        {monthCells(month).map((iso, index) =>
+        {cells.map((iso, index) =>
           iso === null ? (
             <span key={`blank-${index}`} aria-hidden />
           ) : (
@@ -169,10 +288,23 @@ export function RepeatCalendar({
               key={iso}
               type="button"
               data-calendar-day={iso}
-              disabled={disabled || iso === firstDate}
+              disabled={disabled}
+              /* The event's own date is announced as unavailable rather than
+                 disabled, because a disabled button cannot hold focus and
+                 the arrows have to be able to cross it. Its press is a
+                 no-op, which is what disabled bought before. */
+              aria-disabled={iso === firstDate}
               aria-pressed={iso === firstDate || picked.has(iso)}
               aria-label={formatEventDate(iso)}
-              onClick={() => onToggle(iso)}
+              /* Every day but one is out of the tab order; the arrows are
+                 how the rest are reached. */
+              tabIndex={iso === anchor ? 0 : -1}
+              onKeyDown={(pressed) => navigate(pressed, iso)}
+              onFocus={() => setActive(iso)}
+              onClick={() => {
+                if (iso === firstDate) return;
+                onToggle(iso);
+              }}
               className={`h-10 rounded-md text-sm disabled:opacity-100 sm:h-8 ${
                 iso === firstDate
                   ? "cursor-default bg-zinc-200 font-medium text-black dark:bg-zinc-700 dark:text-zinc-50"

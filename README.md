@@ -390,6 +390,26 @@ The event's own date shows as taken and is not pressable there: the Date field
 above is the one place an event is dated, and a second way to change it that
 disagreed with the first would be worse than no second way at all.
 
+**The grid is one tab stop.** Every day was its own, which made a 31-day
+month thirty-odd presses wide — and with Create at the foot of the form, the
+only submit control sat thirty-three Tabs past the calendar, in the cadence
+that needs the most work. One day holds `tabIndex 0` and the rest `-1`, so
+Tab enters the grid, one more Tab leaves it, and the arrows move inside:
+left and right a day, up and down a week, Page a month, Home and End the ends
+of the month shown. Stepping off the 31st pages to November and keeps the
+focus on the day it stepped to. Taking the tab stops away without the arrows
+would not have fixed the order, it would have made thirty days unreachable,
+so the two are one change.
+
+The anchor follows focus, so the grid is one stop wherever you left it. The
+event's own date is `aria-disabled` rather than `disabled` — a disabled
+button cannot hold focus, and the arrows have to be able to cross it; its
+press stays the no-op that `disabled` bought. The group is *not*
+`role="grid"`: that promises rows of gridcells and these are seven-across
+CSS grid children with no rows between them, and a promise the markup does
+not keep reads worse than none. What was wrong was the tab order, which is
+behaviour.
+
 **The picks are forgotten whenever the plan they belong to changes** — the
 event's date, or the cadence. They used to survive both. The calendar
 re-seeds on the event's date, so moving an event from March to September

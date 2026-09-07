@@ -90,7 +90,9 @@ event manager for now. (The app may evolve into a bigger app, with more function
   is too short for that day, the last day of that month is used: the 31st of
   January repeats on the 28th of February and then on the 31st of March.
 - **Custom dates** opens a calendar, a month at a time, and the dates are
-  pressed on it. Any date may be picked, and one earlier than the event's own
+  pressed on it. The month is one tab stop, not one per day: Tab enters and
+  leaves it, and the arrow keys move within it — a day, a week, a month,
+  the ends of the month — paging when they step off the end. Any date may be picked, and one earlier than the event's own
   simply becomes the first of the run. The picks are forgotten if the event's
   date or the cadence changes: they belong to the plan they were made
   against, and the calendar cannot show a pick in a month it has left. The event's own date is in the run and
