@@ -597,13 +597,26 @@ at once — the party's own name and telephone, and the guest list under them.
 Edit used to open the name and number alone, which left the guests a second
 press away on a different control: a party rung to change the booking is
 usually changing who is in it, so one press now puts the whole party in
-front of you. It opens the guests rather than toggling them, so Edit on a
-party already open is not the press that shuts it, and they stay open when
-the party's own fields are saved or cancelled — closing a list somebody is
-working in is a change nobody asked for. The party name closes them again,
-and while the fields are up it is the one thing off screen, so the guests
-cannot be folded away mid-edit either. A **+** at the bottom right of each
-party adds a guest to it. Every
+front of you. It sets the guests open rather than toggling them, so Edit
+on a party already open is not the press that shuts it. **Leaving the editor
+rolls both back up** — Save and Cancel alike — so the screen returns to a
+list of party names, which is what it is for and what an open party costs
+the parties under it. Both ways out do the same thing: which button ended an
+edit is no reason for the list below to be in a different state, and Cancel
+on a party opened by accident would otherwise leave its guests on screen.
+The party name opens and closes them on its own, and while the fields are up
+it is the one thing off screen, so the guests cannot be folded away
+mid-edit. A **+** at the bottom right of each party adds a guest to it.
+
+**Every party row ends in the same cross.** A wholly cancelled one used to
+put a *Party cancelled* pill there instead, which made that row end in a
+paragraph where every other row ends in a cross, and spent about a hundred
+pixels saying what the line beside it already says — the summary reads
+*0/3 guests · 3 cancelled* for exactly those parties. The cross is disabled
+there, because there is nobody left to cancel, and it says so to a screen
+reader. Disabled rather than absent: a row that drops the control shifts
+everything beside it, and a party is cancelled today and takes a guest
+again tomorrow, at which point the cross wakes up. Every
 cancellation on the event is gathered under **Cancelled guests** below the
 bookings, each one a name with its party in brackets. Guests are
 edited individually: name, table, payment status, ticket price. The price a

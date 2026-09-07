@@ -20,11 +20,11 @@ interface Props {
   expanded: boolean;
   onToggle: () => void;
   /**
-   * Open the guest list, as opposed to toggling it: Edit opens the party and
-   * the guests together, and pressing Edit on a party already open must not
-   * be the press that shuts it.
+   * Put the guest list in a state, as opposed to toggling it. Edit opens the
+   * party and the guests together and must not shut a party already open;
+   * leaving the editor rolls them back up.
    */
-  onOpenGuests: () => void;
+  onSetGuestsOpen: (open: boolean) => void;
   onPatchAttendee: (attendeeId: string, patch: AttendeePatch) => Promise<unknown>;
   /** Put a guest on the standing list of regulars, or take them off it. */
   onSetRegular: (attendeeId: string, regular: boolean) => Promise<unknown>;
@@ -57,7 +57,7 @@ export function BookingCard({
   booking,
   expanded,
   onToggle,
-  onOpenGuests,
+  onSetGuestsOpen,
   onPatchAttendee,
   onSetRegular,
   onMoveGuests,
@@ -86,9 +86,24 @@ export function BookingCard({
     // The guests come with it. Editing a party is rarely only its name and
     // number — a party rung to change the booking is usually changing who is
     // in it — and the guest list was a second, separate press on the party
-    // name to find. Opened rather than toggled, so Edit on a party already
-    // open leaves it open.
-    onOpenGuests();
+    // name to find. Set rather than toggled, so Edit on a party already open
+    // leaves it open.
+    onSetGuestsOpen(true);
+  }
+
+  /**
+   * Leave the editor, and take the guest list with it.
+   *
+   * One press opened both, so one press closes both and the screen goes back
+   * to a list of party names — which is what it is for, and what a party left
+   * open costs the parties under it. Both ways out do it: which button ended
+   * an edit is not a reason for the list below to be in a different state,
+   * and Cancel on a party opened by accident would otherwise leave the guests
+   * of it on screen.
+   */
+  function closeEdit() {
+    setEditing(false);
+    onSetGuestsOpen(false);
   }
 
   async function addGuest() {
@@ -112,7 +127,7 @@ export function BookingCard({
         partyName: draftName,
         telephone: draftPhone,
       });
-      setEditing(false);
+      closeEdit();
     } catch (caught) {
       setError(describeError(caught));
     } finally {
@@ -272,7 +287,7 @@ export function BookingCard({
           </button>
           <button
             type="button"
-            onClick={() => setEditing(false)}
+            onClick={closeEdit}
             disabled={busy}
             className="h-9 rounded-md border border-zinc-300 px-3 text-xs font-medium text-black disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-50"
           >
@@ -329,11 +344,7 @@ export function BookingCard({
             Edit
           </button>
 
-          {allCancelled ? (
-            <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-              Party cancelled
-            </span>
-          ) : confirming ? (
+          {confirming ? (
             <>
               <span className="text-xs text-zinc-600 dark:text-zinc-400">
                 Cancel all {live.length}?
@@ -361,14 +372,33 @@ export function BookingCard({
                asks the question — the red button that answers it keeps its
                words, because a cross beside "Keep" would be read as "never
                mind" by half the people who pressed it, and cancelling a
-               party is the one thing in this app that cannot be undone. */
+               party is the one thing in this app that cannot be undone.
+
+               A wholly cancelled party used to put a "Party cancelled" pill
+               here instead, which made that one row end in a paragraph where
+               every other row ends in a cross, and cost a hundred pixels to
+               say what the line beside it already says: the summary reads
+               "0/3 guests · 3 cancelled" for exactly these parties. So the
+               cross is in every row, and it is disabled on this one because
+               there is nobody left to cancel. Disabled rather than gone: a
+               row that skips the control shifts everything beside it, and a
+               party is cancelled today and has a guest again tomorrow. */
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              aria-label={`Cancel the whole of ${booking.partyName}`}
-              title="Cancel this whole party"
+              disabled={allCancelled}
+              aria-label={
+                allCancelled
+                  ? `${booking.partyName} is cancelled`
+                  : `Cancel the whole of ${booking.partyName}`
+              }
+              title={
+                allCancelled
+                  ? "Every guest on this party is cancelled"
+                  : "Cancel this whole party"
+              }
               data-cancel-booking={booking.id}
-              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              className="h-9 w-9 shrink-0 rounded-md border border-zinc-300 text-base leading-none text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:disabled:hover:bg-transparent"
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -548,8 +578,8 @@ export function BookingCard({
             their seats come back to the room, which the free-seat line says
             plainly — and the party they came back from had no way to put
             anyone in them. The only route was a whole New booking, which is
-            not obvious from a party reading "Party cancelled" with a table
-            still free beside it. */}
+            not obvious from a party whose line read nothing but cancelled
+            guests with a table still free beside it. */}
         <div className="mt-1.5 flex justify-end">
           <button
             type="button"

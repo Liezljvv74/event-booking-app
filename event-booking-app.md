@@ -134,9 +134,14 @@ event manager for now. (The app may evolve into a bigger app, with more function
   attendee records
 - **Edit on a party opens the party and its guest list together** — its name
   and telephone, and every guest under them — since editing a booking is
-  usually editing who is in it. The guests are opened, never toggled, so Edit
-  on an open party leaves it open, and they stay open when the party's own
-  fields are saved or cancelled. The party name is what closes them again.
+  usually editing who is in it. The guests are set open, never toggled, so
+  Edit on an open party leaves it open. **Leaving the editor rolls both back
+  up**, by Save or by Cancel, so the screen returns to a list of party names.
+  The party name opens and closes them on its own.
+- **Every party row ends in the same cross**, a wholly cancelled one
+  included. The cross is disabled there — there is nobody left to cancel —
+  and the party line already reads "0/3 guests · 3 cancelled". It wakes up
+  again when the party takes a guest.
 - Each attendee: name, table assignment, status, ticket price (defaults
   from the booking's price but is editable per attendee)
 - **Cancel whole booking**: sets all attendees in the party to `cancelled`,

@@ -146,14 +146,18 @@ export default function BookingsScreen() {
   }
 
   /**
-   * Open one party's guests without the chance of closing them, which is what
-   * Edit needs: it opens the party's own fields and its guest list in one
-   * press, and a party already open must stay open.
+   * Say whether one party's guests are open, rather than flipping them. Edit
+   * opens the party's fields and its guest list together and must leave a
+   * party already open alone; Save and Cancel roll both back up.
    */
-  function openGuests(bookingId: string) {
-    setExpanded((current) =>
-      current.has(bookingId) ? current : new Set(current).add(bookingId),
-    );
+  function setGuestsOpen(bookingId: string, open: boolean) {
+    setExpanded((current) => {
+      if (current.has(bookingId) === open) return current;
+      const next = new Set(current);
+      if (open) next.add(bookingId);
+      else next.delete(bookingId);
+      return next;
+    });
   }
 
   const event = activeEvents.find((candidate) => candidate.id === eventId);
@@ -368,7 +372,7 @@ export default function BookingsScreen() {
               booking={booking}
               expanded={expanded.has(booking.id)}
               onToggle={() => toggle(booking.id)}
-              onOpenGuests={() => openGuests(booking.id)}
+              onSetGuestsOpen={(open) => setGuestsOpen(booking.id, open)}
               onSaveDetails={(details) =>
                 editBookingDetails(event.id, booking.id, details)
               }
