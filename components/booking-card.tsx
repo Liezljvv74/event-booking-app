@@ -19,6 +19,12 @@ interface Props {
   booking: Booking;
   expanded: boolean;
   onToggle: () => void;
+  /**
+   * Open the guest list, as opposed to toggling it: Edit opens the party and
+   * the guests together, and pressing Edit on a party already open must not
+   * be the press that shuts it.
+   */
+  onOpenGuests: () => void;
   onPatchAttendee: (attendeeId: string, patch: AttendeePatch) => Promise<unknown>;
   /** Put a guest on the standing list of regulars, or take them off it. */
   onSetRegular: (attendeeId: string, regular: boolean) => Promise<unknown>;
@@ -51,6 +57,7 @@ export function BookingCard({
   booking,
   expanded,
   onToggle,
+  onOpenGuests,
   onPatchAttendee,
   onSetRegular,
   onMoveGuests,
@@ -76,6 +83,12 @@ export function BookingCard({
     setDraftPhone(booking.telephone);
     setError("");
     setEditing(true);
+    // The guests come with it. Editing a party is rarely only its name and
+    // number — a party rung to change the booking is usually changing who is
+    // in it — and the guest list was a second, separate press on the party
+    // name to find. Opened rather than toggled, so Edit on a party already
+    // open leaves it open.
+    onOpenGuests();
   }
 
   async function addGuest() {
@@ -214,7 +227,16 @@ export function BookingCard({
     >
       {/* Editing replaces the header rather than opening a panel beneath it.
           The name and the telephone are what the header already shows, so a
-          second view of them said nothing the first had not. */}
+          second view of them said nothing the first had not.
+
+          The guest list below is open throughout, opened by the same press:
+          the two halves of a party are edited together. It stays open when
+          the party's own fields are saved or cancelled — the press that
+          opened it is not the press that closes it, and shutting a list
+          somebody is looking at is a change nobody asked for. The party name
+          is what closes it again, and while these fields are up it is the
+          one thing not on screen, so the guests cannot be folded away
+          mid-edit either. */}
       {editing ? (
         <form
           onSubmit={saveDetails}

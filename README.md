@@ -530,7 +530,18 @@ start on the cheapest of the new event's, where any new guest starts).
 **Bookings** — a party is a name, a telephone number and a guest count, which
 generates that many guest lines. Parties collapse to one line each, and the
 list runs two abreast on a wide screen so two of them can be read side by
-side. A **+** at the bottom right of each party adds a guest to it. Every
+side. The party name opens and closes its guests; **Edit** opens both halves
+at once — the party's own name and telephone, and the guest list under them.
+Edit used to open the name and number alone, which left the guests a second
+press away on a different control: a party rung to change the booking is
+usually changing who is in it, so one press now puts the whole party in
+front of you. It opens the guests rather than toggling them, so Edit on a
+party already open is not the press that shuts it, and they stay open when
+the party's own fields are saved or cancelled — closing a list somebody is
+working in is a change nobody asked for. The party name closes them again,
+and while the fields are up it is the one thing off screen, so the guests
+cannot be folded away mid-edit either. A **+** at the bottom right of each
+party adds a guest to it. Every
 cancellation on the event is gathered under **Cancelled guests** below the
 bookings, each one a name with its party in brackets. Guests are
 edited individually: name, table, payment status, ticket price. The price a

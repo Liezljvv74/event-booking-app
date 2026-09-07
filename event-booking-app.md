@@ -123,6 +123,11 @@ event manager for now. (The app may evolve into a bigger app, with more function
 ### Bookings & attendees
 - Creating a booking = party name + guest count → generates that many
   attendee records
+- **Edit on a party opens the party and its guest list together** — its name
+  and telephone, and every guest under them — since editing a booking is
+  usually editing who is in it. The guests are opened, never toggled, so Edit
+  on an open party leaves it open, and they stay open when the party's own
+  fields are saved or cancelled. The party name is what closes them again.
 - Each attendee: name, table assignment, status, ticket price (defaults
   from the booking's price but is editable per attendee)
 - **Cancel whole booking**: sets all attendees in the party to `cancelled`,
