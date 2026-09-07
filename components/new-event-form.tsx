@@ -1,18 +1,59 @@
 "use client";
 
 import { useState } from "react";
-import { addDays, formatEventDate, todayIso } from "@/lib/event-time";
+import {
+  addDays,
+  addMonths,
+  formatEventDate,
+  todayIso,
+} from "@/lib/event-time";
 import type { EventTimes } from "@/lib/repository";
 import type { NewEventInput } from "@/lib/use-events";
-import { MAX_REPEATS } from "@/lib/types";
+import { MAX_REPEATS, type RepeatCadence, type Settings } from "@/lib/types";
 import {
   TicketPricesEditor,
   useTicketPriceRows,
 } from "@/components/ticket-prices-editor";
 import { TablesPlanner, useTablePlan } from "@/components/tables-planner";
+import { RepeatCalendar } from "@/components/repeat-calendar";
 import { useEventContext } from "@/components/event-provider";
 import { describeError } from "@/lib/errors";
 import { FIELD_CLASS, FIELD_LABEL_CLASS } from "@/components/form-styles";
+
+/**
+ * The ways an event repeats, in the order they are offered, and how a run of
+ * each is described once the dates are known.
+ *
+ * The wording is here rather than in the summary line because the two have to
+ * agree: whatever the dropdown is called, the line under the button says what
+ * that choice actually did.
+ */
+const CADENCES: readonly {
+  value: RepeatCadence;
+  label: string;
+  apart: string;
+}[] = [
+  { value: "none", label: "Never", apart: "" },
+  { value: "daily", label: "Daily", apart: "a day apart" },
+  { value: "weekly", label: "Weekly", apart: "a week apart" },
+  { value: "monthly", label: "Monthly", apart: "a month apart" },
+  { value: "custom", label: "Custom dates", apart: "on the dates chosen" },
+];
+
+/** How a run of this cadence reads: "a week apart". */
+function apartness(cadence: RepeatCadence): string {
+  return CADENCES.find((entry) => entry.value === cadence)?.apart ?? "";
+}
+
+/**
+ * Whether this cadence needs a number beside it.
+ *
+ * The three fixed intervals do: an interval says nothing about how far to
+ * carry it. Never needs no count, and picked dates are their own count.
+ */
+function countsRepeats(cadence: RepeatCadence): boolean {
+  return cadence === "daily" || cadence === "weekly" || cadence === "monthly";
+}
 
 interface Props {
   /**
@@ -35,6 +76,11 @@ const fieldClass = FIELD_CLASS;
 const labelClass = FIELD_LABEL_CLASS;
 
 export function NewEventForm({ lastTimes, onCreate }: Props) {
+  // How the venue is set up, as opposed to how this event is: the seat count
+  // a table starts on, and the rhythm the last event was scheduled to. Read
+  // here rather than further down because three of the fields below open on
+  // it.
+  const { settings, saveSetting } = useEventContext();
   const [name, setName] = useState("");
   /**
    * A week after the event saved most recently, on request — a venue's
@@ -59,27 +105,61 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
   // How the room is laid out, said as a plan: so many tables of such a shape
   // with so many seats each. Twenty of the same table is one line to read
   // rather than twenty, and one decision rather than twenty presses.
-  const { settings } = useEventContext();
   const tables = useTablePlan(settings.defaultSeatCount);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   /**
-   * Whether to make more than one of this event, and how many more.
+   * How this event repeats, how many times, and — where the answer is a list
+   * rather than an interval — on which dates.
    *
-   * "Repeat 3 times" means three more after the first, a week apart — which
-   * is the same week the date above is defaulted by, so a rhythm entered once
-   * carries through the lot. The line under the button spells the dates out
-   * rather than leaving the counting to be done twice.
+   * Opened on the rhythm the last event was scheduled to, which is kept with
+   * the settings: a venue whose function is weekly should say so once. The
+   * dates of a custom run are not remembered with it, because particular days
+   * are about the events they made and not about the venue.
+   *
+   * "Weekly, 3 times" means three more after the first — which is the same
+   * week the date above is defaulted by, so a rhythm entered once carries
+   * through the lot. The line under the button spells the dates out rather
+   * than leaving the counting to be done twice.
    */
-  const [repeat, setRepeat] = useState<"no" | "yes">("no");
-  const [times, setTimes] = useState("1");
+  const [cadence, setCadence] = useState<RepeatCadence>(settings.repeatCadence);
+  const [times, setTimes] = useState(String(settings.repeatTimes));
+  const [customDates, setCustomDates] = useState<string[]>([]);
+
+  /** The same date so many intervals on, for whichever interval is set. */
+  function intervalsOn(date: string, steps: number): string {
+    if (cadence === "daily") return addDays(date, steps);
+    if (cadence === "monthly") return addMonths(date, steps);
+    return addDays(date, steps * 7);
+  }
 
   /**
-   * Every date this form would create, the first and then its repeats, a week
-   * apart. Just the one when it is not repeating.
+   * Every date this form would create: the event's own, and then its repeats.
+   * Just the one when it is not repeating.
+   *
+   * Called during render as well as on submit — the button says how many
+   * events it is about to make — so it reports a bad count as a message
+   * rather than throwing, and answers for an empty date field too. Without
+   * that last guard the arithmetic below runs on nothing and the line under
+   * the button reads NaN-NaN-NaN.
    */
   function repeatedDates(): { dates: string[] } | { error: string } {
-    if (repeat === "no") return { dates: [eventDate] };
+    if (eventDate === "") return { error: "Pick an event date." };
+    if (cadence === "none") return { dates: [eventDate] };
+
+    if (cadence === "custom") {
+      const extra = customDates.filter((date) => date !== eventDate);
+      if (extra.length > MAX_REPEATS) {
+        return {
+          error: `${MAX_REPEATS} repeats is as many as one press makes.`,
+        };
+      }
+      // Sorted, so a date picked before the event's own becomes the first of
+      // the run rather than an event created out of order.
+      return {
+        dates: [eventDate, ...extra].sort((a, b) => a.localeCompare(b)),
+      };
+    }
 
     const more = times.trim() === "" ? Number.NaN : Number(times);
     if (!Number.isInteger(more) || more < 1) {
@@ -91,9 +171,19 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
 
     return {
       dates: Array.from({ length: more + 1 }, (unused, index) =>
-        addDays(eventDate, index * 7),
+        intervalsOn(eventDate, index),
       ),
     };
+  }
+
+  /** Pick a date for a custom run, or take one back off it. */
+  function toggleDate(date: string) {
+    setCustomDates((current) =>
+      current.includes(date)
+        ? current.filter((held) => held !== date)
+        : [...current, date],
+    );
+    setError("");
   }
 
   async function submit(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -128,6 +218,20 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
     setSaving(true);
     setError("");
     try {
+      /**
+       * Remember the rhythm before making the events, not after.
+       *
+       * The screen clears this form once the lot has been saved by remounting
+       * it, and a remounted form opens on whatever the settings say — so a
+       * selection written after the events would be written after the form
+       * that reads it had already opened, and the run just scheduled would
+       * come back as Never. The count goes with it for the intervals that
+       * take one; Never and a picked list count nothing.
+       */
+      const rhythm: Partial<Settings> = { repeatCadence: cadence };
+      if (countsRepeats(cadence)) rhythm.repeatTimes = Number(times);
+      await saveSetting(rhythm);
+
       await onCreate(
         dates.dates.map((date) => ({
           name: trimmed,
@@ -241,22 +345,25 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
         <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
           Repeat event
           <select
-            value={repeat}
+            value={cadence}
             disabled={saving}
-            aria-label="Repeat this event"
+            aria-label="How often the event repeats"
             data-repeat
             onChange={(changed) => {
-              setRepeat(changed.target.value as "no" | "yes");
+              setCadence(changed.target.value as RepeatCadence);
               setError("");
             }}
             className="h-11 rounded-md border border-zinc-300 bg-white px-2 text-sm text-black disabled:opacity-50 sm:h-9 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
           >
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
+            {CADENCES.map((entry) => (
+              <option key={entry.value} value={entry.value}>
+                {entry.label}
+              </option>
+            ))}
           </select>
         </label>
 
-        {repeat === "yes" && (
+        {countsRepeats(cadence) && (
           <label className="flex items-center gap-2 text-sm text-black dark:text-zinc-50">
             times
             <input
@@ -279,18 +386,32 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
         )}
       </div>
 
+      {/* The month itself, for the one cadence that is a list of dates rather
+          than an interval. Under the button and above the summary, so the
+          dates picked and the dates listed sit together. */}
+      {cadence === "custom" && eventDate !== "" && (
+        <RepeatCalendar
+          firstDate={eventDate}
+          chosen={customDates}
+          onToggle={toggleDate}
+          disabled={saving}
+        />
+      )}
+
       {/* The dates spelled out, so "repeat 3 times" does not have to be read
           twice to work out whether it means three events or four. */}
-      {repeat === "yes" && (
+      {cadence !== "none" && (
         <p
           data-repeat-summary
           className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-400"
         >
           {"error" in planned
             ? planned.error
-            : `${planned.dates.length} events, a week apart: ${planned.dates
-                .map((date) => formatEventDate(date))
-                .join(", ")}.`}
+            : planned.dates.length === 1
+              ? `1 event, on ${formatEventDate(planned.dates[0])}.`
+              : `${planned.dates.length} events, ${apartness(cadence)}: ${planned.dates
+                  .map((date) => formatEventDate(date))
+                  .join(", ")}.`}
         </p>
       )}
     </form>

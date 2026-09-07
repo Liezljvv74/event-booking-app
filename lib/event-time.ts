@@ -16,6 +16,13 @@ export function formatEventDate(iso: string): string {
   });
 }
 
+/** A local date written the way the store keeps one: "YYYY-MM-DD". */
+function asIso(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 /**
  * A date so many days on, as "YYYY-MM-DD".
  *
@@ -26,18 +33,38 @@ export function formatEventDate(iso: string): string {
  */
 export function addDays(iso: string, days: number): string {
   const [year, month, day] = iso.split("-").map(Number);
-  const moved = new Date(year, month - 1, day + days);
-  const paddedMonth = String(moved.getMonth() + 1).padStart(2, "0");
-  const paddedDay = String(moved.getDate()).padStart(2, "0");
-  return `${moved.getFullYear()}-${paddedMonth}-${paddedDay}`;
+  return asIso(new Date(year, month - 1, day + days));
+}
+
+/**
+ * A date so many months on, as "YYYY-MM-DD". Negative counts go back.
+ *
+ * The day of the month is kept, because that is what a monthly function means
+ * to whoever writes it in a diary: the 14th, every month. Where the month it
+ * lands in is too short for that day, the last day of it is used — the 31st of
+ * January repeats on the 28th of February and then on the 31st of March, and
+ * never on the 3rd of the following month, which is where the Date
+ * constructor's own overflow would put it.
+ *
+ * Counted from the original date every time rather than a month on from the
+ * last answer, so a run that gets clamped once does not stay clamped for the
+ * rest of the year.
+ */
+export function addMonths(iso: string, months: number): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const landing = new Date(year, month - 1 + months, 1);
+  const lastDay = new Date(
+    landing.getFullYear(),
+    landing.getMonth() + 1,
+    0,
+  ).getDate();
+  landing.setDate(Math.min(day, lastDay));
+  return asIso(landing);
 }
 
 /** Today as "YYYY-MM-DD" in local time. */
 export function todayIso(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
+  return asIso(new Date());
 }
 
 /**

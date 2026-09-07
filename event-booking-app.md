@@ -71,9 +71,26 @@ event manager for now. (The app may evolve into a bigger app, with more function
   that event's times — a venue's functions run to a rhythm, and the same
   weekday next week is the likeliest next one. Today's date where there is no
   event to count from.
-- **Repeat event**, beside Create event: yes or no, and how many times. Three
-  repeats makes four events a week apart, and the dates are listed under the
-  button before it is pressed rather than left to be counted.
+- **Repeat event**, beside Create event: how often it repeats — never, daily,
+  weekly, monthly, or on custom dates — and, for the three fixed intervals,
+  how many times. Three weekly repeats makes four events a week apart, and the
+  dates are listed under the button before it is pressed rather than left to
+  be counted.
+- A monthly repeat keeps the day of the month, since that is what a monthly
+  function means to whoever writes it in a diary. Where the month it lands in
+  is too short for that day, the last day of that month is used: the 31st of
+  January repeats on the 28th of February and then on the 31st of March.
+- **Custom dates** opens a calendar, a month at a time, and the dates are
+  pressed on it. Any date may be picked, and one earlier than the event's own
+  simply becomes the first of the run. The event's own date is in the run and
+  is not pressable there — the Date field is the one place an event is dated,
+  and a second way to change it that disagreed with the first would be worse
+  than no second way at all.
+- **How it repeats is remembered**, and is what the next new event opens on: a
+  venue whose function is weekly should say so once. The count is remembered
+  with it, since "weekly" and "weekly, four times" are one decision. The dates
+  of a custom run are not — particular days are about the events they made,
+  so a form opening on Custom dates opens on an empty calendar.
 
 ### Tables
 - Simple numbered list, no visual floor plan yet.  
@@ -290,6 +307,10 @@ Show all six of the following, always in this order:
 - **Seats a new table starts with** — the spec's default is 10; a room laid
   out in eights or twelves should not be retyped table by table. Any table can
   still be given a different number.
+- **How a new event repeats** is kept here too, though it is set where it is
+  used — on the New event form, by scheduling an event — rather than on this
+  screen. It is a standing fact about the venue in the same way the seat count
+  is, not a fact about any one night.
 - **Currency** — chosen from a list, not typed as a symbol. The spec names no
   currency, so the default is none, which is what the app did before. The
   currency decides the symbol, which side of the figure it sits and what

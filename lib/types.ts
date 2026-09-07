@@ -45,11 +45,40 @@ export type TableShape = "long" | "round" | "square";
 export const DEFAULT_TABLE_SHAPE: TableShape = "long";
 
 /**
+ * How often a new event repeats: not at all, at a fixed interval, or on dates
+ * picked off a calendar.
+ *
+ * "custom" is the one that is not an interval at all — a season of functions
+ * on the dates the hall happens to be free is a list, not a rhythm, and no
+ * number of days describes it.
+ */
+export type RepeatCadence = "none" | "daily" | "weekly" | "monthly" | "custom";
+
+/** Every cadence, in the order the dropdown offers them. */
+export const REPEAT_CADENCES: readonly RepeatCadence[] = [
+  "none",
+  "daily",
+  "weekly",
+  "monthly",
+  "custom",
+];
+
+/**
+ * How a new event repeats until it is told otherwise: not at all.
+ *
+ * The stored default, and what an app with nothing saved yet opens on. A
+ * venue whose functions run weekly says so once and stops saying it, which is
+ * the whole point of the selection being kept.
+ */
+export const DEFAULT_REPEAT_CADENCE: RepeatCadence = "none";
+
+/**
  * How many times a new event may be repeated in one go.
  *
- * A year of weeks. Not a rule about how often a venue may hold a function,
- * only a limit on how many a single press may create — fifty-two rows
- * appearing at once is already more than anybody meant to type by accident.
+ * A year of weeks — or, at the shortest interval offered, a couple of months
+ * of days. Not a rule about how often a venue may hold a function, only a
+ * limit on how many a single press may create: fifty-two rows appearing at
+ * once is already more than anybody meant to type by accident.
  */
 export const MAX_REPEATS = 52;
 
@@ -235,6 +264,31 @@ export interface Settings {
    */
   regularsPartyName: string;
   /**
+   * How the last event scheduled was set to repeat, and so how the next one
+   * opens: never, daily, weekly, monthly, or on dates off a calendar.
+   *
+   * Kept with the settings for the same reason the seat count is. A venue
+   * whose function is weekly holds a weekly function every time somebody
+   * schedules one, and being asked again on every event is being asked to
+   * re-enter a standing fact about the place. It is written when an event is
+   * created, which is the moment the selection was actually meant.
+   *
+   * "custom" is remembered as the choice but the dates are not: a list of
+   * particular days is about the events it made and nothing else, so a form
+   * opening on Custom opens on an empty calendar.
+   */
+  repeatCadence: RepeatCadence;
+  /**
+   * How many repeats that cadence was set to make, for the intervals that
+   * take a count. Remembered alongside the cadence, because "weekly" and
+   * "weekly, four times" are one decision about the rhythm and remembering
+   * half of it would have every run of four reopen as a run of one.
+   *
+   * Ignored while the cadence is "none" or "custom", neither of which counts
+   * anything. At least 1, never more than MAX_REPEATS.
+   */
+  repeatTimes: number;
+  /**
    * The currency amounts are shown in, as an ISO 4217 code — "ZAR", "GBP" —
    * or empty for none, which is what the app did before this existed and
    * remains the default. The spec names no currency, so neither does the app
@@ -261,6 +315,8 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: "",
   regulars: [],
   regularsPartyName: REGULARS_PARTY,
+  repeatCadence: DEFAULT_REPEAT_CADENCE,
+  repeatTimes: 1,
   exportDirectory: null,
 };
 

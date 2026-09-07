@@ -311,13 +311,47 @@ recently, on request, and on that event's times: a venue's functions run to a
 rhythm, and the same weekday next week is the likeliest next one. Today's
 date where there is no event to count from.
 
-Beside Create event is **Repeat event** — no or yes, and how many times. Three
+Beside Create event is **Repeat event** — never, daily, weekly, monthly, or on
+custom dates, and for the three fixed intervals how many times. Three weekly
 repeats makes four events a week apart, which is the sort of thing that has to
 be said rather than inferred, so the button reads *Create 4 events* and the
-dates are listed under it before it is pressed. The whole list is handed over
-in one call rather than one call per event: the form clears itself once the
-lot has been saved, and a form that cleared itself between the third and the
-fourth would take the rest of the list with it. They are written one at a
+dates are listed under it before it is pressed.
+
+A **monthly** repeat keeps the day of the month, because that is what a monthly
+function means to whoever writes it in a diary: the 14th, every month. Where
+the month it lands in is too short for that day the last day of that month is
+used, so the 31st of January repeats on the 28th of February and then on the
+31st of March — never on the 3rd of the month after, which is where the
+`Date` constructor's own overflow would put it. Each date is counted from the
+original rather than from the last answer, so a run clamped once does not stay
+clamped for the rest of the year.
+
+**Custom dates** opens a calendar instead of a count, a month at a time, and
+the dates are pressed on it — a season of functions on the nights the hall is
+free follows from no interval at all, and a row of date boxes is not pointing
+at those nights, it is typing them one at a time with no view of the month
+they sit in. Any date may be picked, and one earlier than the event's own
+becomes the first of the run, since the run is sorted before it is created.
+The event's own date shows as taken and is not pressable there: the Date field
+above is the one place an event is dated, and a second way to change it that
+disagreed with the first would be worse than no second way at all.
+
+**How it repeats is remembered**, and is what the next new event opens on — a
+venue whose function is weekly says so once and stops saying it, which is why
+the selection is kept with the settings rather than with any event. The count
+goes with it, because "weekly" and "weekly, four times" are one decision about
+the rhythm and remembering half of it would have every run of four reopen as a
+run of one. It is written just before the events are created rather than
+after: the screen clears the form by remounting it, and a form opens on
+whatever the settings then say, so a selection saved afterwards would arrive
+too late to be read and the run just scheduled would come back as *Never*.
+The dates of a custom run are not remembered — particular days are about the
+events they made — so a form opening on Custom dates opens on an empty
+calendar.
+
+The whole list is handed over in one call rather than one call per event: the
+form clears itself once the lot has been saved, and a form that cleared itself
+between the third and the fourth would take the rest of the list with it. They are written one at a
 time and in order, so each starts from the one before it — which is what
 carries the times and the expenses down the run.
 
@@ -715,6 +749,13 @@ the most destructive value on the screen and enable Save to go with it.
 tables block on Manage events fills in for you, and it is read once when a
 form opens rather than watched, so changing the setting never renumbers seats
 in a form somebody is halfway through.
+
+*How a new event repeats* is stored alongside these and has no line on this
+screen, deliberately. It is set where it is used — by scheduling an event on
+Manage events — and a second place to set it would be a second answer to the
+same question. It is here in the store rather than on an event for the same
+reason the seat count is: it is a standing fact about the venue, not a fact
+about one night.
 
 *The currency.* Chosen from a list rather than typed as a symbol, on request,
 and the difference is not cosmetic: typing "R" says what character to put in
