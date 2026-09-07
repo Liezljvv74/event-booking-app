@@ -157,13 +157,6 @@ export default function ExpensesScreen() {
         </div>
       </div>
 
-      <p className="mt-1.5 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
-        A line needs a description and an amount. Provider, the paid tick and
-        notes can be filled in whenever you know them. Each Description offers
-        the lines you have cleared before, minus any already in the list, so a
-        cost that recurs need not be retyped.
-      </p>
-
       {error !== "" && (
         <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
           {error}

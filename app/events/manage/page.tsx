@@ -89,11 +89,6 @@ export default function ManageEventsScreen() {
             <h3 className="text-base font-semibold text-black dark:text-zinc-50">
               Closed
             </h3>
-            <p className="mt-1 max-w-prose text-xs text-zinc-600 dark:text-zinc-400">
-              Kept for the retention period and then deleted automatically.
-              This is the only screen they appear on, so delete one here to be
-              rid of it sooner.
-            </p>
             <ul className="mt-1.5 flex flex-col gap-1.5">
               {closed.map((event) => (
                 <EventEditor

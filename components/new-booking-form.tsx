@@ -99,12 +99,8 @@ export function NewBookingForm({
       <h2 className="text-base font-semibold text-black dark:text-zinc-50">
         New booking
       </h2>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        The guest count creates that many guests, each starting unseated at
-        this ticket price. Names, tables and prices are editable per guest.
-      </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
           <span className={labelClass}>Party name</span>
           <input

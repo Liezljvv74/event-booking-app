@@ -240,7 +240,9 @@ Cancel and so does the pen, both of which put back what was stored; only a
 refused save keeps it open, with the reason showing. Closed events follow
 underneath in their own section, collapsed the same way, and appear nowhere
 else in the app, so this is the only place one can be looked at or removed
-early. Deleting names what goes with it.
+early — they are kept for the retention period set on Settings and then
+deleted automatically, and deleting one here is how to be rid of it sooner.
+Deleting names what goes with it.
 
 Both columns lay a room out the same way, as a **plan**: *Table form · Number ·
 Seats each*, with a line underneath saying what it all adds up to. A room is
@@ -769,6 +771,25 @@ The ones that were argued out and would otherwise be re-litigated:
   Liezl asked for it off and said prose like it belongs in an app walkthrough,
   which is not built. The behaviour it described is unchanged, and is recorded
   here instead.
+
+  Three more went the same way once the phone layouts made the cost of them
+  visible: the four lines above the Expenses list saying which fields are
+  required and what each Description offers; the two above the New booking
+  form saying that the guest count generates that many guests and that they
+  are editable afterwards; and the two under the **Closed** heading on Manage
+  events saying that closed events are kept for the retention period and can
+  be deleted early. Each was true, each narrated what the fields it sat above
+  already do, and on a phone each cost a screenful of the list it was
+  introducing. All three facts are in this file — the first two were already
+  — and the paragraph above is the standing test: a thing a user is told once
+  on meeting the app is not a thing to print every time they use it.
+
+  What stayed is everything that is not narration: the blockers with a way
+  out of them (*no tables yet, so guests cannot be seated*, with its link to
+  Manage events), the warnings (*more guests booked than seats exist*), the
+  notice saying where a party just went, the IndexedDB failure, and the
+  empty-state lines, which only appear when the screen would otherwise be
+  blank and answer the question that blankness raises.
 - **An event in the list is a line, not a form.** Every event used to have
   every one of its fields on show at all times, whether or not any of them
   were being changed, and four events filled the screen. The list is read far
