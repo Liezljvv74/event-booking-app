@@ -336,18 +336,14 @@ The event's own date shows as taken and is not pressable there: the Date field
 above is the one place an event is dated, and a second way to change it that
 disagreed with the first would be worse than no second way at all.
 
-**How it repeats is remembered**, and is what the next new event opens on — a
-venue whose function is weekly says so once and stops saying it, which is why
-the selection is kept with the settings rather than with any event. The
-cadence alone: the times box opens at 1 every time, because how often the
-place holds a function is standing and how many of them to book in one press
-is about the booking in hand. It is written just before the events are created
-rather than after: the screen clears the form by remounting it, and a form opens on
-whatever the settings then say, so a selection saved afterwards would arrive
-too late to be read and the run just scheduled would come back as *Never*.
-The dates of a custom run are not remembered — particular days are about the
-events they made — so a form opening on Custom dates opens on an empty
-calendar.
+**How it repeats is not remembered.** Every form opens on *Never*, once, with
+no dates picked, whatever the last event was scheduled to. It was kept with
+the settings for a while, on the reasoning that a venue whose function is
+weekly should say so once — but a form that opens on Weekly, 3 times creates
+four events for somebody who came to schedule one and pressed the only button
+on the form. A repeat is something asked for about the booking in hand, and it
+costs one dropdown to ask for it. So there is nothing to save, and nothing
+about a run of events outlives the run.
 
 The whole list is handed over in one call rather than one call per event: the
 form clears itself once the lot has been saved, and a form that cleared itself
@@ -750,12 +746,10 @@ tables block on Manage events fills in for you, and it is read once when a
 form opens rather than watched, so changing the setting never renumbers seats
 in a form somebody is halfway through.
 
-*How a new event repeats* is stored alongside these and has no line on this
-screen, deliberately. It is set where it is used — by scheduling an event on
-Manage events — and a second place to set it would be a second answer to the
-same question. It is here in the store rather than on an event for the same
-reason the seat count is: it is a standing fact about the venue, not a fact
-about one night.
+*How a new event repeats* is deliberately **not** stored, here or anywhere.
+It is asked on the New event form and forgotten with the form: unlike the seat
+count, it is not a standing fact about the venue but a request about one
+booking, and one that creates events by itself if it is remembered wrongly.
 
 *The currency.* Chosen from a list rather than typed as a symbol, on request,
 and the difference is not cosmetic: typing "R" says what character to put in

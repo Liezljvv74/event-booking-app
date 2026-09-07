@@ -54,21 +54,13 @@ export const DEFAULT_TABLE_SHAPE: TableShape = "long";
  */
 export type RepeatCadence = "none" | "daily" | "weekly" | "monthly" | "custom";
 
-/** Every cadence, in the order the dropdown offers them. */
-export const REPEAT_CADENCES: readonly RepeatCadence[] = [
-  "none",
-  "daily",
-  "weekly",
-  "monthly",
-  "custom",
-];
-
 /**
- * How a new event repeats until it is told otherwise: not at all.
+ * How a new event repeats: not at all, until this form is told otherwise.
  *
- * The stored default, and what an app with nothing saved yet opens on. A
- * venue whose functions run weekly says so once and stops saying it, which is
- * the whole point of the selection being kept.
+ * Every new event form opens here, and nothing carries a cadence over from
+ * the event before it. Repeating is something asked for about one booking,
+ * and a form that opened on Weekly because last month's function was weekly
+ * would create a run of events for somebody who only pressed Create.
  */
 export const DEFAULT_REPEAT_CADENCE: RepeatCadence = "none";
 
@@ -264,26 +256,6 @@ export interface Settings {
    */
   regularsPartyName: string;
   /**
-   * How the last event scheduled was set to repeat, and so how the next one
-   * opens: never, daily, weekly, monthly, or on dates off a calendar.
-   *
-   * Kept with the settings for the same reason the seat count is. A venue
-   * whose function is weekly holds a weekly function every time somebody
-   * schedules one, and being asked again on every event is being asked to
-   * re-enter a standing fact about the place. It is written when an event is
-   * created, which is the moment the selection was actually meant.
-   *
-   * "custom" is remembered as the choice but the dates are not: a list of
-   * particular days is about the events it made and nothing else, so a form
-   * opening on Custom opens on an empty calendar.
-   *
-   * The cadence alone is kept, never the number of times it was set to
-   * repeat. How often a venue holds a function is a standing fact about the
-   * place; how many of them to book in one press is a decision about the
-   * booking in hand, so the count opens at 1 every time.
-   */
-  repeatCadence: RepeatCadence;
-  /**
    * The currency amounts are shown in, as an ISO 4217 code — "ZAR", "GBP" —
    * or empty for none, which is what the app did before this existed and
    * remains the default. The spec names no currency, so neither does the app
@@ -310,7 +282,6 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: "",
   regulars: [],
   regularsPartyName: REGULARS_PARTY,
-  repeatCadence: DEFAULT_REPEAT_CADENCE,
   exportDirectory: null,
 };
 

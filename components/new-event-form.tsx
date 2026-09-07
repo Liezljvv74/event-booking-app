@@ -9,7 +9,11 @@ import {
 } from "@/lib/event-time";
 import type { EventTimes } from "@/lib/repository";
 import type { NewEventInput } from "@/lib/use-events";
-import { MAX_REPEATS, type RepeatCadence } from "@/lib/types";
+import {
+  DEFAULT_REPEAT_CADENCE,
+  MAX_REPEATS,
+  type RepeatCadence,
+} from "@/lib/types";
 import {
   TicketPricesEditor,
   useTicketPriceRows,
@@ -77,10 +81,9 @@ const labelClass = FIELD_LABEL_CLASS;
 
 export function NewEventForm({ lastTimes, onCreate }: Props) {
   // How the venue is set up, as opposed to how this event is: the seat count
-  // a table starts on, and the rhythm the last event was scheduled to. Read
-  // here rather than further down because three of the fields below open on
-  // it.
-  const { settings, saveSetting } = useEventContext();
+  // a table starts on. Read here rather than further down because the tables
+  // block below opens on it.
+  const { settings } = useEventContext();
   const [name, setName] = useState("");
   /**
    * A week after the event saved most recently, on request — a venue's
@@ -112,19 +115,20 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
    * How this event repeats, how many times, and — where the answer is a list
    * rather than an interval — on which dates.
    *
-   * Opened on the rhythm the last event was scheduled to, which is kept with
-   * the settings: a venue whose function is weekly should say so once. The
-   * count is not kept with it and opens at 1 — how often the place holds a
-   * function is standing, how many to book in one press is about the booking
-   * in hand. Nor are the dates of a custom run, because particular days are
-   * about the events they made and not about the venue.
+   * Every form opens on Never, once, with no dates picked, and nothing about
+   * the event before it changes that. Repeating is asked for about the
+   * booking in hand: a form that opened on Weekly, 3 times because last
+   * month's function did would quietly create four events for somebody who
+   * only meant to press Create.
    *
    * "Weekly, 3 times" means three more after the first — which is the same
    * week the date above is defaulted by, so a rhythm entered once carries
    * through the lot. The line under the button spells the dates out rather
    * than leaving the counting to be done twice.
    */
-  const [cadence, setCadence] = useState<RepeatCadence>(settings.repeatCadence);
+  const [cadence, setCadence] = useState<RepeatCadence>(
+    DEFAULT_REPEAT_CADENCE,
+  );
   const [times, setTimes] = useState("1");
   const [customDates, setCustomDates] = useState<string[]>([]);
 
@@ -220,18 +224,6 @@ export function NewEventForm({ lastTimes, onCreate }: Props) {
     setSaving(true);
     setError("");
     try {
-      /**
-       * Remember the rhythm before making the events, not after.
-       *
-       * The screen clears this form once the lot has been saved by remounting
-       * it, and a remounted form opens on whatever the settings say — so a
-       * selection written after the events would be written after the form
-       * that reads it had already opened, and the run just scheduled would
-       * come back as Never. The cadence alone: the count opens at 1 each
-       * time, so there is nothing else to write.
-       */
-      await saveSetting({ repeatCadence: cadence });
-
       await onCreate(
         dates.dates.map((date) => ({
           name: trimmed,

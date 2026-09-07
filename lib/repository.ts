@@ -14,7 +14,6 @@ import {
   MAX_RETENTION_DAYS,
   MAX_SEAT_COUNT,
   MIN_RETENTION_DAYS,
-  REPEAT_CADENCES,
   SEAT_OCCUPYING_STATUSES,
   type Attendee,
   type AttendeeStatus,
@@ -1682,11 +1681,6 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
     throw new Error(`"${patch.currency}" is not a currency this app offers.`);
   }
 
-  const cadence = patch.repeatCadence;
-  if (cadence !== undefined && !REPEAT_CADENCES.includes(cadence)) {
-    throw new Error(`"${cadence}" is not a way an event can repeat.`);
-  }
-
   return runTransaction(STORE_SETTINGS, "readwrite", async (transaction) => {
     const row = await getOne<SettingsRow>(
       transaction,
@@ -1703,7 +1697,6 @@ export function saveSettings(patch: Partial<Settings>): Promise<Settings> {
       currency: merged.currency,
       regulars: merged.regulars,
       regularsPartyName: merged.regularsPartyName,
-      repeatCadence: merged.repeatCadence,
       exportDirectory: merged.exportDirectory,
     };
     await put(transaction, STORE_SETTINGS, { key: SETTINGS_KEY, value });

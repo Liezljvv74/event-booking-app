@@ -86,13 +86,10 @@ event manager for now. (The app may evolve into a bigger app, with more function
   is not pressable there — the Date field is the one place an event is dated,
   and a second way to change it that disagreed with the first would be worse
   than no second way at all.
-- **How it repeats is remembered**, and is what the next new event opens on: a
-  venue whose function is weekly should say so once. Only the cadence — the
-  count opens at 1 every time, since how many functions to book in one press
-  is a decision about the booking in hand rather than about the venue. The
-  dates of a custom run are not remembered either — particular days are about
-  the events they made, so a form opening on Custom dates opens on an empty
-  calendar.
+- **How it repeats is not remembered**: every form opens on Never, once, with
+  no dates picked. A repeat is a request about the booking in hand, not a
+  standing fact about the venue, and a form that opened on the last event's
+  rhythm would create a run of events for somebody who came to schedule one.
 
 ### Tables
 - Simple numbered list, no visual floor plan yet.  
@@ -309,10 +306,8 @@ Show all six of the following, always in this order:
 - **Seats a new table starts with** — the spec's default is 10; a room laid
   out in eights or twelves should not be retyped table by table. Any table can
   still be given a different number.
-- **How a new event repeats** is kept here too, though it is set where it is
-  used — on the New event form, by scheduling an event — rather than on this
-  screen. It is a standing fact about the venue in the same way the seat count
-  is, not a fact about any one night.
+- **How a new event repeats** is not kept here or anywhere: it is asked on the
+  New event form and forgotten with the form.
 - **Currency** — chosen from a list, not typed as a symbol. The spec names no
   currency, so the default is none, which is what the app did before. The
   currency decides the symbol, which side of the figure it sits and what
