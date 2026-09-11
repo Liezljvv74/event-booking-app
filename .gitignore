@@ -65,3 +65,4 @@ $RECYCLE.BIN/
 # Notes on how the demo videos were recorded. The videos themselves live
 # outside the repository, and so does the tooling that made them.
 /DEMO-README.md
+/demo-scripts/
